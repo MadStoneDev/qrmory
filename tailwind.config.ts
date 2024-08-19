@@ -8,6 +8,7 @@ const config: Config = {
   ],
   theme: {
     extend: {
+<<<<<<< HEAD
       screens: {
         xs: { min: "0", max: "475px" },
         sm: { min: "476px" },
@@ -75,6 +76,12 @@ const config: Config = {
       },
       translate: {
         1.75: "0.4375rem",
+=======
+      backgroundImage: {
+        "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",
+        "gradient-conic":
+          "conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))",
+>>>>>>> d208da0f (Initial commit from Create Next App)
       },
     },
   },
