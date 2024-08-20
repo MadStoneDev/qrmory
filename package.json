@@ -1,41 +1,26 @@
 {
-  "name": "qrmory",
-  "version": "1.0.0",
-  "main": "next.config.js",
+  "name": "qrmory-web",
+  "version": "1.2.0",
+  "private": true,
   "scripts": {
-    "dev": "next dev --port 3003",
+    "dev": "next dev --port 3020",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "lint": "next lint"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+ssh://git@github.com/richardhaddadau/qrmory.git"
-  },
-  "author": "Richard Haddad",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/richardhaddadau/qrmory/issues"
-  },
-  "homepage": "https://qrmory.com",
-  "description": "",
   "dependencies": {
-    "@sanity/image-url": "^1.0.2",
-    "@sanity/vision": "^3.21.3",
     "d3-svg-to-png": "^0.3.1",
-    "next": "14.0.4",
+    "next": "14.2.5",
     "next-qrcode": "^2.5.1",
-    "next-sanity": "^5.5.11",
     "react": "^18",
-    "react-dom": "^18",
-    "sanity": "^3.21.3",
-    "styled-components": "^6.1.1",
-    "@tsconfig/next": "^2.0.1"
+    "react-dom": "^18"
   },
   "devDependencies": {
-    "@types/react": "^18.2.67",
-    "typescript": "^5.4.3",
-    "autoprefixer": "^10.0.1",
+    "@types/node": "^20",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
     "postcss": "^8",
-    "tailwindcss": "^3.3.0"
+    "tailwindcss": "^3.4.1",
+    "typescript": "^5"
   }
 }

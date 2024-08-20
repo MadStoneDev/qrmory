@@ -5,7 +5,11 @@
 @tailwind utilities;
 
 body {
-  font-family: europa, sans-serif;
+  @apply font-sans;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  @apply font-serif;
 }
 
 .hero-heading span {
@@ -45,40 +49,60 @@ body {
 }
 
 .control-label {
-  margin-bottom: 2rem;
-  color: theme('colors.stone.600');
+  @apply mb-8;
+  
+  @apply text-sm;
+  @apply font-bold;
+  @apply text-stone-500;
 }
 
 .control-input {
-  width: 100%;
-  max-width: 32rem;
+  @apply px-2;
+  @apply pt-2;
+  
+  @apply flex-grow;
 
-  background-color: transparent;
-  border-color: theme('colors.stone.400') !important;
+  @apply bg-transparent;
+  @apply border-stone-400;
+  @apply ring-0;
+  @apply border-0;
+  @apply outline-none;
 
-  color: theme('colors.qrmory-purple-800');
-  font-weight: bold;
+  @apply text-base;
+  @apply text-qrmory-purple-800;
+  @apply font-bold;
 
-  transition: all 3ms ease;
+  @apply transition-all;
+  @apply duration-300;
+  @apply ease-in-out;
+}
+
+.control-input::placeholder {
+  @apply text-stone-400;
+  @apply font-sansLight;
+  @apply text-sm;
+  @apply italic;
+}
+
+.control-input.short,
+.control-input.shorter,
+.control-input.shortest{
+  @apply ml-10;
 }
 
 .control-input.short {
-  margin-left: 10px;
   max-width: 24rem;
 }
-
 .control-input.shorter {
-  margin-left: 10px;
   max-width: 18rem;
 }
 
 .control-input.shortest {
-  margin-left: 10px;
   max-width: 12rem;
 }
 
 .control-input:focus {
-  background-color: theme('colors.stone.50');
+  @apply bg-stone-100;
 }
 
 input {
@@ -118,4 +142,16 @@ input {
 #download-button:disabled {
   /*background-color: theme('colors.stone.500') !important;*/
   box-shadow: none;
+}
+
+/* under md: */
+@media (max-width: 767px) {
+  .control-input {
+    @apply text-sm;
+  }
+}
+
+/* md: */
+@media (min-width: 768px) {
+  
 }
