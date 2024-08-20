@@ -9,6 +9,9 @@ const config: Config = {
   theme: {
     extend: {
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 212a675f (rebuild the base site)
       screens: {
         xs: { min: "0", max: "475px" },
         sm: { min: "476px" },
@@ -34,6 +37,7 @@ const config: Config = {
         "main-card": "1200px",
         "lg.5": "34rem",
       },
+<<<<<<< HEAD
       backgroundImage: {
         hero: "url('/img/header-bg.webp')",
       },
@@ -82,6 +86,50 @@ const config: Config = {
         "gradient-conic":
           "conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))",
 >>>>>>> d208da0f (Initial commit from Create Next App)
+=======
+      backgroundImage: {
+        hero: "url('/img/header-bg.webp')",
+      },
+      backgroundSize: {
+        hero: "cover",
+      },
+      backgroundPosition: {
+        hero: "center",
+      },
+      borderWidth: {
+        1: "1px",
+      },
+      fontFamily: {
+        sans: ["margin-mvb", "sans-serif"],
+        sansLight: ["margin-mvb-light", "sans-serif"],
+        serif: ["quatro-slab", "serif"],
+        header: ["marydale", "sans-serif"],
+      },
+      colors: {
+        "qrmory-purple-100": "#F0D0F7",
+        "qrmory-purple-200": "#DEA4F0",
+        "qrmory-purple-300": "#B66FD2",
+        "qrmory-purple-400": "#8444A6",
+        "qrmory-purple-500": "#49176B",
+        "qrmory-purple-600": "#39105C",
+        "qrmory-purple-700": "#2A0B4D",
+        "qrmory-purple-800": "#1E073E",
+        "qrmory-purple-900": "#150433",
+      },
+      fontSize: {
+        "4.5xl": [
+          "2.5rem",
+          {
+            lineHeight: "1",
+          },
+        ],
+      },
+      fontWeight: {
+        sans: "300",
+      },
+      translate: {
+        1.75: "0.4375rem",
+>>>>>>> 212a675f (rebuild the base site)
       },
     },
   },

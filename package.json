@@ -9,10 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
-<<<<<<< HEAD
     "d3-svg-to-png": "^0.3.1",
-=======
->>>>>>> ca724e72 (install next-qrcode)
     "next": "14.2.5",
     "next-qrcode": "^2.5.1",
     "react": "^18",
