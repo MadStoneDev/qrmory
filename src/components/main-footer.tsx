@@ -24,13 +24,13 @@ export default function MainFooter() {
   ];
 
   return (
-    <footer className="mx-auto my-8 py-8 px-8 w-full max-w-7xl border-t-1 border-stone-300 text-qrmory-purple-800">
+    <footer className="mx-auto mt-8 py-8 px-8 w-full max-w-7xl border-t-1 border-stone-300 text-qrmory-purple-800">
       <div className="mx-auto flex md:flex-row flex-col md:justify-between justify-center items-stretch md:gap-4 gap-16 w-full md:text-left text-center">
         <article className="flex flex-col md:w-1/4 w-full md:items-start items-center">
           <a href="/">
             <FullLogo className="mb-2 w-12 sm:w-16 fill-qrmory-purple-800" />
           </a>
-          <p className="mt-4 mb-0 sm:mb-8 max-w-60 sm:max-w-none text-sm sm:text-base">
+          <p className="mt-4 max-w-60 sm:max-w-none text-sm sm:text-base">
             Generate an arsenal of great QR Codes simply and quickly with
             QRmory.
           </p>
