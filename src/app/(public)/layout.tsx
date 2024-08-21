@@ -1,12 +1,14 @@
-import "./globals.css";
+import "../globals.css";
 import React from "react";
 import MainNavigation from "@/components/main-navigation";
 import MainFooter from "@/components/main-footer";
 
 export const metadata = {
   title: "QRmory - Generate an arsenal of QR Codes",
-  description: "",
+  description:
+    "A simple, easy to use QR code generator for Australian small businesses.",
 };
+6;
 
 export default function RootLayout({
   children,
@@ -17,7 +19,6 @@ export default function RootLayout({
     <html lang="en">
       <body>
         {children}
-
         <MainFooter />
       </body>
     </html>
