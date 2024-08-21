@@ -24,7 +24,7 @@ export default function MainFooter() {
   ];
 
   return (
-    <footer className="mx-auto mt-8 py-8 px-8 w-full max-w-7xl border-t-1 border-stone-300 text-qrmory-purple-800">
+    <footer className="mx-auto py-8 px-8 w-full max-w-7xl border-t-1 border-stone-300 text-qrmory-purple-800">
       <div className="mx-auto flex md:flex-row flex-col md:justify-between justify-center items-stretch md:gap-4 gap-16 w-full md:text-left text-center">
         <article className="flex flex-col md:w-1/4 w-full md:items-start items-center">
           <a href="/">

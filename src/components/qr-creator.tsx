@@ -10,7 +10,7 @@ import { qrControls } from "@/libs/qr-control-object";
 
 export default function QRCreator() {
   // States
-  const [qrTitle, setQRTitle] = useState("Made with QRmory!");
+  const [qrTitle, setQRTitle] = useState("");
   const [qrValue, setQRValue] = useState("Welcome to QRmory!");
   const [textValue, setTextValue] = useState("");
   const [newQR, setNewQR] = useState(true);
@@ -23,6 +23,7 @@ export default function QRCreator() {
     qrControls["website"].component(setTextValue, setQRChanged, setNewQR),
   );
 
+  // Hooks
   const { SVG } = useQRCode();
 
   // Data
@@ -34,6 +35,31 @@ export default function QRCreator() {
     "My New QR Code",
     "QR Codes are fun",
     "I Love QRmory",
+    "Scan Me, Maybe?",
+    "QR Code Magic",
+    "Unlock the Fun!",
+    "QR-tastic!",
+    "Your QR Adventure Begins",
+    "Code of Wonders",
+    "Dive into QRmory",
+    "Scan and Be Amazed",
+    "QR Code Extravaganza",
+    "The QR Code Chronicles",
+    "Discover the QR Secret",
+    "Your QR Code Awaits!",
+    "Scan for a Surprise!",
+    "QR Code Quest",
+    "Get QR Smart!",
+    "The QR Code Treasure",
+    "QR Codes: The New Black",
+    "The Code That Rocks!",
+    "Join the QR Revolution",
+    "The Ultimate QR Code Experience",
+    "Finding QRmory",
+    "QRmory Begins",
+    "QR Code Knight Rises",
+    "The One with the Scan",
+    "Stranger QR Things",
   ];
 
   // Functions
@@ -41,18 +67,17 @@ export default function QRCreator() {
     const svgData = document.querySelector("#final-qr div svg");
     if (!svgData) return;
 
-    const serializer = new XMLSerializer();
-    const svgString = serializer.serializeToString(svgData);
-
     // Pass SVG string to d3ToPng
-    d3ToPng(svgString, qrTitle, {
+    d3ToPng(`#final-qr div svg`, qrTitle, {
       format: format,
-    }).then((r) => console.log(r));
+    }).then((r) => console.log(`Downloaded ${format} file`));
   };
 
   // Effects
   useEffect(() => {
-    setQRSVG(document.querySelector("#final-qr.div.svg"));
+    setQRTitle(
+      suggestedTitles[Math.floor(Math.random() * suggestedTitles.length)],
+    );
   }, []);
 
   return (
