@@ -11,17 +11,17 @@ export default function AuthLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`bg-qrmory-purple-500 w-full h-screen overflow-y-auto`}>
+      <body className={`bg-qrmory-purple-800 w-full h-screen overflow-y-auto`}>
         <main className={`grid md:grid-cols-2 w-full h-full`}>
           <section
-            className={`px-3 absolute md:relative top-2 grid md:place-items-center w-full md:h-full z-10`}
+            className={`px-3 absolute md:relative top-4 md:top-0 left-2 md:left-0 grid md:place-items-center w-full md:h-full z-10`}
           >
             <Link
               href={"/"}
               className={`md:hover:scale-110 transition-all duration-300`}
             >
               <Logo
-                className={`fill-qrmory-purple-500 md:fill-white w-16 md:w-24`}
+                className={`fill-qrmory-purple-500 md:fill-white w-16 md:w-32`}
               />
             </Link>
           </section>
