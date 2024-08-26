@@ -18,19 +18,25 @@ export default function PrivateNavigation() {
             <IconDashboard size={30} strokeWidth={1.75} />
           </NavItem>
 
-          <div className={`ml-2 w-8 h-[1px] border-b border-stone-200`}></div>
+          <div
+            className={`sm:ml-2 w-8 h-[1px] border-b border-stone-200`}
+          ></div>
 
-          <NavItem href={"/dashboard/new"} title={"Create"}>
+          <NavItem href={"/dashboard/create"} title={"Create"}>
             <IconPencilPlus size={30} strokeWidth={1.75} />
           </NavItem>
 
-          <div className={`ml-2 w-8 h-[1px] border-b border-stone-200`}></div>
+          <div
+            className={`sm:ml-2 w-8 h-[1px] border-b border-stone-200`}
+          ></div>
 
           <NavItem href={"/dashboard/my-codes"} title={"My Codes"}>
             <IconQrcode size={30} strokeWidth={1.75} />
           </NavItem>
 
-          <div className={`ml-2 w-8 h-[1px] border-b border-stone-200`}></div>
+          <div
+            className={`sm:ml-2 w-8 h-[1px] border-b border-stone-200`}
+          ></div>
 
           <NavItem href={"/dashboard/my-teams"} title={"My Teams"}>
             <IconUsersGroup size={30} strokeWidth={1.75} />
@@ -42,7 +48,9 @@ export default function PrivateNavigation() {
             <IconInfoHexagon size={30} strokeWidth={1.75} />
           </NavItem>
 
-          <div className={`ml-2 w-8 h-[1px] border-b border-stone-200`}></div>
+          <div
+            className={`sm:ml-2 w-8 h-[1px] border-b border-stone-200`}
+          ></div>
 
           <NavItem href={"/dashboard/settings"} title={"Settings"}>
             <IconSettings size={30} strokeWidth={1.75} />
@@ -63,11 +71,11 @@ function NavItem({ href, title, children }: NavItemType) {
   return (
     <Link
       href={href}
-      className={`group p-2 relative flex hover:bg-qrmory-purple-800 hover:text-white transition-all duration-300 ease-in-out`}
+      className={`group sm:p-2 relative flex hover:bg-qrmory-purple-800 hover:text-white transition-all duration-300 ease-in-out`}
     >
       {children}
       <div
-        className={`group-hover:px-2 flex items-center h-full w-fit max-w-0 group-hover:max-w-lg text-white whitespace-nowrap overflow-hidden transition-all duration-300 ease-in-out`}
+        className={`md:group-hover:px-2 flex items-center h-full w-fit max-w-0 md:group-hover:max-w-lg text-white whitespace-nowrap overflow-hidden transition-all duration-300 ease-in-out`}
       >
         {title}
       </div>

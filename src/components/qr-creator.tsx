@@ -8,7 +8,11 @@ import { downloadToSVG } from "@/utils/qr-save";
 
 import { qrControls } from "@/libs/qr-control-object";
 
-export default function QRCreator() {
+export default function QRCreator({
+  withHeading = true,
+}: {
+  withHeading?: boolean;
+}) {
   // States
   const [qrTitle, setQRTitle] = useState("");
   const [qrValue, setQRValue] = useState("Welcome to QRmory!");
@@ -83,24 +87,39 @@ export default function QRCreator() {
   return (
     <div
       id={`start-creating`}
-      className="mx-auto mt-24 mb-16 px-2 lg:px-6 w-full max-w-6xl text-center text-qrmory-purple-800"
+      className={`mx-auto ${
+        withHeading ? "mt-24 px-2" : ""
+      } mb-16 lg:px-6 w-full max-w-6xl text-center text-qrmory-purple-800`}
     >
-      <h2 className="font-header text-3xl sm:text-4.5xl">Start Creating</h2>
-      <h3 className="font-serif text-sm sm:text-xl font-bold uppercase">
-        Go on! Give it a go
-      </h3>
+      {withHeading ? (
+        <>
+          <h2 className="font-header text-3xl lg:text-4.5xl">Start Creating</h2>
+          <h3 className="font-serif text-sm lg:text-xl font-bold uppercase">
+            Go on! Give it a go
+          </h3>
+        </>
+      ) : null}
 
-      <section className="py-16 flex lg:flex-row flex-col lg:items-stretch items-center gap-6 min-h-qr-card w-full">
-        <article className="p-8 flex flex-col grow bg-white rounded-3xl shadow-xl shadow-stone-300">
+      {/* QR Settings */}
+      <section
+        className={`${
+          withHeading ? "py-16" : ""
+        } flex lg:flex-row flex-col lg:items-stretch items-center gap-6 min-h-qr-card w-full`}
+      >
+        <article
+          className={`${
+            withHeading ? "px-4 py-16" : ""
+          } lg:px-8 flex flex-col grow bg-white max-w-full lg:rounded-3xl lg:shadow-xl lg:shadow-stone-300`}
+        >
           {/* QR Control Select */}
-          <div className="mb-4 pb-4 flex flex-row flex-wrap justify-start items-center content-end self-start border-b-2 border-b-stone-100 transition-all">
+          <div className="mb-4 pb-4 flex flex-row flex-wrap justify-start items-center content-end self-start border-b-2 border-stone-100 transition-all">
             {Object.keys(qrControls).map((key) => (
               <article
                 className={`${
                   activeSelector === key
                     ? "bg-qrmory-purple-800 text-white"
                     : "bg-white hover:bg-qrmory-purple-400 border-qrmory-purple-500 hover:border-qrmory-purple-400 hover:text-white"
-                } qr-selector cursor-pointer m-1 py-2 px-5 flex justify-center items-center rounded border text-xs sm:text-sm transition-all duration-300`}
+                } qr-selector cursor-pointer m-1 py-2 px-5 flex justify-center items-center rounded border text-xs lg:text-sm transition-all duration-300`}
                 key={`qr-control-${qrControls[key].title.toLowerCase()}`}
                 data-selector={key}
                 onClick={() => {
@@ -145,7 +164,7 @@ export default function QRCreator() {
             </div>
 
             <button
-              className="mt-8 py-2.5 px-8 hover:enabled:translate-x-1 hover:enabled:-translate-y-1 border disabled:border-none border-qrmory-purple-800 hover:enabled:border-qrmory-purple-400 bg-white disabled:bg-stone-300 hover:enabled:bg-qrmory-purple-400 w-full md:w-44 text-xs sm:text-sm text-qrmory-purple-800 disabled:text-stone-600 hover:enabled:text-white rounded uppercase font-semibold transition-all duration-300"
+              className="mt-8 py-2.5 px-8 hover:enabled:translate-x-1 hover:enabled:-translate-y-1 border disabled:border-none border-qrmory-purple-800 hover:enabled:border-qrmory-purple-400 bg-white disabled:bg-stone-300 hover:enabled:bg-qrmory-purple-400 w-full md:w-44 text-xs lg:text-sm text-qrmory-purple-800 disabled:text-stone-600 hover:enabled:text-white rounded uppercase font-semibold transition-all duration-300"
               onClick={() => {
                 if (textValue.length > 0) {
                   setQRValue(textValue);
@@ -165,8 +184,12 @@ export default function QRCreator() {
           </div>
         </article>
 
+        <div
+          className={`block lg:hidden my-4 w-full h-[1px] bg-stone-300`}
+        ></div>
+
         {/* QR Block */}
-        <article className="pt-8 pb-10 px-10 flex flex-col justify-between w-qr-preview max-w-full bg-white rounded-3xl shadow-xl shadow-stone-300 text-center">
+        <article className="lg:pt-8 lg:pb-10 lg:px-10 self-start lg:self-auto flex flex-col items-start lg:items-auto justify-between lg:w-qr-preview w-full max-w-xs bg-white lg:rounded-3xl lg:shadow-xl lg:shadow-stone-300 text-center">
           <div className="">
             <h4 className="text-xs text-stone-400">Your QR Code Title</h4>
 
@@ -177,7 +200,7 @@ export default function QRCreator() {
 
           <div
             id={`final-qr`}
-            className="my-16 mx-auto text-gray-600 dark:text-gray-600 text-sm"
+            className="my-6 lg:my-16 lg:mx-auto flex-grow text-gray-600 dark:text-gray-600 text-sm"
           >
             <SVG
               text={qrValue}
@@ -192,7 +215,8 @@ export default function QRCreator() {
 
           <button
             className={
-              "mx-auto py-2.5 px-4 grow w-full rounded uppercase font-bold text-xs sm:text-base transition-all" +
+              "mx-auto py-2.5 px-4 grow w-full max-h-12 rounded uppercase font-bold text-xs lg:text-base" +
+              " transition-all" +
               " duration-300" +
               (qrChanged
                 ? " bg-stone-300 text-white"
@@ -213,7 +237,7 @@ export default function QRCreator() {
           <div className="my-2 flex flex-row flex-nowrap gap-2 items-center w-full">
             <button
               className={
-                "py-2.5 px-4 grow rounded uppercase font-bold text-xs sm:text-base transition-all" +
+                "py-2.5 px-4 grow rounded uppercase font-bold text-xs lg:text-base transition-all" +
                 " duration-300" +
                 (qrChanged
                   ? " bg-stone-300 text-white"
@@ -230,7 +254,7 @@ export default function QRCreator() {
 
             <button
               className={
-                "py-2.5 px-4 grow rounded uppercase font-bold text-xs sm:text-base transition-all" +
+                "py-2.5 px-4 grow rounded uppercase font-bold text-xs lg:text-base transition-all" +
                 " duration-300" +
                 (qrChanged
                   ? " bg-stone-300 text-white"

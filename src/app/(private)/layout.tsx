@@ -13,12 +13,16 @@ export default function PrivateLayout({
     <div className={`flex flex-col h-screen max-h-screen overflow-y-auto`}>
       <MainNavigation className={`bg-qrmory-purple-800`} absolute={false} />
 
-      <main className={`flex-grow overflow-y-auto`}>
+      <main className={`flex-grow overflow-hidden`}>
         <div className={`flex flex-row items-stretch h-full`}>
           <section className={`p-4 h-full`}>
             <PrivateNavigation />
           </section>
-          <section className={`p-6 flex-grow`}>{children}</section>
+          <section
+            className={`py-4 sm:py-6 px-2 pr-4 sm:px-6 flex-grow overflow-y-auto`}
+          >
+            {children}
+          </section>
         </div>
       </main>
 
