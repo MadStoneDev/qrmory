@@ -26,25 +26,25 @@ export default function PrivateNavigation() {
 
           <div className={`ml-2 w-8 h-[1px] border-b border-stone-200`}></div>
 
-          <NavItem href={"/"} title={"My Codes"}>
+          <NavItem href={"/dashboard/my-codes"} title={"My Codes"}>
             <IconQrcode size={30} strokeWidth={1.75} />
           </NavItem>
 
           <div className={`ml-2 w-8 h-[1px] border-b border-stone-200`}></div>
 
-          <NavItem href={"/"} title={"My Teams"}>
+          <NavItem href={"/dashboard/my-teams"} title={"My Teams"}>
             <IconUsersGroup size={30} strokeWidth={1.75} />
           </NavItem>
         </article>
 
         <article className={`flex flex-col gap-4`}>
-          <NavItem href={"/"} title={"Account Info"}>
+          <NavItem href={"/dashboard/account"} title={"Account Info"}>
             <IconInfoHexagon size={30} strokeWidth={1.75} />
           </NavItem>
 
           <div className={`ml-2 w-8 h-[1px] border-b border-stone-200`}></div>
 
-          <NavItem href={"/"} title={"Settings"}>
+          <NavItem href={"/dashboard/settings"} title={"Settings"}>
             <IconSettings size={30} strokeWidth={1.75} />
           </NavItem>
         </article>
