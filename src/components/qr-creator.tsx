@@ -87,9 +87,9 @@ export default function QRCreator({
   return (
     <div
       id={`start-creating`}
-      className={`mx-auto ${
-        withHeading ? "mt-24 px-2" : ""
-      } mb-16 lg:px-6 w-full max-w-6xl text-center text-qrmory-purple-800`}
+      className={`${
+        withHeading ? "mx-auto mt-24 px-2 lg:px-6 max-w-6xl" : "px-2"
+      } mb-16 w-full text-center text-qrmory-purple-800`}
     >
       {withHeading ? (
         <>
@@ -190,7 +190,7 @@ export default function QRCreator({
 
         {/* QR Block */}
         <article className="lg:pt-8 lg:pb-10 lg:px-10 self-start lg:self-auto flex flex-col items-start lg:items-auto justify-between lg:w-qr-preview w-full max-w-xs bg-white lg:rounded-3xl lg:shadow-xl lg:shadow-stone-300 text-center">
-          <div className="">
+          <div className="w-full">
             <h4 className="text-xs text-stone-400">Your QR Code Title</h4>
 
             <h5 className="text-base text-qrmory-purple-800 font-bold">
@@ -200,7 +200,7 @@ export default function QRCreator({
 
           <div
             id={`final-qr`}
-            className="my-6 lg:my-16 lg:mx-auto flex-grow text-gray-600 dark:text-gray-600 text-sm"
+            className="my-6 lg:my-16 lg:mx-auto flex-grow grid place-content-center text-gray-600 dark:text-gray-600 text-sm"
           >
             <SVG
               text={qrValue}
