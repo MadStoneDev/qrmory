@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import { useQRCode } from "next-qrcode";
+import { IconPencil } from "@tabler/icons-react";
 
 export default function MyCodes() {
   return (
@@ -39,17 +40,9 @@ function MyCodeItem({
 
   return (
     <article
-      className={`py-3 flex flex-row items-center w-full h-full [&:not(:last-of-type)]:border-b border-stone-300`}
+      className={`py-4 flex flex-row items-center gap-4 w-full h-full [&:not(:last-of-type)]:border-b border-stone-300`}
     >
-      <div className={`flex-grow`}>
-        <h2 className={`font-sans text-lg md:text-xl`}>{title}</h2>
-        <h3 className={`font-sans text-xs`}>{type}</h3>
-      </div>
-
-      {/* Separator */}
-      <div className={`w-[1px] h-full bg-stone-300`}></div>
-
-      <div className={`flex w-12 md:w-20 items-center justify-center`}>
+      <div className={`flex w-8 md:w-12 items-center justify-center`}>
         <div className={`w-full`}>
           <SVG
             text={qrValue}
@@ -60,6 +53,18 @@ function MyCodeItem({
             }}
           />
         </div>
+      </div>
+
+      <div className={`flex-grow`}>
+        <h2 className={`font-serif text-base font-bold`}>{title}</h2>
+        <h3 className={`font-sans text-xs md:ext-sm`}>{type}</h3>
+      </div>
+
+      {/* Separator */}
+      <div className={`w-[1px] h-full bg-stone-300`}></div>
+
+      <div>
+        <IconPencil />
       </div>
     </article>
   );
