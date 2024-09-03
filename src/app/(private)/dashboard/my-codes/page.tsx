@@ -5,7 +5,7 @@ import { IconPencil } from "@tabler/icons-react";
 
 export default function MyCodes() {
   return (
-    <section className={`flex flex-col overflow-y-auto`}>
+    <section className={`flex flex-col w-full`}>
       <h1 className={`mb-4 text-xl font-bold`}>My Codes</h1>
       <MyCodeItem title={"Sample QR Code"} type={"Text"} qrValue={"Hello"} />
       <MyCodeItem title={"Sample QR Code"} type={"Text"} qrValue={"Richard"} />
@@ -40,7 +40,7 @@ function MyCodeItem({
 
   return (
     <article
-      className={`py-4 flex flex-row items-center gap-4 w-full h-full [&:not(:last-of-type)]:border-b border-stone-300`}
+      className={`py-3 sm:py-4 flex flex-row items-center gap-4 w-full h-full [&:not(:last-of-type)]:border-b border-stone-200/70`}
     >
       <div className={`flex w-8 md:w-12 items-center justify-center`}>
         <div className={`w-full`}>
@@ -56,8 +56,8 @@ function MyCodeItem({
       </div>
 
       <div className={`flex-grow`}>
-        <h2 className={`font-serif text-base font-bold`}>{title}</h2>
-        <h3 className={`font-sans text-xs md:ext-sm`}>{type}</h3>
+        <h2 className={`font-serif text-sm sm:text-base font-bold`}>{title}</h2>
+        <h3 className={`font-sans text-xs md:text-sm`}>{type}</h3>
       </div>
 
       {/* Separator */}

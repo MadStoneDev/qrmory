@@ -14,11 +14,11 @@ export default function MainNavigation({
   return (
     <nav
       className={`${className} ${
-        absolute ? "absolute" : "relative"
-      } py-6 px-8 top-0 flex flex-col items-center justify-between w-full`}
+        absolute ? "absolute" : ""
+      } py-6 px-8 top-0 flex flex-col items-center justify-center w-full h-16 sm:h-20`}
     >
       <Link href="/">
-        <Logo className={`w-24`} logoColour={logoColour} />
+        <Logo className={`w-20 sm:w-24`} logoColour={logoColour} />
       </Link>
 
       <section

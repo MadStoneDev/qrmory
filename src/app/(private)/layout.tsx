@@ -10,14 +10,20 @@ export default function PrivateLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <div className={`flex flex-col h-screen max-h-screen overflow-y-auto`}>
-      <MainNavigation className={`bg-qrmory-purple-800`} absolute={false} />
+    <div className={`flex flex-col h-screen max-h-screen`}>
+      <MainNavigation
+        className={`fixed top-0 left-0 right-0 bg-qrmory-purple-800 z-50`}
+        absolute={false}
+      />
 
-      <main className={`flex-grow overflow-hidden`}>
-        <div className={`flex flex-row items-stretch h-full`}>
-          <section className={`p-4 h-full`}>
-            <PrivateNavigation />
-          </section>
+      {/* Block Space for Nav */}
+      <div className={`min-h-20 w-full`}></div>
+
+      <main className={`mb-10 flex-grow flex flex-row gap-2 overflow-hidden`}>
+        <PrivateNavigation className={`py-2 z-50`} />
+
+        {/* Main Block */}
+        <div className={`flex-grow flex flex-row items-stretch h-full`}>
           <section
             className={`py-4 sm:py-6 px-2 pr-4 sm:px-6 flex-grow overflow-y-auto`}
           >
@@ -26,8 +32,10 @@ export default function PrivateLayout({
         </div>
       </main>
 
-      <footer className={`p-2 text-xs text-center opacity-50`}>
-        &copy; 2024 QRmory
+      <footer
+        className={`px-4 fixed bottom-0 w-full h-10 bg-white text-xs text-center text-stone-400`}
+      >
+        <p className={`py-2 border-t border-stone-200`}>&copy; 2024 QRmory</p>
       </footer>
     </div>
   );

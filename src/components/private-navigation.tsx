@@ -9,17 +9,23 @@ import {
   IconUsersGroup,
 } from "@tabler/icons-react";
 
-export default function PrivateNavigation() {
+export default function PrivateNavigation({
+  className = "",
+}: {
+  className?: string;
+}) {
   return (
-    <nav className={`h-full`}>
-      <section className={`flex flex-col items-start justify-between h-full`}>
-        <article className={`flex flex-col items-start gap-4`}>
+    <nav className={`h-full ${className}`}>
+      <section
+        className={`flex flex-col items-start sm:justify-between h-full`}
+      >
+        <article className={`flex flex-col items-start`}>
           <NavItem href={"/dashboard/"} title={"Dashboard"}>
             <IconDashboard size={30} strokeWidth={1.75} />
           </NavItem>
 
           <div
-            className={`sm:ml-2 w-8 h-[1px] border-b border-stone-200`}
+            className={`ml-2.5 sm:ml-6 w-8 h-[1px] border-b border-stone-200/60`}
           ></div>
 
           <NavItem href={"/dashboard/create"} title={"Create"}>
@@ -27,7 +33,7 @@ export default function PrivateNavigation() {
           </NavItem>
 
           <div
-            className={`sm:ml-2 w-8 h-[1px] border-b border-stone-200`}
+            className={`ml-2.5 sm:ml-6 w-8 h-[1px] border-b border-stone-200/60`}
           ></div>
 
           <NavItem href={"/dashboard/my-codes"} title={"My Codes"}>
@@ -35,21 +41,25 @@ export default function PrivateNavigation() {
           </NavItem>
 
           <div
-            className={`sm:ml-2 w-8 h-[1px] border-b border-stone-200`}
+            className={`ml-2.5 sm:ml-6 w-8 h-[1px] border-b border-stone-200/60`}
           ></div>
 
           <NavItem href={"/dashboard/my-teams"} title={"My Teams"}>
             <IconUsersGroup size={30} strokeWidth={1.75} />
           </NavItem>
+
+          <div
+            className={`sm:hidden ml-2.5 sm:ml-6 w-8 h-[1px] border-b border-stone-200/60`}
+          ></div>
         </article>
 
-        <article className={`flex flex-col gap-4`}>
+        <article className={`flex flex-col`}>
           <NavItem href={"/dashboard/account"} title={"Account Info"}>
             <IconInfoHexagon size={30} strokeWidth={1.75} />
           </NavItem>
 
           <div
-            className={`sm:ml-2 w-8 h-[1px] border-b border-stone-200`}
+            className={`ml-2.5 sm:ml-6 w-8 h-[1px] border-b border-stone-200/60`}
           ></div>
 
           <NavItem href={"/dashboard/settings"} title={"Settings"}>
@@ -71,7 +81,7 @@ function NavItem({ href, title, children }: NavItemType) {
   return (
     <Link
       href={href}
-      className={`group sm:p-2 relative flex hover:bg-qrmory-purple-800 hover:text-white transition-all duration-300 ease-in-out`}
+      className={`group px-3 sm:px-6 py-3 sm:py-4 hover:bg-qrmory-purple-800 hover:text-white relative flex transition-all duration-500 ease-in-out`}
     >
       {children}
       <div
