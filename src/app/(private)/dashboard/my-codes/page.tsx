@@ -20,7 +20,11 @@ export default function MyCodes() {
       <MyCodeItem title={"Sample QR Code"} type={"Text"} qrValue={"Hello"} />
       <MyCodeItem title={"Sample QR Code"} type={"Text"} qrValue={"Richard"} />
       <MyCodeItem title={"Sample QR Code"} type={"Text"} qrValue={"Hello"} />
-      <MyCodeItem title={"Sample QR Code"} type={"Text"} qrValue={"Richard"} />
+      <MyCodeItem
+        title={"This is the title of a really long sample QR Code"}
+        type={"Text"}
+        qrValue={"Richard"}
+      />
     </section>
   );
 }
@@ -42,7 +46,7 @@ function MyCodeItem({
     <article
       className={`py-3 sm:py-4 flex flex-row items-center gap-4 w-full h-full [&:not(:last-of-type)]:border-b border-stone-200/70`}
     >
-      <div className={`flex w-8 md:w-12 items-center justify-center`}>
+      <div className={`flex min-w7-12 items-center justify-center`}>
         <div className={`w-full`}>
           <SVG
             text={qrValue}
