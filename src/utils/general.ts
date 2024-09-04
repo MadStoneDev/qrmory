@@ -1,5 +1,7 @@
-﻿export const cleanTitle = (title: string) => {
-  return title.replace(" ", "-").toLowerCase();
+﻿export const cleanTitle = (title: string, makeLowercase = false) => {
+  const cleanedUpTitle = title.replace(" ", "-");
+
+  return makeLowercase ? cleanedUpTitle.toLowerCase() : cleanedUpTitle;
 };
 
 export const isValidURL = (urlString: string): boolean => {
