@@ -1,4 +1,3 @@
-import "../globals.css";
 import React from "react";
 
 import MainNavigation from "@/components/main-navigation";

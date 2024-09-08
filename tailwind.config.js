@@ -1,16 +1,21 @@
-import type { Config } from "tailwindcss";
-
-const config: Config = {
+/** @type {import('tailwindcss').Config} */
+module.exports = {
+  darkMode: ["class"],
   content: [
     "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
-    "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
+    "./src/app/app/**/*.{js,ts,jsx,tsx,mdx}",
   ],
   theme: {
     extend: {
       screens: {
-        xs: { min: "0", max: "475px" },
-        sm: { min: "476px" },
+        xs: {
+          min: "0",
+          max: "475px",
+        },
+        sm: {
+          min: "476px",
+        },
       },
       spacing: {
         4.5: "18px",
@@ -63,12 +68,7 @@ const config: Config = {
         "qrmory-purple-900": "#150433",
       },
       fontSize: {
-        "4.5xl": [
-          "2.5rem",
-          {
-            lineHeight: "1",
-          },
-        ],
+        "4.5xl": ["2.5rem", { lineHeight: "1" }],
       },
       fontWeight: {
         sans: "300",
@@ -76,8 +76,12 @@ const config: Config = {
       translate: {
         1.75: "0.4375rem",
       },
+      borderRadius: {
+        lg: "var(--radius)",
+        md: "calc(var(--radius) - 2px)",
+        sm: "calc(var(--radius) - 4px)",
+      },
     },
   },
-  plugins: [],
+  plugins: [require("tailwindcss-animate")],
 };
-export default config;

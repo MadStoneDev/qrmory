@@ -4,7 +4,7 @@ import { stripe } from "@/utils/stripe/config";
 import { createClient } from "@supabase/supabase-js";
 
 import Stripe from "stripe";
-import type { Database, Tables, TablesInsert } from "../../../types_db";
+import type { Database, Tables, TablesInsert } from "@/types_db";
 
 type Product = Tables<"products">;
 type Price = Tables<"prices">;
@@ -228,7 +228,7 @@ const copyBillingDetailsToCustomer = async (
   //@ts-ignore
   await stripe.customers.update(customer, { name, phone, address });
   const { error: updateError } = await supabaseAdmin
-    .from("users")
+    .from("accounts")
     .update({
       billing_address: { ...address },
       payment_method: { ...payment_method[payment_method.type] },
@@ -263,7 +263,7 @@ const manageSubscriptionStatusChange = async (
     id: subscription.id,
     user_id: uuid,
     metadata: subscription.metadata,
-    status: subscription.status,
+    // status: subscription.status,
     price_id: subscription.items.data[0].price.id,
     //TODO check quantity on subscription
     // @ts-ignore
