@@ -27,7 +27,7 @@ h1, h2, h3, h4, h5, h6 {
   font-size: 1.5rem;
   font-weight: bold;
   line-height: 2rem;
-  /*color: theme('colors.qrmory-purple-500');*/
+  color: theme('colors.qrmory-purple-500');
 }
 
 .policy-document h4 {
@@ -37,7 +37,7 @@ h1, h2, h3, h4, h5, h6 {
   font-weight: bold;
   line-height: 1.5rem;
 
-  /*color: theme('colors.qrmory-purple-800');*/
+  color: theme('colors.qrmory-purple-800');
 }
 
 .policy-document p {
@@ -69,7 +69,7 @@ h1, h2, h3, h4, h5, h6 {
   @apply outline-none;
 
   @apply text-base;
-  /*@apply text-qrmory-purple-800;*/
+  @apply text-qrmory-purple-800;
   @apply font-bold;
 
   @apply transition-all;
@@ -79,7 +79,7 @@ h1, h2, h3, h4, h5, h6 {
 
 .control-input::placeholder {
   @apply text-stone-400;
-  /*@apply font-sansLight;*/
+  @apply font-sansLight;
   @apply text-sm;
   @apply italic;
 }
@@ -116,12 +116,12 @@ input {
   transition-timing-function: ease, ease !important;
 }
 
-/*.qr-selector.active {*/
-/*  background-color: theme('colors.qrmory-purple-800') !important;*/
-/*  color: white !important;*/
+.qr-selector.active {
+  background-color: theme('colors.qrmory-purple-800') !important;
+  color: white !important;
 
-/*  box-shadow: 0 12px 20px -5px theme('colors.qrmory-purple-600');*/
-/*}*/
+  box-shadow: 0 12px 20px -5px theme('colors.qrmory-purple-600');
+}
 
 .qr-selector.active #selector-descriptor {
   display: none;
@@ -136,7 +136,7 @@ input {
 #selector-block-head.disabled,
 #selector-block-foot.disabled {
   cursor: initial;
-  /*color: theme('colors.qrmory-purple-200') !important;*/
+  color: theme('colors.qrmory-purple-200') !important;
 }
 
 #download-button:disabled {

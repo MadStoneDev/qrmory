@@ -9,6 +9,8 @@ interface Props {
   options: Option[];
   className?: string;
   onChange?: (value: string) => void;
+  prefix?: string;
+  suffix?: string;
   value?: string;
 }
 
@@ -16,6 +18,8 @@ export default function SelectSwitch({
   options = [],
   className,
   onChange,
+  prefix = "",
+  suffix = "",
   value: propValue,
   ...props
 }: Props) {
@@ -38,28 +42,35 @@ export default function SelectSwitch({
     (option) => option.value === currentValue,
   );
 
+  console.log(options.length);
+
   return (
     <article
-      className={`m-2 p-1 relative grid grid-cols-${options.length} max-w-xs bg-stone-200 ${className}`}
+      className={`m-2 p-1 relative grid max-w-xs bg-stone-200 ${className}`}
+      style={{
+        gridTemplateColumns: `repeat(${options.length}, minmax(0, 1fr))`,
+      }}
       {...props}
     >
       {options.map((option, index) => (
         <button
           key={option.value}
-          className={`p-2 text-center z-10 transition-all duration-200 text-sm tracking-wide ${
+          className={`p-2 col-span-1 text-center z-10 transition-all duration-200 text-sm tracking-wide ${
             currentValue === option.value
               ? "text-white"
               : "text-qrmory-purple-800/50"
           }`}
           onClick={() => handleOptionClick(option.value)}
         >
-          {option.label} billing
+          {prefix}
+          {option.label}
+          {suffix}
         </button>
       ))}
       <div
-        className={`absolute left-1.5 top-1.5 bottom-1.5 bg-qrmory-purple-800 rounded-lg transition-all duration-300`}
+        className={`absolute left-1 top-1 bottom-1 bg-qrmory-purple-800 rounded-lg transition-all duration-300`}
         style={{
-          width: `calc((100% / ${options.length}) - 0.375rem)`,
+          width: `calc((100% / ${options.length}) - 0.125rem)`,
           transform: `translateX(${selectedOptionIndex * 100}%)`,
         }}
       ></div>
