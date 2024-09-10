@@ -1,4 +1,4 @@
-﻿import QRCreator from "@/components/qr-creator";
+﻿import QRCreator from "@/components/qr-create/qr-creator";
 
 export default function Create() {
   return (

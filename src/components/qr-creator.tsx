@@ -22,7 +22,6 @@ export default function QRCreator({
   const [activeSelector, setActiveSelector] = useState("website");
   const [qrChanged, setQRChanged] = useState(true);
 
-  const [qrSVG, setQRSVG] = useState<Element | null>(null);
   const [qrControl, setQRControl] = useState<JSX.Element | null>(
     qrControls["website"].component(setTextValue, setQRChanged, setNewQR),
   );
@@ -108,8 +107,8 @@ export default function QRCreator({
       >
         <article
           className={`${
-            withHeading ? "px-4 py-16" : ""
-          } lg:px-8 flex flex-col grow bg-white max-w-full lg:rounded-3xl lg:shadow-xl lg:shadow-stone-300`}
+            withHeading ? "px-4 py-16" : "px-4 py-4"
+          } lg:px-8 flex flex-col grow bg-stone-100 max-w-full lg:rounded-3xl lg:shadow-xl lg:shadow-stone-300`}
         >
           {/* QR Control Select */}
           <div className="mb-4 pb-4 flex flex-row flex-wrap justify-start items-center content-end self-start border-b-2 border-stone-100 transition-all">
@@ -184,12 +183,12 @@ export default function QRCreator({
           </div>
         </article>
 
-        <div
+        <article
           className={`block lg:hidden my-4 w-full h-[1px] bg-stone-300`}
-        ></div>
+        ></article>
 
         {/* QR Block */}
-        <article className="lg:pt-8 lg:pb-10 lg:px-10 self-start lg:self-auto flex flex-col items-start lg:items-auto justify-between lg:w-qr-preview w-full max-w-xs bg-white lg:rounded-3xl lg:shadow-xl lg:shadow-stone-300 text-center">
+        <article className="p-4 lg:pt-8 lg:pb-10 lg:px-10 self-start lg:self-auto flex flex-col items-start lg:items-auto justify-between lg:w-qr-preview w-full max-w-xs bg-stone-100 lg:rounded-3xl lg:shadow-xl lg:shadow-stone-300 text-center">
           <div className="w-full">
             <h4 className="text-xs text-stone-400">Your QR Code Title</h4>
 
