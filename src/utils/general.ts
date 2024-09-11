@@ -82,7 +82,7 @@ export const generateShortCode = (codeLength: number) => {
     let numberProbability;
 
     if (numberCount === 1) {
-      numberProbability = 0.25; // 25% chance for second number
+      numberProbability = 0.15; // 15% chance for second number
     } else if (numberCount === 2) {
       numberProbability = 0.1; // 10% chance for third number
     } else {
@@ -105,6 +105,6 @@ export const generateShortCode = (codeLength: number) => {
     .sort(() => Math.random() - 0.5)
     .join("");
 
-  console.log(newShortCode);
+  console.log(newShortCode, numberCount);
   return newShortCode;
 };

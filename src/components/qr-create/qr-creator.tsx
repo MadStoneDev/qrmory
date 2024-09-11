@@ -3,15 +3,16 @@
 import React, { useState, useEffect } from "react";
 import QRSettings from "./qr-settings";
 import QRPreview from "./qr-preview";
-import d3ToPng from "d3-svg-to-png";
 
 interface QRCreatorProps {
   withHeading?: boolean;
+  shadow?: boolean;
   user: any;
 }
 
 export default function QRCreator({
   withHeading = true,
+  shadow = false,
   user = null,
 }: QRCreatorProps) {
   const [qrTitle, setQRTitle] = useState("");
@@ -109,6 +110,7 @@ export default function QRCreator({
           initialTextValue={textValue}
           initialQRChanged={qrChanged}
           initialActiveSelector={activeSelector}
+          shadow={shadow}
           user={user}
           onUpdate={handleQRSettingsUpdate}
         />
@@ -117,6 +119,7 @@ export default function QRCreator({
           qrTitle={qrTitle}
           qrValue={qrValue}
           qrChanged={qrChanged}
+          shadow={shadow}
           user={user}
         />
       </section>

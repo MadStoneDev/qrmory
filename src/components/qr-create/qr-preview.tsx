@@ -9,6 +9,7 @@ interface Props {
   qrTitle: string;
   qrValue: string;
   qrChanged: boolean;
+  shadow?: boolean;
   user: any;
 }
 
@@ -16,6 +17,7 @@ export default function QRPreview({
   qrTitle,
   qrValue,
   qrChanged,
+  shadow,
   user,
 }: Props) {
   const { SVG } = useQRCode();
@@ -30,7 +32,13 @@ export default function QRPreview({
   };
 
   return (
-    <article className="p-4 lg:pt-8 lg:pb-10 lg:px-10 self-start lg:self-auto flex flex-col items-start lg:items-auto justify-between lg:w-qr-preview w-full max-w-xs bg-white lg:rounded-3xl lg:shadow-xl lg:shadow-stone-300/50 text-center">
+    <article
+      className={`mx-auto p-4 lg:pt-8 lg:pb-10 lg:px-10 self-start lg:self-auto flex flex-col items-center lg:items-auto justify-between lg:w-qr-preview w-full sm:max-w-xs bg-white ${
+        shadow
+          ? "rounded-3xl shadow-xl shadow-stone-300/50"
+          : "lg:rounded-3xl lg:shadow-xl lg:shadow-stone-300/50"
+      } text-center`}
+    >
       <div className="w-full">
         <h4 className="text-xs text-stone-400">Your QR Code Title</h4>
         <h5 className="text-base text-qrmory-purple-800 font-bold">

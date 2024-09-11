@@ -1,12 +1,14 @@
 ﻿import React, { useState, useEffect } from "react";
 import { qrControls } from "@/libs/qr-control-object";
 import { generateShortCode } from "@/utils/general";
+import { IconDeviceFloppy } from "@tabler/icons-react";
 
 interface Props {
   initialQRTitle: string;
   initialTextValue: string;
   initialQRChanged: boolean;
   initialActiveSelector: string;
+  shadow?: boolean;
   user: any;
   onUpdate: (updates: {
     qrTitle?: string;
@@ -22,6 +24,7 @@ export default function QRSettings({
   initialTextValue,
   initialQRChanged,
   initialActiveSelector,
+  shadow = false,
   user,
   onUpdate,
 }: Props) {
@@ -31,6 +34,8 @@ export default function QRSettings({
   const [qrChanged, setQRChanged] = useState(initialQRChanged);
   const [activeSelector, setActiveSelector] = useState(initialActiveSelector);
   const [newQR, setNewQR] = useState(true);
+
+  const [isDynamic, setIsDynamic] = useState(false);
 
   // Update internal state when props changed
   useEffect(() => {
@@ -96,7 +101,11 @@ export default function QRSettings({
 
   return (
     <article
-      className={`px-4 py-4 lg:px-8 flex flex-col grow bg-white max-w-full lg:rounded-3xl lg:shadow-xl lg:shadow-stone-300/50`}
+      className={`p-4 sm:p-6 lg:px-8 flex flex-col grow bg-white max-w-full ${
+        shadow
+          ? "sm:rounded-3xl sm:shadow-xl shadow-stone-300/50"
+          : "lg:rounded-3xl lg:shadow-xl lg:shadow-stone-300/50"
+      }`}
     >
       <div className="mb-4 pb-4 flex flex-row flex-wrap justify-start items-center content-end self-start border-b-2 border-stone-100 transition-all">
         {Object.keys(qrControls).map((key) => (
@@ -135,9 +144,9 @@ export default function QRSettings({
           <div className="relative w-full">{qrControl}</div>
         </div>
 
-        <section className={`flex gap-2`}>
+        <section className={`mt-8 flex flex-col sm:flex-row gap-2`}>
           <button
-            className="mt-8 py-2.5 px-8 hover:enabled:translate-x-1 hover:enabled:-translate-y-1 border disabled:border-none border-qrmory-purple-800 hover:enabled:border-qrmory-purple-400 bg-white disabled:bg-stone-300 hover:enabled:bg-qrmory-purple-400 w-full md:w-44 text-xs lg:text-sm text-qrmory-purple-800 disabled:text-stone-600 hover:enabled:text-white rounded uppercase font-semibold transition-all duration-300"
+            className="py-2.5 px-8 hover:enabled:translate-x-1 hover:enabled:-translate-y-1 border disabled:border-none border-qrmory-purple-800 hover:enabled:border-qrmory-purple-400 bg-white disabled:bg-stone-300 hover:enabled:bg-qrmory-purple-400 w-full md:w-44 text-xs lg:text-sm text-qrmory-purple-800 disabled:text-stone-600 hover:enabled:text-white rounded uppercase font-semibold transition-all duration-300"
             onClick={handleGenerateQR}
             disabled={textValue.length === 0}
           >
@@ -146,14 +155,34 @@ export default function QRSettings({
 
           {!user && (
             <button
-              className="mt-8 py-2.5 px-8 hover:enabled:translate-x-1 hover:enabled:-translate-y-1 border disabled:border-none border-qrmory-purple-800 hover:enabled:border-qrmory-purple-400 bg-white disabled:bg-stone-300 hover:enabled:bg-qrmory-purple-400 w-full md:w-44 text-xs lg:text-sm text-qrmory-purple-800 disabled:text-stone-600 hover:enabled:text-white rounded uppercase font-semibold transition-all duration-300"
-              onClick={() => generateShortCode(7)}
+              className={`py-2.5 px-8 hover:enabled:translate-x-1 hover:enabled:-translate-y-1 border disabled:border-none border-qrmory-purple-800 hover:enabled:border-qrmory-purple-400 ${
+                isDynamic
+                  ? "bg-qrmory-purple-800 text-white"
+                  : "bg-white disabled:bg-stone-300 hover:enabled:bg-qrmory-purple-400 text-qrmory-purple-800 disabled:text-stone-600"
+              } w-full md:w-44 text-xs lg:text-sm hover:enabled:text-white rounded uppercase font-semibold transition-all duration-300`}
+              onClick={() => setIsDynamic(!isDynamic)}
               disabled={false}
             >
               Make Dynamic
             </button>
           )}
         </section>
+
+        {!user && (
+          <section>
+            <button
+              className={`mt-2 py-2.5 px-2.5 flex items-center justify-center gap-1 hover:enabled:translate-x-1 hover:enabled:-translate-y-1 border disabled:border-none border-qrmory-purple-800 hover:enabled:border-qrmory-purple-400 ${
+                isDynamic
+                  ? "bg-qrmory-purple-800 text-white"
+                  : "bg-white disabled:bg-stone-300 hover:enabled:bg-qrmory-purple-400 text-qrmory-purple-800 disabled:text-stone-600"
+              } w-full md:w-44 text-xs lg:text-sm hover:enabled:text-white rounded uppercase font-semibold transition-all duration-300`}
+              onClick={() => setIsDynamic(!isDynamic)}
+              disabled={!qrChanged || textValue.length === 0}
+            >
+              <IconDeviceFloppy /> Save QR Code
+            </button>
+          </section>
+        )}
 
         {qrChanged && !newQR && (
           <p className="mt-4 text-rose-500 text-sm">
