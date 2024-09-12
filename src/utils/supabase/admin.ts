@@ -12,6 +12,9 @@ type Price = Tables<"prices">;
 // Change to control trial period length
 const TRIAL_PERIOD_DAYS = 0;
 
+// Current Project
+const CURRENT_PLATFORM = "qrmory";
+
 // Note: supabaseAdmin uses the SERVICE_ROLE_KEY which you must only use in a secure server-side context
 // as it has full access to your database and can overwrite RLS policies!
 const supabaseAdmin = createClient<Database>(
@@ -20,6 +23,11 @@ const supabaseAdmin = createClient<Database>(
 );
 
 const upsertProductRecord = async (product: Stripe.Product) => {
+  // Check if product belongs to the current platform
+  if (product.metadata?.platform !== CURRENT_PLATFORM) {
+    return;
+  }
+
   const productData: Product = {
     id: product.id,
     active: product.active,
@@ -45,6 +53,11 @@ const upsertPriceRecord = async (
   retryCount = 0,
   maxRetries = 3,
 ) => {
+  const product = await stripe.products.retrieve(price.product as string);
+  if (product.metadata?.platform !== CURRENT_PLATFORM) {
+    return;
+  }
+
   const priceData: Price = {
     id: price.id,
     product_id: typeof price.product === "string" ? price.product : "",
