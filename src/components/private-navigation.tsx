@@ -17,7 +17,7 @@ export default function PrivateNavigation({
   return (
     <nav className={`h-full ${className}`}>
       <section
-        className={`flex flex-col items-start sm:justify-between h-full`}
+        className={`flex flex-col items-start sm:justify-between h-full text-qrmory-purple-800 hover:opacity-100 transition-all duration-300 ease-in-out`}
       >
         <article className={`flex flex-col items-start`}>
           <NavItem href={"/dashboard/"} title={"Dashboard"}>
@@ -40,13 +40,13 @@ export default function PrivateNavigation({
             <IconQrcode size={30} strokeWidth={1.75} />
           </NavItem>
 
-          <div
-            className={`ml-2.5 sm:ml-6 w-8 h-[1px] border-b border-stone-200/60`}
-          ></div>
+          {/*<div*/}
+          {/*  className={`ml-2.5 sm:ml-6 w-8 h-[1px] border-b border-stone-200/60`}*/}
+          {/*></div>*/}
 
-          <NavItem href={"/dashboard/my-teams"} title={"My Teams"}>
-            <IconUsersGroup size={30} strokeWidth={1.75} />
-          </NavItem>
+          {/*<NavItem href={"/dashboard/my-teams"} title={"My Teams"}>*/}
+          {/*  <IconUsersGroup size={30} strokeWidth={1.75} />*/}
+          {/*</NavItem>*/}
 
           <div
             className={`sm:hidden ml-2.5 sm:ml-6 w-8 h-[1px] border-b border-stone-200/60`}

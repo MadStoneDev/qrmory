@@ -46,7 +46,7 @@ export default function Home() {
         smartly. Trust us, it's riveting stuff! 😉
       </p>
 
-      <section>{/* TODO: Add a FAQ Section */}</section>
+      <section>{/* TODO Sprint#3: Add a FAQ Section */}</section>
     </main>
   );
 }

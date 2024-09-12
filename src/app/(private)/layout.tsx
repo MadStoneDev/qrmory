@@ -16,15 +16,15 @@ export default function PrivateLayout({
       />
 
       {/* Block Space for Nav */}
-      <div className={`min-h-20 w-full`}></div>
+      <div className={`min-h-16 sm:min-h-20 w-full`}></div>
 
-      <main className={`mb-10 flex-grow flex flex-row gap-2 overflow-y-auto`}>
+      <main className={`mb-10 flex-grow flex flex-row overflow-y-auto`}>
         <PrivateNavigation className={`py-2 z-50`} />
 
         {/* Main Block */}
-        <div className={`flex-grow flex flex-row items-stretch`}>
+        <div className={`flex-grow flex flex-row justify-center items-stretch`}>
           <section
-            className={`py-4 sm:py-6 px-2 pr-4 sm:px-6 flex-grow overflow-y-auto`}
+            className={`py-4 sm:py-6 px-2 pr-4 sm:px-6 flex-grow bg-stone-100 shadow-2xl shadow-stone-400 overflow-y-auto`}
           >
             {children}
           </section>
