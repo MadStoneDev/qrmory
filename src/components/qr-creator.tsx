@@ -6,7 +6,7 @@ import d3ToPng from "d3-svg-to-png";
 import { useQRCode } from "next-qrcode";
 import { downloadToSVG } from "@/utils/qr-save";
 
-import { qrControls } from "@/libs/qr-control-object";
+import { qrControls } from "@/lib/qr-control-object";
 
 export default function QRCreator({
   withHeading = true,

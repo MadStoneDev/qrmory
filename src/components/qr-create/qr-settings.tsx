@@ -1,7 +1,9 @@
 ﻿import React, { useState, useEffect } from "react";
-import { qrControls } from "@/libs/qr-control-object";
-import { generateShortCode } from "@/utils/general";
+
+import { qrControls } from "@/lib/qr-control-object";
 import { IconDeviceFloppy } from "@tabler/icons-react";
+
+import { generateShortCode } from "@/utils/general";
 
 interface Props {
   initialQRTitle: string;
