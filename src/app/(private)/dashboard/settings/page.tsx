@@ -73,7 +73,7 @@ export default function SettingsPage() {
             General
           </h3>
           <div
-            className={`py-4 flex flex-col md:flex-row justify-between md:items-center gap-4`}
+            className={`py-2 flex flex-col md:flex-row justify-between md:items-center gap-4`}
           >
             <div className={`flex flex-col gap-4`}>
               <h4 className={`font-sans font-semibold`}>
@@ -105,7 +105,7 @@ export default function SettingsPage() {
           <div className={`w-full h-[1px] bg-stone-200`}></div>
 
           <div
-            className={`py-4 flex flex-col md:flex-row justify-between md:items-center gap-4`}
+            className={`py-2 flex flex-col md:flex-row justify-between md:items-center gap-4`}
           >
             <h4 className={`font-sans font-semibold`}>
               Error Correction Level
@@ -134,7 +134,7 @@ export default function SettingsPage() {
           </h3>
 
           <div
-            className={`py-4 flex flex-col md:flex-row justify-between md:items-center gap-4`}
+            className={`py-2 flex flex-col md:flex-row justify-between md:items-center gap-4`}
           >
             <h4 className={`font-sans font-semibold`}>Default Logo</h4>
             <div className={`w-12 h-12 bg-stone-400`}></div>
@@ -144,7 +144,7 @@ export default function SettingsPage() {
           <div className={`w-full h-[1px] bg-stone-200`}></div>
 
           <div
-            className={`py-4 flex flex-col md:flex-row justify-between md:items-center gap-4`}
+            className={`py-2 flex flex-col md:flex-row justify-between md:items-center gap-4`}
           >
             <h4 className={`font-sans font-semibold`}>Change Password</h4>
             <Dialog>
@@ -215,7 +215,7 @@ export default function SettingsPage() {
           <div className={`w-full h-[1px] bg-stone-200`}></div>
 
           <div
-            className={`py-4 flex flex-col md:flex-row justify-between md:items-center gap-4`}
+            className={`py-2 flex flex-col md:flex-row justify-between md:items-center gap-4`}
           >
             <h4 className={`font-sans font-semibold`}>Deactivate Account</h4>
             <Dialog>
@@ -278,7 +278,7 @@ export default function SettingsPage() {
           <div className={`w-full h-[1px] bg-stone-200`}></div>
 
           <div
-            className={`py-4 flex flex-col md:flex-row justify-between md:items-center gap-4`}
+            className={`py-2 flex flex-col md:flex-row justify-between md:items-center gap-4`}
           >
             <h4 className={`font-sans font-semibold`}>Delete Account</h4>
             <Dialog>

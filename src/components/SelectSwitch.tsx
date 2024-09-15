@@ -42,8 +42,6 @@ export default function SelectSwitch({
     (option) => option.value === currentValue,
   );
 
-  console.log(options.length);
-
   return (
     <article
       className={`m-2 p-1 relative grid max-w-xs bg-stone-200 ${className}`}

@@ -110,31 +110,41 @@ export default function PricingTable({ user, products, subscription }: Props) {
           suffix={` billing`}
           onChange={(value) => setBillingInterval(value as BillingInterval)}
         />
-        <section className={`grid grid-cols-1 sm:grid-cols-6 gap-4`}>
-          {products.map((product) => {
-            const price = product?.prices?.find(
-              (price) => price?.interval === billingInterval,
-            );
-            if (!price) return;
+        <section
+          className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4`}
+        >
+          {products
+            .sort((a, b) => {
+              const priceA =
+                a.prices.find((price) => price.interval === billingInterval)
+                  ?.unit_amount || 0;
+              const priceB =
+                b.prices.find((price) => price.interval === billingInterval)
+                  ?.unit_amount || 0;
+              return priceA - priceB;
+            })
+            .map((product) => {
+              const price = product?.prices?.find(
+                (price) => price?.interval === billingInterval,
+              );
+              if (!price) return;
 
-            return (
-              <section
-                className={`p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4`}
-              >
-                <PricingPackage
-                  key={product.id}
-                  title="Free"
-                  price={price}
-                  description="Sample Description"
-                  subscriptionID="basic"
-                  subscription={subscription}
-                  billingInterval={billingInterval}
-                  // loading={priceIdLoading === price.id}
-                  handleStripeCheckout={() => handleStripeCheckout(price)}
-                />
-              </section>
-            );
-          })}
+              return (
+                <section className={`p-2 grid grid-cols-1`}>
+                  <PricingPackage
+                    key={product.id}
+                    title="Free"
+                    price={price}
+                    description="Sample Description"
+                    subscriptionID="basic"
+                    subscription={subscription}
+                    billingInterval={billingInterval}
+                    // loading={priceIdLoading === price.id}
+                    handleStripeCheckout={() => handleStripeCheckout(price)}
+                  />
+                </section>
+              );
+            })}
         </section>
       </>
     );
@@ -170,7 +180,9 @@ function PricingPackage({
   }).format((price?.unit_amount || 0) / 100);
 
   return (
-    <article className={`bg-stone-100 md:shadow-2xl shadow-stone-300`}>
+    <article
+      className={`col-span-4 bg-stone-100 md:shadow-2xl shadow-stone-300 border border-stone-300`}
+    >
       <div className={`p-4 bg-qrmory-purple-800 font-sans text-white`}>
         <h2 className={`text-lg font-sans font-semibold`}>{title}</h2>
         <h4 className={`text-sm font-sans font-light`}>{description}</h4>
@@ -182,8 +194,17 @@ function PricingPackage({
         <p className={`font-sans`} style={{ fontWeight: 800 }}>
           {price ? (
             <>
-              <span className={`text-3xl md:text-4xl`}>$</span>
-              {priceString}
+              {isNaN(parseInt(priceString[0])) ? (
+                <>
+                  <span className={`text-3xl md:text-4xl`}>
+                    {priceString[0]}
+                  </span>
+                  {priceString.substring(1)}
+                </>
+              ) : (
+                // <span className={`text-3xl md:text-4xl`}>{priceString[0]}</span>
+                { priceString }
+              )}
             </>
           ) : (
             "Free"
