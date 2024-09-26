@@ -1,5 +1,5 @@
 ﻿export const cleanTitle = (title: string, makeLowercase = false) => {
-  const cleanedUpTitle = title.replace(" ", "-");
+  const cleanedUpTitle = title.replaceAll(" ", "-");
 
   return makeLowercase ? cleanedUpTitle.toLowerCase() : cleanedUpTitle;
 };
