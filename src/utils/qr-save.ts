@@ -3,9 +3,12 @@
 export const downloadToSVG = (svgData: null | Node, title: string) => {
   if (!svgData) return;
 
+  const clonedSvg = svgData.cloneNode(true) as SVGElement;
+  clonedSvg.querySelector("path")?.setAttribute("stroke-width", "1");
+
   // Serialize the SVG element to get the SVG source code
   const serializer = new XMLSerializer();
-  const svgSource = serializer.serializeToString(svgData);
+  const svgSource = serializer.serializeToString(clonedSvg);
 
   const svgBlob = new Blob([svgSource], {
     type: "image/svg+xml;charset=utf-8",
