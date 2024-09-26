@@ -1,45 +1,41 @@
 ﻿import { cleanTitle } from "@/utils/general";
 
-export const downloadToSVG = (svgData: null | Node, title: string) => {
+const outlineSVG = async (svgElement: SVGElement) => {
+  const clonedSVG = svgElement.cloneNode(true) as SVGElement;
+  const svgString = new XMLSerializer().serializeToString(clonedSVG);
+
+  try {
+    const response = await fetch(`https://170.64.215.144:3000/outline-svg`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        svg: svgString,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to fetch outline SVG");
+    }
+
+    const { outlinedSVG } = await response.json();
+    return outlinedSVG;
+  } catch (error) {
+    console.error("Error outlineSVG:", error);
+    return svgString;
+  }
+};
+
+export const downloadToSVG = async (svgData: null | Node, title: string) => {
   if (!svgData) return;
 
-  // Clone SVG Node
-  const svgClone = svgData.cloneNode(true) as SVGElement;
+  const cloneData = svgData.cloneNode(true) as SVGElement;
+  cloneData.querySelector("path")!.setAttribute("stroke-width", "1");
 
-  // Convert strokes to fills
-  svgClone.querySelectorAll("path").forEach((path) => {
-    const strokeWidth = parseFloat(path.getAttribute("stroke-width") || "1");
-    const strokeColor = path.getAttribute("stroke") || "black";
-
-    path.setAttribute("fill", strokeColor);
-    path.removeAttribute("stroke");
-    path.removeAttribute("stroke-width");
-
-    // Adjust path to account for stroke width
-    const d = path.getAttribute("d");
-
-    if (d) {
-      const pathData = d.split(" ");
-      const x = parseFloat(pathData[0]);
-      const y = parseFloat(pathData[1]);
-      const width = parseFloat(pathData[2]);
-      const height = parseFloat(pathData[3]);
-
-      const newX = x + strokeWidth / 2;
-      const newY = y + strokeWidth / 2;
-      const newWidth = width - strokeWidth;
-      const newHeight = height - strokeWidth;
-
-      path.setAttribute(
-        "d",
-        `M ${newX} ${newY} h ${newWidth} v ${newHeight} h -${newWidth} Z`,
-      );
-    }
-  });
-
-  // Serialize modified SVG element to get the SVG source code
+  // Serialize the SVG element to get the SVG source code
   const serializer = new XMLSerializer();
-  const svgSource = serializer.serializeToString(svgClone);
+  const svgSource = serializer.serializeToString(cloneData);
 
   const svgBlob = new Blob([svgSource], {
     type: "image/svg+xml;charset=utf-8",
@@ -51,7 +47,7 @@ export const downloadToSVG = (svgData: null | Node, title: string) => {
   downloadLink.href = svgUrl;
   downloadLink.download = cleanTitle(title).length
     ? cleanTitle(title) + ".svg"
-    : "code-from-qrmory.svg";
+    : "awesome-qr.svg";
 
   document.body.appendChild(downloadLink);
 
