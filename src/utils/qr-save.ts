@@ -4,7 +4,23 @@ export const downloadToSVG = (svgData: null | Node, title: string) => {
   if (!svgData) return;
 
   const clonedSvg = svgData.cloneNode(true) as SVGElement;
-  clonedSvg.querySelector("path")?.setAttribute("stroke-width", "1");
+
+  // Set width to match ViewBox
+  clonedSvg.setAttribute("width", "31");
+  clonedSvg.setAttribute("height", "31");
+
+  // Adjust Stroke Width for all paths
+  clonedSvg.querySelectorAll("path").forEach((path) => {
+    path.setAttribute("stroke-width", "1");
+  });
+
+  // Add a Style Tag to Ensure Stroke Width is Applied
+  const styleTag = document.createElementNS(
+    "http://www.w3.org/2000/svg",
+    "style",
+  );
+  styleTag.textContent = `path { vector-effect: non-scaling-stroke; }`;
+  clonedSvg.insertBefore(styleTag, clonedSvg.firstChild);
 
   // Serialize the SVG element to get the SVG source code
   const serializer = new XMLSerializer();
