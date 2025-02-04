@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import QRSettings from "./qr-settings";
 import QRPreview from "./qr-preview";
+import { suggestedTitles } from "@/data/suggested-titles";
 
 interface QRCreatorProps {
   withHeading?: boolean;
@@ -36,53 +37,12 @@ export default function QRCreator({
     if (updates.qrValue !== undefined) setQRValue(updates.qrValue);
   };
 
-  // Data
-  const suggestedTitles = [
-    "New QRmory Code",
-    "Made with QRmory",
-    "QRmory is Awesome",
-    "QRmory Code",
-    "My New QR Code",
-    "QR Codes are fun",
-    "I Love QRmory",
-    "Scan Me, Maybe?",
-    "QR Code Magic",
-    "Unlock the Fun!",
-    "QR-tastic!",
-    "Your QR Adventure Begins",
-    "Code of Wonders",
-    "Dive into QRmory",
-    "Scan and Be Amazed",
-    "QR Code Extravaganza",
-    "The QR Code Chronicles",
-    "Discover the QR Secret",
-    "Your QR Code Awaits!",
-    "Scan for a Surprise!",
-    "QR Code Quest",
-    "Get QR Smart!",
-    "The QR Code Treasure",
-    "QR Codes: The New Black",
-    "The Code That Rocks!",
-    "Join the QR Revolution",
-    "The Ultimate QR Code Experience",
-    "Finding QRmory",
-    "QRmory Begins",
-    "QR Code Knight Rises",
-    "The One with the Scan",
-    "Stranger QR Things",
-  ];
-
   // Effects
   useEffect(() => {
     setQRTitle(
       suggestedTitles[Math.floor(Math.random() * suggestedTitles.length)],
     );
   }, []);
-
-  useEffect(() => {
-    // This effect can be used to perform actions when certain states change
-    // For example, you might want to save the current state to local storage
-  }, [qrTitle, qrValue, textValue, qrChanged, activeSelector]);
 
   return (
     <div

@@ -1,7 +1,7 @@
 ﻿import React, { useState, useEffect } from "react";
 
 import { qrControls } from "@/lib/qr-control-object";
-import { IconDeviceFloppy } from "@tabler/icons-react";
+import { IconBolt, IconDeviceFloppy, IconRocket } from "@tabler/icons-react";
 
 import { generateShortCode } from "@/utils/general";
 
@@ -35,11 +35,51 @@ export default function QRSettings({
   const [textValue, setTextValue] = useState(initialTextValue);
   const [qrChanged, setQRChanged] = useState(initialQRChanged);
   const [activeSelector, setActiveSelector] = useState(initialActiveSelector);
-  const [newQR, setNewQR] = useState(true);
 
   const [isDynamic, setIsDynamic] = useState(false);
 
-  // Update internal state when props changed
+  const [qrControl, setQRControl] = useState(() =>
+    qrControls[activeSelector].component(
+      (value: string) => {
+        setTextValue(value);
+
+        if (value.length > 0) {
+          setQRChanged(true);
+        }
+      },
+      (changed: boolean) => {
+        if (changed) {
+          setQRChanged(true);
+        }
+      },
+    ),
+  );
+
+  // Functions
+  const handleActiveSelector = (key: string) => {
+    setTextValue("");
+    setActiveSelector(key);
+    setQRControl(
+      qrControls[key].component((value: string) => {
+        setTextValue(value);
+        setQRChanged(false);
+      }, setQRChanged),
+    );
+    setQRChanged(true);
+  };
+
+  const handleGenerateQR = () => {
+    if (textValue.length > 0) {
+      onUpdate({
+        qrValue: textValue,
+        qrChanged: false,
+      });
+
+      setQRChanged(false);
+    }
+  };
+
+  // Effects
   useEffect(() => {
     setQRTitle(initialQRTitle);
   }, [initialQRTitle]);
@@ -60,46 +100,6 @@ export default function QRSettings({
       activeSelector,
     });
   }, [qrTitle, textValue, qrChanged, activeSelector]);
-
-  const [qrControl, setQRControl] = useState(() =>
-    qrControls[activeSelector].component(
-      (value: string) => {
-        setTextValue(value);
-        setQRChanged(false);
-        setNewQR(false);
-      },
-      setQRChanged,
-      setNewQR,
-    ),
-  );
-
-  // Functions
-  const handleActiveSelector = (key: string) => {
-    setTextValue("");
-    setActiveSelector(key);
-    setQRControl(
-      qrControls[key].component(
-        (value: string) => {
-          setTextValue(value);
-          setQRChanged(false);
-          setNewQR(false);
-        },
-        setQRChanged,
-        setNewQR,
-      ),
-    );
-    setQRChanged(true);
-  };
-
-  const handleGenerateQR = () => {
-    if (textValue.length > 0) {
-      onUpdate({
-        qrValue: textValue,
-        qrChanged: false,
-      });
-      setQRChanged(false);
-    }
-  };
 
   return (
     <article
@@ -136,7 +136,6 @@ export default function QRSettings({
             className="block py-2 control-input w-full"
             onChange={(el) => {
               setQRTitle(el.target.value);
-              setNewQR(false);
             }}
             value={qrTitle}
           />
@@ -146,51 +145,46 @@ export default function QRSettings({
           <div className="relative w-full">{qrControl}</div>
         </div>
 
-        <section className={`mt-8 flex flex-col sm:flex-row gap-2`}>
-          <button
-            className="py-2.5 px-8 hover:enabled:translate-x-1 hover:enabled:-translate-y-1 border disabled:border-none border-qrmory-purple-800 hover:enabled:border-qrmory-purple-400 bg-white disabled:bg-stone-300 hover:enabled:bg-qrmory-purple-400 w-full md:w-44 text-xs lg:text-sm text-qrmory-purple-800 disabled:text-stone-600 hover:enabled:text-white rounded uppercase font-semibold transition-all duration-300"
-            onClick={handleGenerateQR}
-            disabled={textValue.length === 0}
-          >
-            Generate QR
-          </button>
-
+        <section
+          className={`mt-8 flex flex-col md:flex-row items-center justify-between gap-2`}
+        >
           {!user && (
-            <button
-              className={`py-2.5 px-8 hover:enabled:translate-x-1 hover:enabled:-translate-y-1 border disabled:border-none border-qrmory-purple-800 hover:enabled:border-qrmory-purple-400 ${
-                isDynamic
-                  ? "bg-qrmory-purple-800 text-white"
-                  : "bg-white disabled:bg-stone-300 hover:enabled:bg-qrmory-purple-400 text-qrmory-purple-800 disabled:text-stone-600"
-              } w-full md:w-44 text-xs lg:text-sm hover:enabled:text-white rounded uppercase font-semibold transition-all duration-300`}
-              onClick={() => setIsDynamic(!isDynamic)}
-              disabled={false}
+            <article
+              className={`flex flex-col md:flex-row items-center justify-between gap-2`}
             >
-              Make Dynamic
-            </button>
+              <button
+                className={`py-2.5 px-4 hover:enabled:translate-x-1 hover:enabled:-translate-y-1 flex items-center justify-center gap-2 border disabled:border-none border-qrmory-purple-800 ${
+                  isDynamic
+                    ? "bg-qrmory-purple-800 text-white"
+                    : "bg-white disabled:bg-stone-300 hover:enabled:bg-qrmory-purple-400 text-qrmory-purple-800 disabled:text-stone-600"
+                } w-48 max-w-full text-xs lg:text-sm hover:enabled:text-white rounded uppercase font-semibold transition-all duration-300`}
+                onClick={() => setIsDynamic(!isDynamic)}
+                disabled={false}
+              >
+                <IconBolt />
+                <span>Make Dynamic</span>
+              </button>
+
+              <button
+                className={`py-2.5 px-4 hover:enabled:translate-x-1 hover:enabled:-translate-y-1 flex items-center justify-center gap-2 border disabled:border-none border-qrmory-purple-800 hover:enabled:border-qrmory-purple-400 bg-white disabled:bg-stone-300 hover:enabled:bg-qrmory-purple-400 text-qrmory-purple-800 disabled:text-stone-600 w-48 max-w-full text-xs lg:text-sm hover:enabled:text-white rounded uppercase font-semibold transition-all duration-300`}
+                onClick={() => setIsDynamic(!isDynamic)}
+                disabled={textValue.length === 0}
+              >
+                <IconDeviceFloppy />
+                <span>Save QR Code</span>
+              </button>
+            </article>
           )}
+
+          <button
+            className="py-2.5 hover:enabled:translate-x-1 hover:enabled:-translate-y-1 flex items-center justify-center gap-2 border disabled:border-none border-qrmory-purple-800 hover:enabled:border-qrmory-purple-400 bg-white disabled:bg-stone-300 hover:enabled:bg-qrmory-purple-400 w-48 max-w-full text-xs lg:text-sm text-qrmory-purple-800 disabled:text-stone-600 hover:enabled:text-white rounded uppercase font-semibold transition-all duration-300"
+            onClick={handleGenerateQR}
+            disabled={textValue.length === 0 || !qrChanged}
+          >
+            <span>Generate QR</span>
+            <IconRocket />
+          </button>
         </section>
-
-        {!user && (
-          <section>
-            <button
-              className={`mt-2 py-2.5 px-2.5 flex items-center justify-center gap-1 hover:enabled:translate-x-1 hover:enabled:-translate-y-1 border disabled:border-none border-qrmory-purple-800 hover:enabled:border-qrmory-purple-400 ${
-                isDynamic
-                  ? "bg-qrmory-purple-800 text-white"
-                  : "bg-white disabled:bg-stone-300 hover:enabled:bg-qrmory-purple-400 text-qrmory-purple-800 disabled:text-stone-600"
-              } w-full md:w-44 text-xs lg:text-sm hover:enabled:text-white rounded uppercase font-semibold transition-all duration-300`}
-              onClick={() => setIsDynamic(!isDynamic)}
-              disabled={!qrChanged || textValue.length === 0}
-            >
-              <IconDeviceFloppy /> Save QR Code
-            </button>
-          </section>
-        )}
-
-        {qrChanged && !newQR && (
-          <p className="mt-4 text-rose-500 text-sm">
-            {/*Click the button above to apply the new changes*/}
-          </p>
-        )}
       </div>
     </article>
   );

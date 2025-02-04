@@ -23,13 +23,13 @@
           example:
         </p>
         <ul className="pb-4 font-bold sm:text-xl leading-7 sm:leading-9">
-          <li>Content that could be harmful to kids or minors</li>
-          <li>Targeting specific groups in a dangerous or hateful way</li>
-          <li>Anything promoting violence or illegal activities</li>
-          <li>Spam or things that encourage self-harm</li>
+          <li>Content that can be considered spam or malware</li>
+          <li>Content encouraging violence or hate toward anyone</li>
+          <li>Content selling or promoting illegal activities</li>
+          <li>Content that is pornographic in nature</li>
         </ul>
         <p className="mx-auto py-4 font-light sm:text-xl leading-7 sm:leading-9 max-w-md">
-          Keep it clean, keep it fun! 😎
+          Basically, just keep it clean, keep it fun! 😎
         </p>
       </article>
 

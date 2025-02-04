@@ -11,76 +11,36 @@ export const qrControls: QRControlsObject = {
   website: {
     title: "Website",
     description: "Link to a page or site",
-    component: (
-      setText: Function,
-      setChanged: Function,
-      setNewQR: Function,
-    ) => (
-      <QRWebsite
-        setText={setText}
-        setChanged={setChanged}
-        setNewQR={setNewQR}
-      />
+    component: (setText: Function, setChanged: Function) => (
+      <QRWebsite setText={setText} setChanged={setChanged} />
     ),
   },
   facebook: {
     title: "Facebook",
     description: "Facebook page/group",
-    component: (
-      setText: Function,
-      setChanged: Function,
-      setNewQR: Function,
-    ) => (
-      <QRFacebook
-        setText={setText}
-        setChanged={setChanged}
-        setNewQR={setNewQR}
-      />
+    component: (setText: Function, setChanged: Function) => (
+      <QRFacebook setText={setText} setChanged={setChanged} />
     ),
   },
   instagram: {
     title: "Instagram",
     description: "Instagram account",
-    component: (
-      setText: Function,
-      setChanged: Function,
-      setNewQR: Function,
-    ) => (
-      <QRInstagram
-        setText={setText}
-        setChanged={setChanged}
-        setNewQR={setNewQR}
-      />
+    component: (setText: Function, setChanged: Function) => (
+      <QRInstagram setText={setText} setChanged={setChanged} />
     ),
   },
   twitter: {
     title: "Twitter",
     description: "Twitter account",
-    component: (
-      setText: Function,
-      setChanged: Function,
-      setNewQR: Function,
-    ) => (
-      <QRTwitter
-        setText={setText}
-        setChanged={setChanged}
-        setNewQR={setNewQR}
-      />
+    component: (setText: Function, setChanged: Function) => (
+      <QRTwitter setText={setText} setChanged={setChanged} />
     ),
   },
   youTube: {
     title: "YouTube",
     description: "YouTube video",
-    component: (
-      setText: Function,
-      setChanged: Function,
-      setNewQR: Function,
-    ) => (
-      <QRYoutube
-        setText={setText}
-        setChanged={setChanged}
-        setNewQR={setNewQR}
-      />
+    component: (setText: Function, setChanged: Function) => (
+      <QRYoutube setText={setText} setChanged={setChanged} />
     ),
   },
   // email: [
@@ -113,12 +73,8 @@ export const qrControls: QRControlsObject = {
   text: {
     title: "Text",
     description: "Display a text message",
-    component: (
-      setText: Function,
-      setChanged: Function,
-      setNewQR: Function,
-    ) => (
-      <QRText setText={setText} setChanged={setChanged} setNewQR={setNewQR} />
+    component: (setText: Function, setChanged: Function) => (
+      <QRText setText={setText} setChanged={setChanged} />
     ),
   },
   // wifi: ["WiFi", "Share WiFi details"],

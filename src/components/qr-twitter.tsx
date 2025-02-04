@@ -2,11 +2,7 @@
 
 import { QRControlType } from "@/types/qr-controls";
 
-export default function QRTwitter({
-  setText,
-  setChanged,
-  setNewQR,
-}: QRControlType) {
+export default function QRTwitter({ setText, setChanged }: QRControlType) {
   // States
   const [enteredLink, setEnteredLink] = useState("");
   const [mainLink, setMainLink] = useState(`twitter.com/`);
@@ -43,7 +39,6 @@ export default function QRTwitter({
               }
 
               setEnteredLink(el.target.value);
-              setNewQR(false);
               setChanged(true);
             }}
             onBlur={() => {

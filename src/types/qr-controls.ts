@@ -3,7 +3,6 @@
 export interface QRControlType {
   setText: Function;
   setChanged: Function;
-  setNewQR: Function;
 }
 
 export interface QRType {
@@ -12,7 +11,6 @@ export interface QRType {
   component: (
     setText: (value: string) => void,
     setChange: (change: boolean) => void,
-    setNewQR: (newQR: boolean) => void,
   ) => JSX.Element;
 }
 
