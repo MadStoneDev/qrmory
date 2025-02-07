@@ -1,13 +1,16 @@
-﻿import { JSX } from "react";
+﻿"use client";
+
+import { JSX } from "react";
 import Link from "next/link";
+
 import {
   IconDashboard,
   IconInfoHexagon,
   IconPencilPlus,
   IconQrcode,
   IconSettings,
-  IconUsersGroup,
 } from "@tabler/icons-react";
+import { usePathname } from "next/navigation";
 
 export default function PrivateNavigation({
   className = "",
@@ -15,17 +18,19 @@ export default function PrivateNavigation({
   className?: string;
 }) {
   return (
-    <nav className={`h-full ${className}`}>
+    <nav className={`sm:h-full bg-white ${className}`}>
       <section
-        className={`flex flex-col items-start sm:justify-between h-full text-qrmory-purple-800 hover:opacity-100 transition-all duration-300 ease-in-out`}
+        className={`flex sm:flex-col items-center sm:items-start justify-center sm:justify-between gap-3 w-full sm:w-auto h-16 sm:h-full text-qrmory-purple-800 shadow-2xl shadow-neutral-800 sm:shadow-none hover:opacity-100 transition-all duration-300 ease-in-out`}
       >
-        <article className={`flex flex-col items-start`}>
-          <NavItem href={"/dashboard/"} title={"Dashboard"}>
+        <article
+          className={`flex flex-row sm:flex-col items-center justify-around gap-3`}
+        >
+          <NavItem href={"/dashboard"} title={"Dashboard"}>
             <IconDashboard size={30} strokeWidth={1.75} />
           </NavItem>
 
           <div
-            className={`ml-2.5 sm:ml-6 w-8 h-[1px] border-b border-stone-200/60`}
+            className={`hidden sm:block w-8 h-[1px] border-b border-stone-200/60`}
           ></div>
 
           <NavItem href={"/dashboard/create"} title={"Create"}>
@@ -33,7 +38,7 @@ export default function PrivateNavigation({
           </NavItem>
 
           <div
-            className={`ml-2.5 sm:ml-6 w-8 h-[1px] border-b border-stone-200/60`}
+            className={`hidden sm:block w-8 h-[1px] border-b border-stone-200/60`}
           ></div>
 
           <NavItem href={"/dashboard/my-codes"} title={"My Codes"}>
@@ -41,7 +46,7 @@ export default function PrivateNavigation({
           </NavItem>
 
           {/*<div*/}
-          {/*  className={`ml-2.5 sm:ml-6 w-8 h-[1px] border-b border-stone-200/60`}*/}
+          {/*  className={`hidden sm:block w-8 h-[1px] border-b border-stone-200/60`}*/}
           {/*></div>*/}
 
           {/*<NavItem href={"/dashboard/my-teams"} title={"My Teams"}>*/}
@@ -49,17 +54,17 @@ export default function PrivateNavigation({
           {/*</NavItem>*/}
 
           <div
-            className={`sm:hidden ml-2.5 sm:ml-6 w-8 h-[1px] border-b border-stone-200/60`}
+            className={`hidden sm:block w-8 h-[1px] border-b border-stone-200/60`}
           ></div>
         </article>
 
-        <article className={`flex flex-col`}>
+        <article className={`flex flex-row sm:flex-col items-center gap-3`}>
           <NavItem href={"/dashboard/account"} title={"Account Info"}>
             <IconInfoHexagon size={30} strokeWidth={1.75} />
           </NavItem>
 
           <div
-            className={`ml-2.5 sm:ml-6 w-8 h-[1px] border-b border-stone-200/60`}
+            className={`hidden sm:block w-8 h-[1px] border-b border-stone-200/60`}
           ></div>
 
           <NavItem href={"/dashboard/settings"} title={"Settings"}>
@@ -78,17 +83,29 @@ interface NavItemType {
 }
 
 function NavItem({ href, title, children }: NavItemType) {
+  // Hooks
+  const pathname = usePathname();
+  console.log(pathname);
+
   return (
     <Link
       href={href}
-      className={`group px-3 sm:px-6 py-3 sm:py-4 hover:bg-qrmory-purple-800 hover:text-white relative flex transition-all duration-500 ease-in-out`}
+      className={`group nav-item px-1 sm:px-4 py-1 sm:py-2 hover:bg-qrmory-purple-800 hover:text-white relative flex transition-all duration-500 ease-in-out`}
     >
-      {children}
       <div
-        className={`md:group-hover:px-2 flex items-center h-full w-fit max-w-0 md:group-hover:max-w-lg text-white whitespace-nowrap overflow-hidden transition-all duration-300 ease-in-out`}
+        className={`p-2 ${
+          href === pathname
+            ? "bg-qrmory-purple-400 group-hover:bg-transparent rounded-full text-white transition-all duration-300 ease-in-out"
+            : ""
+        }`}
       >
-        {title}
+        {children}
       </div>
+      {/*<div*/}
+      {/*  className={`md:group-hover:px-2 flex items-center h-full w-fit max-w-0 md:group-hover:max-w-lg text-white whitespace-nowrap overflow-hidden transition-all duration-300 ease-in-out`}*/}
+      {/*>*/}
+      {/*  {title}*/}
+      {/*</div>*/}
     </Link>
   );
 }
