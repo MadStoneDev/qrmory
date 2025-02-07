@@ -18,7 +18,7 @@ export const isValidURL = (urlString: string): boolean => {
   return urlPattern.test(urlString);
 };
 
-export const generateShortCode = (codeLength: number) => {
+export const generateShortCode = (codeLength: number, checkList?: string[]) => {
   const letters = [
     "a",
     "b",
@@ -69,42 +69,51 @@ export const generateShortCode = (codeLength: number) => {
   ];
 
   const numbers = [2, 3, 4, 5, 6, 7, 8, 9];
-
   let newShortCode = "";
-  let numberCount = 0;
+  const maxAttempts = 100;
+  let attempts = 0;
 
-  // Ensure at least one number is used
-  const randomNumber = numbers[Math.floor(Math.random() * numbers.length)];
-  newShortCode += randomNumber;
-  numberCount++;
+  const maxNumbers = Math.floor(codeLength * 0.35);
 
-  for (let x = 1; x < codeLength; x++) {
-    let numberProbability;
+  do {
+    attempts++;
 
-    if (numberCount === 1) {
-      numberProbability = 0.15; // 15% chance for second number
-    } else if (numberCount === 2) {
-      numberProbability = 0.1; // 10% chance for third number
-    } else {
-      numberProbability = 0; // No more numbers after 3
+    if (attempts > maxAttempts) {
+      throw new Error("Failed to generate short code after maximum attempts");
     }
 
-    if (Math.random() < numberProbability) {
-      const randomNumber = numbers[Math.floor(Math.random() * numbers.length)];
-      newShortCode += randomNumber;
-      numberCount++;
-    } else {
-      const randomLetter = letters[Math.floor(Math.random() * letters.length)];
-      newShortCode += randomLetter;
+    newShortCode = "";
+    let numberCount = 0;
+    let currentProbability = 0.45;
+
+    for (let x = 1; x < codeLength; x++) {
+      if (numberCount < maxNumbers && Math.random() < currentProbability) {
+        const randomNumber =
+          numbers[Math.floor(Math.random() * numbers.length)];
+        newShortCode += randomNumber;
+        numberCount++;
+        currentProbability *= 0.45;
+      } else {
+        const randomLetter =
+          letters[Math.floor(Math.random() * letters.length)];
+        newShortCode += randomLetter;
+      }
     }
-  }
 
-  // Shuffle the shortcode
-  newShortCode = newShortCode
-    .split("")
-    .sort(() => Math.random() - 0.5)
-    .join("");
+    // Shuffle the shortcode (update: use Fisher-Yates shuffle)
+    const shuffledArray = newShortCode.split("");
 
-  console.log(newShortCode, numberCount);
+    for (let i = shuffledArray.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffledArray[i], shuffledArray[j]] = [
+        shuffledArray[j],
+        shuffledArray[i],
+      ];
+    }
+
+    newShortCode = shuffledArray.join("");
+  } while (checkList?.includes(newShortCode));
+
+  console.log(newShortCode);
   return newShortCode;
 };

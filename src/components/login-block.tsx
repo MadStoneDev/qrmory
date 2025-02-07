@@ -7,6 +7,7 @@ import { login } from "@/app/(auth)/actions";
 
 export const LoginBlock = () => {
   // States
+  const [timerActive, setTimerActive] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -21,6 +22,8 @@ export const LoginBlock = () => {
       [target.name]: target.value,
     });
   };
+
+  const handleLogin = () => {};
 
   return (
     <section className={`grid gap-10 w-full max-w-xs`}>
@@ -38,18 +41,10 @@ export const LoginBlock = () => {
         value={formData.email}
         onChange={handleChange}
       />
-      <AuthText
-        type={"password"}
-        name={"password"}
-        label={"Password"}
-        placeholder={"eg. Plotka!3"}
-        value={formData.password}
-        onChange={handleChange}
-      />
       <article className={`grid gap-3`}>
         <button
           formAction={login}
-          disabled={formData.email.length < 6 || formData.password.length < 8}
+          disabled={formData.email.length < 6}
           className={`py-2 w-full bg-qrmory-purple-500 disabled:bg-stone-300 rounded-md text-white text-sm md:text-base font-bold`}
         >
           Login!

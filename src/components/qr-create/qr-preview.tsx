@@ -9,6 +9,7 @@ interface Props {
   qrTitle: string;
   qrValue: string;
   qrChanged: boolean;
+  qrShortCode: string;
   shadow?: boolean;
   user: any;
 }
@@ -17,6 +18,7 @@ export default function QRPreview({
   qrTitle,
   qrValue,
   qrChanged,
+  qrShortCode,
   shadow,
   user,
 }: Props) {
@@ -51,7 +53,7 @@ export default function QRPreview({
         className="my-6 lg:my-16 lg:mx-auto flex-grow grid place-content-center text-gray-600 dark:text-gray-600 text-sm"
       >
         <SVG
-          text={qrValue}
+          text={qrShortCode || qrValue}
           options={{
             errorCorrectionLevel: "M",
             color: {

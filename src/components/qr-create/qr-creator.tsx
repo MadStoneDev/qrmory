@@ -20,6 +20,7 @@ export default function QRCreator({
   const [qrValue, setQRValue] = useState("Welcome to QRmory!");
   const [textValue, setTextValue] = useState("");
   const [qrChanged, setQRChanged] = useState(true);
+  const [qrShortCode, setQRShortCode] = useState("");
   const [activeSelector, setActiveSelector] = useState("website");
 
   const handleQRSettingsUpdate = (updates: {
@@ -28,6 +29,7 @@ export default function QRCreator({
     qrChanged?: boolean;
     activeSelector?: string;
     qrValue?: string;
+    qrShortCode?: string;
   }) => {
     if (updates.qrTitle !== undefined) setQRTitle(updates.qrTitle);
     if (updates.textValue !== undefined) setTextValue(updates.textValue);
@@ -35,6 +37,7 @@ export default function QRCreator({
     if (updates.activeSelector !== undefined)
       setActiveSelector(updates.activeSelector);
     if (updates.qrValue !== undefined) setQRValue(updates.qrValue);
+    if (updates.qrShortCode !== undefined) setQRShortCode(updates.qrShortCode);
   };
 
   // Effects
@@ -78,6 +81,7 @@ export default function QRCreator({
         <QRPreview
           qrTitle={qrTitle}
           qrValue={qrValue}
+          qrShortCode={qrShortCode}
           qrChanged={qrChanged}
           shadow={shadow}
           user={user}

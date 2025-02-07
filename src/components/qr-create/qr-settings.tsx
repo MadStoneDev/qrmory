@@ -17,6 +17,7 @@ interface Props {
     textValue?: string;
     qrChanged?: boolean;
     activeSelector?: string;
+    qrShortCode?: string;
     qrValue?: string;
   }) => void;
 }
@@ -37,6 +38,8 @@ export default function QRSettings({
   const [activeSelector, setActiveSelector] = useState(initialActiveSelector);
 
   const [isDynamic, setIsDynamic] = useState(false);
+  const [loadingDynamic, setLoadingDynamic] = useState(false);
+  const [qrShortCode, setQRShortCode] = useState("");
 
   const [qrControl, setQRControl] = useState(() =>
     qrControls[activeSelector].component(
@@ -73,11 +76,36 @@ export default function QRSettings({
       onUpdate({
         qrValue: textValue,
         qrChanged: false,
+        qrShortCode,
       });
 
       setQRChanged(false);
     }
   };
+
+  const handleMakeDynamic = () => {
+    if (isDynamic) {
+      setQRShortCode("");
+      setIsDynamic(false);
+      return;
+    }
+
+    setLoadingDynamic(true);
+
+    try {
+      const shortCode = generateShortCode(8);
+      setQRShortCode(shortCode);
+      setIsDynamic(true);
+    } catch (error) {
+      console.error(error);
+    }
+
+    setTimeout(() => {
+      setLoadingDynamic(false);
+    }, 1000);
+  };
+
+  const handleSaveQR = () => {};
 
   // Effects
   useEffect(() => {
@@ -98,8 +126,9 @@ export default function QRSettings({
       textValue,
       qrChanged,
       activeSelector,
+      qrShortCode,
     });
-  }, [qrTitle, textValue, qrChanged, activeSelector]);
+  }, [qrTitle, textValue, qrChanged, activeSelector, qrShortCode]);
 
   return (
     <article
@@ -158,16 +187,20 @@ export default function QRSettings({
                     ? "bg-qrmory-purple-800 text-white"
                     : "bg-white disabled:bg-stone-300 hover:enabled:bg-qrmory-purple-400 text-qrmory-purple-800 disabled:text-stone-600"
                 } w-48 max-w-full text-xs lg:text-sm hover:enabled:text-white rounded uppercase font-semibold transition-all duration-300`}
-                onClick={() => setIsDynamic(!isDynamic)}
-                disabled={false}
+                onClick={handleMakeDynamic}
+                disabled={loadingDynamic}
               >
-                <IconBolt />
+                <IconBolt
+                  className={`${
+                    loadingDynamic ? "animate-pulse duration-1000" : ""
+                  }`}
+                />
                 <span>Make Dynamic</span>
               </button>
 
               <button
                 className={`py-2.5 px-4 hover:enabled:translate-x-1 hover:enabled:-translate-y-1 flex items-center justify-center gap-2 border disabled:border-none border-qrmory-purple-800 hover:enabled:border-qrmory-purple-400 bg-white disabled:bg-stone-300 hover:enabled:bg-qrmory-purple-400 text-qrmory-purple-800 disabled:text-stone-600 w-48 max-w-full text-xs lg:text-sm hover:enabled:text-white rounded uppercase font-semibold transition-all duration-300`}
-                onClick={() => setIsDynamic(!isDynamic)}
+                onClick={handleSaveQR}
                 disabled={textValue.length === 0}
               >
                 <IconDeviceFloppy />
@@ -185,6 +218,17 @@ export default function QRSettings({
             <IconRocket />
           </button>
         </section>
+        {isDynamic && (
+          <section className={`mt-4`}>
+            <p className={`text-sm`}>
+              Your Dynamic Code will be:{" "}
+              <span className={`font-bold`}>
+                https://qrmory.com/{qrShortCode}
+              </span>
+            </p>
+            <p className={`text-sm`}>Save to secure this code.</p>
+          </section>
+        )}
       </div>
     </article>
   );
