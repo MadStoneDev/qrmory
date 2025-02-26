@@ -3,6 +3,11 @@
 import Link from "next/link";
 import Logo from "@/components/logo";
 import { IconUser } from "@tabler/icons-react";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 export default function MainNavigation({
   className = "",
@@ -25,7 +30,7 @@ export default function MainNavigation({
     <nav
       className={`${className} ${
         absolute ? "absolute" : ""
-      } py-6 px-8 top-0 flex flex-col items-center justify-center w-full h-16 sm:h-20`}
+      } py-6 px-8 top-0 flex flex-col items-center justify-center w-full h-16 sm:h-20 bg-qrmory-purple-800`}
     >
       <Link href="/">
         <Logo className={`w-20 sm:w-24`} logoColour={logoColour} />
@@ -44,12 +49,21 @@ export default function MainNavigation({
           </Link>
         ))}
 
-        <Link
-          href={`/sign-up`}
-          className={`px-2 flex items-center justify-center aspect-square hover:bg-qrmory-purple-400 rounded-full shadow-lg shadow-qrmory-purple-900 hover:shadow-xl hover:translate-x-1 hover:-translate-y-1 text-sm text-white transition-all duration-300`}
-        >
-          <IconUser />
-        </Link>
+        <Popover>
+          <PopoverTrigger
+            className={`px-2 flex items-center justify-center aspect-square hover:bg-qrmory-purple-400 rounded-full shadow-lg shadow-qrmory-purple-900 hover:shadow-xl hover:translate-x-1 hover:-translate-y-1 text-sm text-white transition-all duration-300`}
+          >
+            <IconUser />
+          </PopoverTrigger>
+
+          <PopoverContent
+            className={`bg-neutral-100 border-none w-fit text-neutral-900`}
+          >
+            <Link href={`/sign-up`} className={`transition-all duration-300`}>
+              Create a Free Account
+            </Link>
+          </PopoverContent>
+        </Popover>
       </section>
     </nav>
   );
