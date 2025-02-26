@@ -8,9 +8,10 @@ const AuthText = ({
   type = "text",
   value = "",
   onChange = (event: ChangeEvent) => {},
+  ...props
 }) => {
   return (
-    <div className={`grid gap-1`}>
+    <div className={`grid gap-1`} {...props}>
       <label htmlFor={id} className={`text-xs text-neutral-500 font-light`}>
         {label}
       </label>

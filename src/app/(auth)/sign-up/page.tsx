@@ -1,5 +1,4 @@
-﻿import { LoginBlock } from "@/components/login-block";
-import SignUpBlock from "@/components/sign-up-block";
+﻿import SignUpBlock from "@/components/sign-up-block";
 
 export const metadata = {
   title: "Create a Free Account | QRmory",
