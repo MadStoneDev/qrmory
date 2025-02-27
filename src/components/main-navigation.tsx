@@ -43,7 +43,7 @@ export default function MainNavigation({
           <Link
             href={path}
             key={index}
-            className={`${specialClasses} px-4 py-1 hover:bg-qrmory-purple-400 rounded-md shadow-lg shadow-qrmory-purple-900 hover:shadow-xl hover:translate-x-1 hover:-translate-y-1 text-sm hover:text-white transition-all duration-300`}
+            className={`${specialClasses} px-4 py-1 hover:bg-qrmory-purple-400 rounded-md shadow-lg shadow-qrmory-purple-900 hover:shadow-xl hover:translate-x-1 hover:-translate-y-1 text-sm text-white transition-all duration-300`}
           >
             {title}
           </Link>
@@ -57,10 +57,20 @@ export default function MainNavigation({
           </PopoverTrigger>
 
           <PopoverContent
-            className={`bg-neutral-100 border-none w-fit text-neutral-900`}
+            className={`flex flex-col bg-neutral-100 border-none w-fit text-neutral-900`}
           >
-            <Link href={`/sign-up`} className={`transition-all duration-300`}>
+            <Link
+              href={`/auth/sign-up`}
+              className={`py-1 px-2 hover:bg-qrmory-purple-400 hover:text-white transition-all duration-300`}
+            >
               Create a Free Account
+            </Link>
+
+            <Link
+              href={`/auth/login`}
+              className={`py-1 px-2 hover:bg-qrmory-purple-400 hover:text-white transition-all duration-300`}
+            >
+              Login
             </Link>
           </PopoverContent>
         </Popover>

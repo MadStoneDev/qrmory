@@ -1,17 +1,19 @@
 ﻿"use client";
 
 import Link from "next/link";
-import { ChangeEvent, EventHandler, useState } from "react";
+import { ChangeEvent, EventHandler, FormEvent, useState } from "react";
 
 import { signup } from "@/app/(auth)/actions";
 import AuthText from "@/components/auth-text";
 import { IconEye } from "@tabler/icons-react";
+import { SignUp } from "@/app/(auth)/auth/sign-up/actions";
 
 export default function SignUpBlock() {
   // States
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [passwordHasFocus, setPasswordHasFocus] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
   const [passwordValidation, setPasswordValidation] = useState({
@@ -56,15 +58,39 @@ export default function SignUpBlock() {
     }));
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setIsLoading(true);
+
     setError("");
+
+    const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    if (!emailRegex.test(formData.email.trim())) {
+      setError("Please enter a valid email address.");
+      setIsLoading(false);
+      return;
+    }
 
     Object.keys(passwordValidation).forEach((key: string) => {
       if (!passwordValidation[key as keyof typeof passwordValidation]) {
         setError("Password does not meet the minimum requirements");
+        setIsLoading(false);
         return;
       }
     });
+
+    try {
+      const response = await SignUp(formData);
+      if (response?.error) {
+        setError(response.error);
+      } else {
+        // Redirect handled by SignUp action
+      }
+    } catch (error) {
+      setError("Failed to sign up. Please try again later.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
