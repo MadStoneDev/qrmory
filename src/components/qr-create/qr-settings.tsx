@@ -177,37 +177,37 @@ export default function QRSettings({
         <section
           className={`mt-8 flex flex-col md:flex-row items-center justify-between gap-2`}
         >
-          {!user && (
-            <article
-              className={`flex flex-col md:flex-row items-center justify-between gap-2`}
-            >
-              <button
-                className={`py-2.5 px-4 hover:enabled:translate-x-1 hover:enabled:-translate-y-1 flex items-center justify-center gap-2 border disabled:border-none border-qrmory-purple-800 ${
-                  isDynamic
-                    ? "bg-qrmory-purple-800 text-white"
-                    : "bg-white disabled:bg-stone-300 hover:enabled:bg-qrmory-purple-400 text-qrmory-purple-800 disabled:text-stone-600"
-                } w-48 max-w-full text-xs lg:text-sm hover:enabled:text-white rounded uppercase font-semibold transition-all duration-300`}
-                onClick={handleMakeDynamic}
-                disabled={loadingDynamic}
-              >
-                <IconBolt
-                  className={`${
-                    loadingDynamic ? "animate-pulse duration-1000" : ""
-                  }`}
-                />
-                <span>Make Dynamic</span>
-              </button>
+          {/*{!user && (*/}
+          {/*  <article*/}
+          {/*    className={`flex flex-col md:flex-row items-center justify-between gap-2`}*/}
+          {/*  >*/}
+          {/*    <button*/}
+          {/*      className={`py-2.5 px-4 hover:enabled:translate-x-1 hover:enabled:-translate-y-1 flex items-center justify-center gap-2 border disabled:border-none border-qrmory-purple-800 ${*/}
+          {/*        isDynamic*/}
+          {/*          ? "bg-qrmory-purple-800 text-white"*/}
+          {/*          : "bg-white disabled:bg-stone-300 hover:enabled:bg-qrmory-purple-400 text-qrmory-purple-800 disabled:text-stone-600"*/}
+          {/*      } w-48 max-w-full text-xs lg:text-sm hover:enabled:text-white rounded uppercase font-semibold transition-all duration-300`}*/}
+          {/*      onClick={handleMakeDynamic}*/}
+          {/*      disabled={loadingDynamic}*/}
+          {/*    >*/}
+          {/*      <IconBolt*/}
+          {/*        className={`${*/}
+          {/*          loadingDynamic ? "animate-pulse duration-1000" : ""*/}
+          {/*        }`}*/}
+          {/*      />*/}
+          {/*      <span>Make Dynamic</span>*/}
+          {/*    </button>*/}
 
-              <button
-                className={`py-2.5 px-4 hover:enabled:translate-x-1 hover:enabled:-translate-y-1 flex items-center justify-center gap-2 border disabled:border-none border-qrmory-purple-800 hover:enabled:border-qrmory-purple-400 bg-white disabled:bg-stone-300 hover:enabled:bg-qrmory-purple-400 text-qrmory-purple-800 disabled:text-stone-600 w-48 max-w-full text-xs lg:text-sm hover:enabled:text-white rounded uppercase font-semibold transition-all duration-300`}
-                onClick={handleSaveQR}
-                disabled={textValue.length === 0}
-              >
-                <IconDeviceFloppy />
-                <span>Save QR Code</span>
-              </button>
-            </article>
-          )}
+          {/*    <button*/}
+          {/*      className={`py-2.5 px-4 hover:enabled:translate-x-1 hover:enabled:-translate-y-1 flex items-center justify-center gap-2 border disabled:border-none border-qrmory-purple-800 hover:enabled:border-qrmory-purple-400 bg-white disabled:bg-stone-300 hover:enabled:bg-qrmory-purple-400 text-qrmory-purple-800 disabled:text-stone-600 w-48 max-w-full text-xs lg:text-sm hover:enabled:text-white rounded uppercase font-semibold transition-all duration-300`}*/}
+          {/*      onClick={handleSaveQR}*/}
+          {/*      disabled={textValue.length === 0}*/}
+          {/*    >*/}
+          {/*      <IconDeviceFloppy />*/}
+          {/*      <span>Save QR Code</span>*/}
+          {/*    </button>*/}
+          {/*  </article>*/}
+          {/*)}*/}
 
           <button
             className="py-2.5 hover:enabled:translate-x-1 hover:enabled:-translate-y-1 flex items-center justify-center gap-2 border disabled:border-none border-qrmory-purple-800 hover:enabled:border-qrmory-purple-400 bg-white disabled:bg-stone-300 hover:enabled:bg-qrmory-purple-400 w-48 max-w-full text-xs lg:text-sm text-qrmory-purple-800 disabled:text-stone-600 hover:enabled:text-white rounded uppercase font-semibold transition-all duration-300"
