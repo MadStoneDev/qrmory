@@ -49,31 +49,31 @@ export default function MainNavigation({
           </Link>
         ))}
 
-        <Popover>
-          <PopoverTrigger
-            className={`px-2 flex items-center justify-center aspect-square hover:bg-qrmory-purple-400 rounded-full shadow-lg shadow-qrmory-purple-900 hover:shadow-xl hover:translate-x-1 hover:-translate-y-1 text-sm text-white transition-all duration-300`}
-          >
-            <IconUser />
-          </PopoverTrigger>
+        {/*<Popover>*/}
+        {/*  <PopoverTrigger*/}
+        {/*    className={`px-2 flex items-center justify-center aspect-square hover:bg-qrmory-purple-400 rounded-full shadow-lg shadow-qrmory-purple-900 hover:shadow-xl hover:translate-x-1 hover:-translate-y-1 text-sm text-white transition-all duration-300`}*/}
+        {/*  >*/}
+        {/*    <IconUser />*/}
+        {/*  </PopoverTrigger>*/}
 
-          <PopoverContent
-            className={`flex flex-col bg-neutral-100 border-none w-fit text-neutral-900`}
-          >
-            <Link
-              href={`/auth/sign-up`}
-              className={`py-1 px-2 hover:bg-qrmory-purple-400 hover:text-white transition-all duration-300`}
-            >
-              Create a Free Account
-            </Link>
+        {/*  <PopoverContent*/}
+        {/*    className={`flex flex-col bg-neutral-100 border-none w-fit text-neutral-900`}*/}
+        {/*  >*/}
+        {/*    <Link*/}
+        {/*      href={`/auth/sign-up`}*/}
+        {/*      className={`py-1 px-2 hover:bg-qrmory-purple-400 hover:text-white transition-all duration-300`}*/}
+        {/*    >*/}
+        {/*      Create a Free Account*/}
+        {/*    </Link>*/}
 
-            <Link
-              href={`/auth/login`}
-              className={`py-1 px-2 hover:bg-qrmory-purple-400 hover:text-white transition-all duration-300`}
-            >
-              Login
-            </Link>
-          </PopoverContent>
-        </Popover>
+        {/*    <Link*/}
+        {/*      href={`/auth/login`}*/}
+        {/*      className={`py-1 px-2 hover:bg-qrmory-purple-400 hover:text-white transition-all duration-300`}*/}
+        {/*    >*/}
+        {/*      Login*/}
+        {/*    </Link>*/}
+        {/*  </PopoverContent>*/}
+        {/*</Popover>*/}
       </section>
     </nav>
   );
