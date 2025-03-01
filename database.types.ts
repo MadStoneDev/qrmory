@@ -13,7 +13,6 @@ export type Database = {
         Row: {
           created_at: string
           dynamic_qr_quota: number
-          email: string
           id: string
           stripe_customer_id: string | null
           subscription_level: Database["public"]["Enums"]["subscription_level"]
@@ -23,7 +22,6 @@ export type Database = {
         Insert: {
           created_at?: string
           dynamic_qr_quota?: number
-          email: string
           id: string
           stripe_customer_id?: string | null
           subscription_level?: Database["public"]["Enums"]["subscription_level"]
@@ -33,7 +31,6 @@ export type Database = {
         Update: {
           created_at?: string
           dynamic_qr_quota?: number
-          email?: string
           id?: string
           stripe_customer_id?: string | null
           subscription_level?: Database["public"]["Enums"]["subscription_level"]
@@ -163,8 +160,8 @@ export type Database = {
           id: string
           package_id: string
           purchased_at: string
-          quantity_remaining: number
-          stripe_payment_intent_id: string
+          quantity: number
+          stripe_checkout_id: string
           user_id: string
         }
         Insert: {
@@ -172,8 +169,8 @@ export type Database = {
           id?: string
           package_id: string
           purchased_at?: string
-          quantity_remaining: number
-          stripe_payment_intent_id: string
+          quantity: number
+          stripe_checkout_id: string
           user_id: string
         }
         Update: {
@@ -181,8 +178,8 @@ export type Database = {
           id?: string
           package_id?: string
           purchased_at?: string
-          quantity_remaining?: number
-          stripe_payment_intent_id?: string
+          quantity?: number
+          stripe_checkout_id?: string
           user_id?: string
         }
         Relationships: [
@@ -207,24 +204,33 @@ export type Database = {
           created_at: string
           current_period_end: string
           id: string
+          plan_name: string | null
           status: string
+          stripe_price_id: string | null
           stripe_subscription_id: string
+          updated_at: string | null
           user_id: string
         }
         Insert: {
           created_at?: string
           current_period_end: string
           id?: string
+          plan_name?: string | null
           status: string
+          stripe_price_id?: string | null
           stripe_subscription_id: string
+          updated_at?: string | null
           user_id: string
         }
         Update: {
           created_at?: string
           current_period_end?: string
           id?: string
+          plan_name?: string | null
           status?: string
+          stripe_price_id?: string | null
           stripe_subscription_id?: string
+          updated_at?: string | null
           user_id?: string
         }
         Relationships: [
@@ -242,12 +248,44 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      handle_new_subscription: {
+        Args: {
+          p_user_id: string
+          p_subscription_id: string
+          p_price_id: string
+          p_status: string
+          p_plan_name: string
+          p_current_period_end: string
+          p_quota_amount: number
+        }
+        Returns: undefined
+      }
+      handle_quota_purchase: {
+        Args: {
+          p_user_id: string
+          p_package_id: string
+          p_quantity: number
+          p_amount_paid: number
+          p_stripe_checkout_id: string
+          p_expires_at?: string
+        }
+        Returns: undefined
+      }
+      handle_subscription_updated: {
+        Args: {
+          p_subscription_id: string
+          p_price_id: string
+          p_status: string
+          p_plan_name: string
+          p_current_period_end: string
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       qr_code_type: "static" | "dynamic"
       quota_package_type: "static" | "dynamic"
-      subscription_level: "free" | "basic" | "premium" | "enterprise"
+      subscription_level: "0" | "1" | "2" | "3" | "4"
     }
     CompositeTypes: {
       [_ in never]: never
