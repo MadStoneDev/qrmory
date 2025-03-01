@@ -1,9 +1,10 @@
 ﻿"use client";
 
 import React, { useState, useEffect } from "react";
-import QRSettings from "./qr-settings";
+
 import QRPreview from "./qr-preview";
-import { suggestedTitles } from "@/data/suggested-titles";
+import QRSettings from "./qr-settings";
+import { suggestedTitles } from "@/data/defaults/suggested-titles";
 
 interface QRCreatorProps {
   withHeading?: boolean;

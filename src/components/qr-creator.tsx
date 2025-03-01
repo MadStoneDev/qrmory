@@ -6,7 +6,7 @@ import d3ToPng from "d3-svg-to-png";
 import { useQRCode } from "next-qrcode";
 import { downloadToSVG } from "@/utils/qr-save";
 
-import { qrControls } from "@/libs/qr-control-object";
+import { qrControls } from "@/lib/qr-control-object";
 
 export default function QRCreator() {
   // States
@@ -20,7 +20,7 @@ export default function QRCreator() {
 
   const [qrSVG, setQRSVG] = useState<Element | null>(null);
   const [qrControl, setQRControl] = useState<JSX.Element | null>(
-    qrControls["website"].component(setTextValue, setQRChanged, setNewQR),
+    qrControls["website"].component(setTextValue, setQRChanged),
   );
 
   // Hooks
@@ -107,11 +107,7 @@ export default function QRCreator() {
                   setTextValue("");
                   setActiveSelector(key);
                   setQRControl(
-                    qrControls[key].component(
-                      setTextValue,
-                      setQRChanged,
-                      setNewQR,
-                    ),
+                    qrControls[key].component(setTextValue, setQRChanged),
                   );
                   setQRChanged(true);
                 }}
