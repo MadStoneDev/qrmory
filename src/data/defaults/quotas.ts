@@ -1,18 +1,18 @@
 ﻿export const SUBSCRIPTION_LEVELS = {
   0: "Free",
-  1: "Starter",
-  2: "Plus",
-  3: "Premium",
+  1: "Explorer",
+  2: "Creator",
+  3: "Champion",
 };
 
 export const DEFAULT_QUOTAS = [
   {
     subscription: SUBSCRIPTION_LEVELS[0],
-    dynamicCodes: 2,
+    dynamicCodes: 3,
   },
   {
     subscription: SUBSCRIPTION_LEVELS[1],
-    dynamicCodes: 5,
+    dynamicCodes: 10,
   },
   {
     subscription: SUBSCRIPTION_LEVELS[2],
