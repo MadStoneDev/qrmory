@@ -8,6 +8,7 @@ import { redirect } from "next/navigation";
 export async function SignUp(formData: {
   email: string;
   password: string;
+  confirmPassword: string;
 }): Promise<{
   error: string | null;
   success: boolean;

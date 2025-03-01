@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { ChangeEvent, FormEvent, useState } from "react";
 
-import { login } from "@/app/(auth)/actions";
 import AuthText from "@/components/auth-text";
 import {
   loginWithMagicLink,
@@ -33,7 +32,7 @@ export const LoginBlock = () => {
     });
   };
 
-  const handleLogin = async (e: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
     setError("");
@@ -86,8 +85,22 @@ export const LoginBlock = () => {
     }
   };
 
+  if (magicLinkSent) {
+    return (
+      <div className="mt-16 flex flex-col w-full max-w-full lg:max-w-2xl bg-emerald-500 p-4 rounded-2xl text-white">
+        <span className="text-lg font-bold">
+          Check your email for the login link.
+        </span>
+        <span className="text-sm italic text-center">
+          We've sent you a magic link to{" "}
+          <span className={"font-bold"}>{formData.email}</span>
+        </span>
+      </div>
+    );
+  }
+
   return (
-    <section className={`grid gap-10 w-full max-w-sm`}>
+    <form onSubmit={handleSubmit} className={`grid gap-10 w-full max-w-sm`}>
       <article>
         <h1 className={`md:text-xl font-bold`}>Welcome Back!</h1>
         <h2 className={`text-sm md:text-base text-neutral-600 font-light`}>
@@ -131,13 +144,19 @@ export const LoginBlock = () => {
         </button>
       )}
 
+      {error && <p className="text-red-600 text-sm">{error}</p>}
+
       <article className={`grid gap-3`}>
         <button
-          formAction={login}
-          disabled={formData.email.length < 6}
+          type="submit"
+          disabled={formData.email.length < 6 || isLoading}
           className={`py-2 w-full bg-qrmory-purple-500 disabled:bg-stone-300 rounded-md text-white text-sm md:text-base font-bold`}
         >
-          Login!
+          {isLoading
+            ? "Logging you in..."
+            : useMagicLink
+              ? "Send Magic Link"
+              : "Login"}
         </button>
 
         <h4 className={`text-xs md:text-sm font-light text-center`}>
@@ -151,6 +170,6 @@ export const LoginBlock = () => {
           .
         </h4>
       </article>
-    </section>
+    </form>
   );
 };

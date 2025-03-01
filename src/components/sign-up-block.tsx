@@ -1,11 +1,11 @@
 ﻿"use client";
 
 import Link from "next/link";
-import { ChangeEvent, EventHandler, FormEvent, useState } from "react";
+import { ChangeEvent, FormEvent, useState } from "react";
 
-import { signup } from "@/app/(auth)/actions";
-import AuthText from "@/components/auth-text";
 import { IconEye } from "@tabler/icons-react";
+
+import AuthText from "@/components/auth-text";
 import { SignUp } from "@/app/(auth)/auth/sign-up/actions";
 
 export default function SignUpBlock() {
@@ -94,7 +94,7 @@ export default function SignUpBlock() {
   };
 
   return (
-    <form className={`grid gap-10 w-full max-w-sm`}>
+    <form onSubmit={handleSubmit} className={`grid gap-10 w-full max-w-sm`}>
       <article>
         <h1 className={`md:text-xl font-bold`}>Welcome to QRmory!</h1>
         <h2 className={`text-sm md:text-base text-neutral-600 font-light`}>
@@ -216,7 +216,7 @@ export default function SignUpBlock() {
 
       <article className={`grid gap-3`}>
         <button
-          formAction={signup}
+          type="submit"
           disabled={
             formData.email.length < 6 ||
             formData.password.length < 8 ||

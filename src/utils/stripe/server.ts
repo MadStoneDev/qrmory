@@ -2,8 +2,10 @@
 
 import Stripe from "stripe";
 import { stripe } from "./config";
+
 import { createClient } from "@/utils/supabase/server";
 import { createOrRetrieveCustomer } from "@/utils/supabase/admin";
+
 import {
   getURL,
   getErrorRedirect,
@@ -24,7 +26,8 @@ export async function checkoutWithStripe(
 ): Promise<CheckoutResponse> {
   try {
     // Get the user from Supabase auth
-    const supabase = createClient();
+    const supabase = await createClient();
+
     const {
       error,
       data: { user },

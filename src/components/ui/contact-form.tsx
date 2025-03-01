@@ -1,8 +1,7 @@
 ﻿"use client";
 
-import React, { ChangeEvent } from "react";
+import React, { ChangeEvent, FormEvent } from "react";
 import AuthText from "@/components/auth-text";
-import { signup } from "@/app/(auth)/actions";
 
 export default function ContactForm() {
   // Hooks
@@ -18,8 +17,12 @@ export default function ContactForm() {
     setFormData({ ...formData, [target.name]: target.value });
   };
 
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+  };
+
   return (
-    <form className={`flex flex-col gap-8`}>
+    <form onSubmit={handleSubmit} className={`flex flex-col gap-8`}>
       <AuthText
         type={"text"}
         name={"name"}
@@ -56,7 +59,7 @@ export default function ContactForm() {
       </div>
 
       <button
-        formAction={signup}
+        type={"submit"}
         disabled={
           formData.name.length < 3 ||
           formData.email.length < 6 ||
