@@ -50,7 +50,7 @@ h1, h2, h3, h4, h5, h6 {
 
 .control-label {
   @apply mb-8;
-  
+
   @apply text-sm;
   @apply font-bold;
   @apply text-stone-500;
@@ -59,7 +59,7 @@ h1, h2, h3, h4, h5, h6 {
 .control-input {
   @apply px-2;
   @apply pt-2;
-  
+
   @apply flex-grow;
 
   @apply bg-transparent;
@@ -106,7 +106,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 input {
-  border-width: 0px !important;
+  border-width: 0 !important;
   border-bottom-width: 1px !important;
 }
 
@@ -116,12 +116,12 @@ input {
   transition-timing-function: ease, ease !important;
 }
 
-/*.qr-selector.active {*/
-/*  background-color: theme('colors.qrmory-purple-800') !important;*/
-/*  color: white !important;*/
+.qr-selector.active {
+  background-color: theme('colors.qrmory-purple-800') !important;
+  color: white !important;
 
-/*  box-shadow: 0 12px 20px -5px theme('colors.qrmory-purple-600');*/
-/*}*/
+  box-shadow: 0 12px 20px -5px theme('colors.qrmory-purple-600');
+}
 
 .qr-selector.active #selector-descriptor {
   display: none;
@@ -140,7 +140,6 @@ input {
 }
 
 #download-button:disabled {
-  /*background-color: theme('colors.stone.500') !important;*/
   box-shadow: none;
 }
 
@@ -153,5 +152,9 @@ input {
 
 /* md: */
 @media (min-width: 768px) {
-  
+
+}
+
+@layer base {
+
 }

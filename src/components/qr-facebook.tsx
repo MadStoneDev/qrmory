@@ -2,11 +2,7 @@
 
 import { QRControlType } from "@/types/qr-controls";
 
-export default function QRFacebook({
-  setText,
-  setChanged,
-  setNewQR,
-}: QRControlType) {
+export default function QRFacebook({ setText, setChanged }: QRControlType) {
   // States
   const [enteredLink, setEnteredLink] = useState("");
 
@@ -44,7 +40,6 @@ export default function QRFacebook({
               }
 
               setEnteredLink(el.target.value);
-              setNewQR(false);
               setChanged(true);
             }}
             onBlur={() => {

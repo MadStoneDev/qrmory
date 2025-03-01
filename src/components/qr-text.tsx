@@ -1,6 +1,6 @@
 ﻿import { QRControlType } from "@/types/qr-controls";
 
-const QRText = ({ setText, setChanged, setNewQR }: QRControlType) => {
+const QRText = ({ setText, setChanged }: QRControlType) => {
   return (
     <>
       <label className="flex items-center control-label">
@@ -10,7 +10,6 @@ const QRText = ({ setText, setChanged, setNewQR }: QRControlType) => {
           className="control-input"
           onChange={(el) => {
             setText(el.target.value);
-            setNewQR(false);
             setChanged(true);
           }}
         />

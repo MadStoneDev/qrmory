@@ -2,11 +2,7 @@
 
 import { QRControlType } from "@/types/qr-controls";
 
-export default function QRInstagram({
-  setText,
-  setChanged,
-  setNewQR,
-}: QRControlType) {
+export default function QRInstagram({ setText, setChanged }: QRControlType) {
   // States
   const [enteredLink, setEnteredLink] = useState("");
 
@@ -44,7 +40,6 @@ export default function QRInstagram({
               }
 
               setEnteredLink(el.target.value);
-              setNewQR(false);
               setChanged(true);
             }}
             onBlur={() => {

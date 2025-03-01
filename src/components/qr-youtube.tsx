@@ -1,11 +1,7 @@
 ﻿import { useState } from "react";
 import { QRControlType } from "@/types/qr-controls";
 
-export default function QRYoutube({
-  setText,
-  setChanged,
-  setNewQR,
-}: QRControlType) {
+export default function QRYoutube({ setText, setChanged }: QRControlType) {
   // States
   const [enteredLink, setEnteredLink] = useState("");
   const [mainLink, setMainLink] = useState(`https://www.youtube.com/`);
@@ -54,7 +50,6 @@ export default function QRYoutube({
               }
 
               setEnteredLink(el.target.value);
-              setNewQR(false);
               setChanged(true);
             }}
             onBlur={() => {

@@ -1,8 +1,8 @@
-﻿import { ChangeEvent, useEffect, useRef, useState } from "react";
+﻿import { useRef, useState } from "react";
 import { QRControlType } from "@/types/qr-controls";
 import { isValidURL } from "@/utils/general";
 
-const QRWebsite = ({ setText, setChanged, setNewQR }: QRControlType) => {
+const QRWebsite = ({ setText, setChanged }: QRControlType) => {
   // States
   const [site, setSite] = useState("");
   const [protocol, setProtocol] = useState("https");

@@ -1,6 +1,4 @@
-import "../globals.css";
 import React from "react";
-import MainNavigation from "@/components/main-navigation";
 import MainFooter from "@/components/main-footer";
 
 export const metadata = {
@@ -8,19 +6,16 @@ export const metadata = {
   description:
     "A simple, easy to use QR code generator for Australian small businesses.",
 };
-6;
 
-export default function RootLayout({
+export default function PublicLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body>
-        {children}
-        <MainFooter />
-      </body>
-    </html>
+    <>
+      {children}
+      <MainFooter />
+    </>
   );
 }

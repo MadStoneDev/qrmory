@@ -2,6 +2,7 @@
 import Link from "next/link";
 
 import MainNavigation from "@/components/main-navigation";
+import MainFooter from "@/components/main-footer";
 
 export default function NotFound() {
   return (
@@ -53,6 +54,8 @@ export default function NotFound() {
           </ul>
         </div>
       </section>
+
+      <MainFooter />
     </main>
   );
 }

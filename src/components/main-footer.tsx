@@ -6,12 +6,13 @@ export default function MainFooter() {
     // about: ["About", "/about"],
     // aboutQRCodes: ["More About QR Codes", "/more-about-qr-codes"],
     // features: ["Features", "/features"],
-    pricing: ["Pricing", "/pricing"],
+    // pricing: ["Pricing", "/pricing"],
     // blog: ["Blog", "/blog"],
   };
 
   const supportLinks = {
     helpCenter: ["Help Center", "/help"],
+    contact: ["Contact Us", "/help/contact"],
   };
 
   const importantLinks = [
@@ -24,13 +25,15 @@ export default function MainFooter() {
   ];
 
   return (
-    <footer className="mx-auto py-8 px-8 w-full max-w-7xl border-t-1 border-stone-300 text-qrmory-purple-800">
-      <div className="mx-auto flex md:flex-row flex-col md:justify-between justify-center items-stretch md:gap-4 gap-16 w-full md:text-left text-center">
-        <article className="flex flex-col md:w-1/4 w-full md:items-start items-center">
+    <footer
+      className={`mx-auto pt-7 pb-4 md:py-8 px-8 w-full max-w-7xl border-t-1 border-stone-300 text-qrmory-purple-800`}
+    >
+      <section className="mx-auto flex md:flex-row flex-col md:justify-between justify-center items-stretch md:gap-4 gap-16 w-full md:text-left text-center">
+        <article className="flex flex-col md:w-2/5 w-full md:items-start items-center">
           <a href="/">
             <FullLogo className="mb-2 w-12 sm:w-16 fill-qrmory-purple-800" />
           </a>
-          <p className="mt-4 max-w-60 sm:max-w-none text-sm sm:text-base">
+          <p className="mt-4 max-w-60 sm:max-w-xs text-sm sm:text-base">
             Generate an arsenal of great QR Codes simply and quickly with
             QRmory.
           </p>
@@ -60,71 +63,61 @@ export default function MainFooter() {
           {/*</div>*/}
         </article>
 
-        {/*<article className="md:w-1/5 w-full">*/}
-        {/*  <h4 className="mb-4 font-bold text-xl">Explore</h4>*/}
-        {/*  <ul>*/}
-        {/*    {Object.keys(exploreLinks).map((key, index) => (*/}
-        {/*      <li className="my-2" key={key}>*/}
-        {/*        <a*/}
-        {/*          className="py-0.5 px-1 text-base text-qrmory-purple-400 hover:text-white hover:bg-qrmory-purple-400 transition-all duration-500"*/}
-        {/*          href={exploreLinks[key][1]}*/}
-        {/*        >*/}
-        {/*          {exploreLinks[key][0]}*/}
-        {/*        </a>*/}
-        {/*      </li>*/}
-        {/*    ))}*/}
-        {/*  </ul>*/}
-        {/*</article>*/}
-
-        {/*<article className="md:w-1/5 w-full">*/}
-        {/*  <h4 className="mb-4 font-bold text-xl">Important Information</h4>*/}
-        {/*  <ul>*/}
-        {/*    {Object.keys(importantLinks).map((key, index) => (*/}
-        {/*      <li className="my-2" key={key}>*/}
-        {/*        <a*/}
-        {/*          className="py-0.5 px-1 text-base text-qrmory-purple-400 hover:text-white hover:bg-qrmory-purple-400 transition-all duration-500"*/}
-        {/*          href={importantLinks[key][1]}*/}
-        {/*        >*/}
-        {/*          {importantLinks[key][0]}*/}
-        {/*        </a>*/}
-        {/*      </li>*/}
-        {/*    ))}*/}
-        {/*  </ul>*/}
-        {/*</article>*/}
-
         <article className="md:w-1/5 w-full">
-          {/* Support */}
-          {/*<h4 className="mb-4 font-bold text-xl">Support</h4>*/}
-          {/*<ul className="mb-10">*/}
-          {/*  {Object.keys(supportLinks).map((key, index) => (*/}
-          {/*    <li className="my-2" key={key}>*/}
-          {/*      <a*/}
-          {/*        className="py-0.5 px-1 text-base text-qrmory-purple-400 hover:text-white hover:bg-qrmory-purple-400 transition-all duration-500"*/}
-          {/*        href={supportLinks[key][1]}*/}
-          {/*      >*/}
-          {/*        {supportLinks[key][0]}*/}
-          {/*      </a>*/}
-          {/*    </li>*/}
-          {/*  ))}*/}
-          {/*</ul>*/}
-
-          <h4 className="mb-4 font-bold text-sm sm:text-base">
-            Legal Information
-          </h4>
+          <h4 className="mb-4 font-bold text-lg md:text-xl">Explore</h4>
           <ul>
-            {importantLinks.map((item, index) => (
-              <li className="my-2" key={`important-link-${index}`}>
+            {Object.keys(exploreLinks).map((key, index) => (
+              <li className="my-2" key={key}>
                 <a
-                  className="py-0.5 px-1 text-sm text-qrmory-purple-400 hover:text-white hover:bg-qrmory-purple-400 transition-all duration-500"
-                  href={item.link}
+                  className="py-0.5 px-1 text-base text-qrmory-purple-400 hover:text-white hover:bg-qrmory-purple-400 transition-all duration-500"
+                  href={exploreLinks[key as keyof typeof exploreLinks][1]}
                 >
-                  {item.title}
+                  {exploreLinks[key as keyof typeof exploreLinks][0]}
                 </a>
               </li>
             ))}
           </ul>
         </article>
-      </div>
+
+        <article className="md:w-1/5 w-full">
+          <h4 className={`mb-4 font-bold text-lg md:text-xl`}>Support</h4>
+          <ul className={`mb-10`}>
+            {Object.keys(supportLinks).map((key, index) => (
+              <li className={`my-2`} key={key}>
+                <a
+                  className={`py-0.5 px-1 text-base text-qrmory-purple-400 hover:text-white hover:bg-qrmory-purple-400 transition-all duration-500`}
+                  href={supportLinks[key as keyof typeof supportLinks][1]}
+                >
+                  {supportLinks[key as keyof typeof supportLinks][0]}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </article>
+      </section>
+
+      <section className={`mt-10`}>
+        <h4 className={`md:hidden mb-4 font-bold text-lg text-center`}>
+          Legal Information
+        </h4>
+        <ul className={`flex flex-col-reverse md:flex-row items-center gap-4`}>
+          <li
+            className={`mt-4 md:mt-0 pt-4 md:py-0.5 px-1 w-full md:w-fit border-t md:border-none text-sm text-neutral-400 text-center md:text-left`}
+          >
+            © 2025 QRmory. All rights reserved
+          </li>
+          {importantLinks.map((item, index) => (
+            <li className={``} key={`important-link-${index}`}>
+              <a
+                className="py-0.5 px-1 text-sm text-qrmory-purple-400 hover:text-white hover:bg-qrmory-purple-400 transition-all duration-500"
+                href={item.link}
+              >
+                {item.title}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </section>
     </footer>
   );
 }
