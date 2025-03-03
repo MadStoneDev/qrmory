@@ -6,7 +6,7 @@ import { ChangeEvent, FormEvent, useState, useEffect } from "react";
 import {
   loginWithMagicLink,
   loginWithPassword,
-} from "@/app/(auth)/auth/login/actions";
+} from "@/app/(auth)/login/actions";
 import AuthText from "@/components/auth-text";
 import { IconEye } from "@tabler/icons-react";
 
@@ -270,7 +270,7 @@ export const LoginBlock = () => {
 
         <h4 className={`text-xs md:text-sm font-light text-center`}>
           Don't have an account yet?{" "}
-          <Link href={"/sign-up"} className={`group relative font-bold`}>
+          <Link href={"/register"} className={`group relative font-bold`}>
             Create one here
             <div
               className={`absolute left-0 -bottom-0.5 w-0 group-hover:w-full h-[1px] bg-qrmory-purple-500 transition-all duration-300`}

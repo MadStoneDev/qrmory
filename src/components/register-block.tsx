@@ -4,7 +4,7 @@ import Link from "next/link";
 import { ChangeEvent, FormEvent, useState } from "react";
 
 import AuthText from "@/components/auth-text";
-import { SignUp } from "@/app/(auth)/auth/sign-up/actions";
+import { SignUp } from "@/app/(auth)/register/actions";
 
 import { IconEye } from "@tabler/icons-react";
 

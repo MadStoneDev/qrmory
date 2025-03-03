@@ -6,7 +6,6 @@ import { IconBolt, IconDeviceFloppy, IconRocket } from "@tabler/icons-react";
 import { generateShortCode } from "@/utils/general";
 import { createClient } from "@/utils/supabase/client";
 
-import { Toaster } from "@/components/ui/sonner";
 import { toast } from "sonner";
 
 interface Props {
@@ -356,7 +355,6 @@ export default function QRSettings({
           </section>
         )}
       </div>
-      <Toaster />
     </article>
   );
 }
