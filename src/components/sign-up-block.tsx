@@ -92,25 +92,48 @@ export default function SignUpBlock() {
     }
 
     try {
+      console.log("Submitting sign-up form...");
       const response = await SignUp({
         email: formData.email,
         password: formData.password,
         confirmPassword: formData.confirmPassword,
       });
 
+      // Log the full response for debugging
+      console.log("Sign-up response:", response);
+
       // Check if response contains an error message
       if (response && response.error) {
-        setError(response.error);
+        // Show a user-friendly error message
+        if (response.error.includes("already registered")) {
+          setError("This email is already registered. Please log in instead.");
+        } else if (response.error.toLowerCase().includes("rate limit")) {
+          setError("Too many attempts. Please try again later.");
+        } else {
+          // Generic user-friendly message for other errors
+          setError(
+            "There was an issue creating your account. Please try again.",
+          );
+        }
       }
-      // If no error and no redirection occurred (which would be handled by the action)
-      // then something unexpected happened
-      else if (!response || !response.success) {
-        setError("An unexpected error occurred. Please try again.");
+      // If successful but no redirect happened (should be rare in production)
+      else if (response && response.success) {
+        setError(
+          "Sign-up successful! Please check your email to confirm your account.",
+        );
       }
-      // Otherwise the redirect from the actions.ts should handle navigation
+      // If no clear status is returned
+      else {
+        setError(
+          "Unable to create your account at this time. Please try again later.",
+        );
+      }
     } catch (error: any) {
+      // Log the full error to console for debugging
       console.error("Sign up error:", error);
-      setError(error?.message || "Failed to sign up. Please try again later.");
+
+      // Show a generic user-friendly error message
+      setError("An unexpected error occurred. Please try again later.");
     } finally {
       setIsLoading(false);
     }
@@ -118,7 +141,7 @@ export default function SignUpBlock() {
 
   // Validate all password requirements are met
   const allPasswordRequirementsMet = Object.values(passwordValidation).every(
-    (value) => value,
+    (value) => value === true,
   );
 
   // Check if form is valid for submission
