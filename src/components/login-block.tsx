@@ -100,7 +100,7 @@ export const LoginBlock = () => {
   }
 
   return (
-    <form onSubmit={handleSubmit} className={`grid gap-10 w-full max-w-sm`}>
+    <form onSubmit={handleSubmit} className={`p-4 grid gap-10 w-full max-w-sm`}>
       <article>
         <h1 className={`md:text-xl font-bold`}>Welcome Back!</h1>
         <h2 className={`text-sm md:text-base text-neutral-600 font-light`}>

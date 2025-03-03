@@ -3,7 +3,17 @@ module.exports = {
     return [
       // Permanent Redirects
       {
+        source: "/signup",
+        destination: "/auth/sign-up",
+        permanent: true,
+      },
+      {
         source: "/sign-up",
+        destination: "/auth/sign-up",
+        permanent: true,
+      },
+      {
+        source: "/register",
         destination: "/auth/sign-up",
         permanent: true,
       },

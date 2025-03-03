@@ -2,9 +2,7 @@
 
 import Link from "next/link";
 import { ChangeEvent, FormEvent, useState } from "react";
-
 import { IconEye } from "@tabler/icons-react";
-
 import AuthText from "@/components/auth-text";
 import { SignUp } from "@/app/(auth)/auth/sign-up/actions";
 
@@ -41,29 +39,30 @@ export default function SignUpBlock() {
       [target.name]: target.value,
     });
 
-    // Check if password meets requirements
-    const passwordLength = target.value.length;
-    const passwordUppercase = target.value.match(/[A-Z]/g) || [];
-    const passwordLowercase = target.value.match(/[a-z]/g) || [];
-    const passwordNumber = target.value.match(/[0-9]/g) || [];
-    const passwordSpecial = target.value.match(/[!@#$%^&*]/g) || [];
+    if (target.name === "password") {
+      // Check if password meets requirements
+      const passwordLength = target.value.length;
+      const passwordUppercase = target.value.match(/[A-Z]/g) || [];
+      const passwordLowercase = target.value.match(/[a-z]/g) || [];
+      const passwordNumber = target.value.match(/[0-9]/g) || [];
+      const passwordSpecial = target.value.match(/[!@#$%^&*]/g) || [];
 
-    setPasswordValidation((prevState) => ({
-      ...prevState,
-      atLeast8: passwordLength >= 8,
-      atLeast1Uppercase: passwordUppercase.length >= 1,
-      atLeast1Lowercase: passwordLowercase.length >= 1,
-      atLeast1Number: passwordNumber.length >= 1,
-      atLeast1Special: passwordSpecial.length >= 1,
-    }));
+      setPasswordValidation({
+        atLeast8: passwordLength >= 8,
+        atLeast1Uppercase: passwordUppercase.length >= 1,
+        atLeast1Lowercase: passwordLowercase.length >= 1,
+        atLeast1Number: passwordNumber.length >= 1,
+        atLeast1Special: passwordSpecial.length >= 1,
+      });
+    }
   };
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
-
     setError("");
 
+    // Validate email
     const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
     if (!emailRegex.test(formData.email.trim())) {
       setError("Please enter a valid email address.");
@@ -71,30 +70,72 @@ export default function SignUpBlock() {
       return;
     }
 
-    Object.keys(passwordValidation).forEach((key: string) => {
-      if (!passwordValidation[key as keyof typeof passwordValidation]) {
-        setError("Password does not meet the minimum requirements");
-        setIsLoading(false);
-        return;
+    // Validate password requirements
+    let passwordError = false;
+    Object.entries(passwordValidation).forEach(([key, value]) => {
+      if (!value) {
+        passwordError = true;
       }
     });
 
+    if (passwordError) {
+      setError("Password does not meet the minimum requirements");
+      setIsLoading(false);
+      return;
+    }
+
+    // Validate password match
+    if (formData.password !== formData.confirmPassword) {
+      setError("Passwords do not match");
+      setIsLoading(false);
+      return;
+    }
+
     try {
-      const response = await SignUp(formData);
-      if (response?.error) {
+      const response = await SignUp({
+        email: formData.email,
+        password: formData.password,
+        confirmPassword: formData.confirmPassword,
+      });
+
+      // Check if response contains an error message
+      if (response && response.error) {
         setError(response.error);
-      } else {
-        // Redirect handled by SignUp action
       }
-    } catch (error) {
-      setError("Failed to sign up. Please try again later.");
+      // If no error and no redirection occurred (which would be handled by the action)
+      // then something unexpected happened
+      else if (!response || !response.success) {
+        setError("An unexpected error occurred. Please try again.");
+      }
+      // Otherwise the redirect from the actions.ts should handle navigation
+    } catch (error: any) {
+      console.error("Sign up error:", error);
+      setError(error?.message || "Failed to sign up. Please try again later.");
     } finally {
       setIsLoading(false);
     }
   };
 
+  // Validate all password requirements are met
+  const allPasswordRequirementsMet = Object.values(passwordValidation).every(
+    (value) => value,
+  );
+
+  // Check if form is valid for submission
+  const isFormValid =
+    formData.email.length >= 6 &&
+    emailIsValid(formData.email) &&
+    allPasswordRequirementsMet &&
+    formData.password === formData.confirmPassword;
+
+  // Simple email validation function
+  function emailIsValid(email: string) {
+    const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    return emailRegex.test(email.trim());
+  }
+
   return (
-    <form onSubmit={handleSubmit} className={`grid gap-10 w-full max-w-sm`}>
+    <form onSubmit={handleSubmit} className={`p-4 grid gap-10 w-full max-w-sm`}>
       <article>
         <h1 className={`md:text-xl font-bold`}>Welcome to QRmory!</h1>
         <h2 className={`text-sm md:text-base text-neutral-600 font-light`}>
@@ -210,21 +251,17 @@ export default function SignUpBlock() {
 
       {error && (
         <article>
-          <p className={`text-red-600`}>Oops</p>
+          <p className={`text-red-600`}>{error}</p>
         </article>
       )}
 
       <article className={`grid gap-3`}>
         <button
           type="submit"
-          disabled={
-            formData.email.length < 6 ||
-            formData.password.length < 8 ||
-            formData.password !== formData.confirmPassword
-          }
+          disabled={isLoading || !isFormValid}
           className={`py-2 w-full bg-qrmory-purple-500 disabled:bg-stone-300 rounded-md text-white text-sm md:text-base font-bold`}
         >
-          Create!
+          {isLoading ? "Creating..." : "Create!"}
         </button>
         <h4 className={`text-xs md:text-sm font-light text-center`}>
           Already have an account?{" "}
