@@ -1,5 +1,4 @@
-﻿import { useState, useEffect } from "react";
-
+﻿import { useState, useEffect, Dispatch, SetStateAction } from "react";
 import { QRControlType } from "@/types/qr-controls";
 import { getSoftBgColor } from "@/utils/colour-utils";
 
@@ -60,11 +59,9 @@ export default function QRCoupon({ setText, setChanged }: QRControlType) {
 
   // Update parent with coupon URL
   const updateParentValue = () => {
-    // Only create QR if at least title and discount are provided
-    if (
-      dealTitle &&
-      (discountType === "free" || discountType === "bogo" || discount)
-    ) {
+    // Only create QR if at least title is provided
+    // Business name, discount amount, and description are all optional
+    if (dealTitle) {
       const encodedData = encodeCouponData();
       const couponUrl = `https://qrmory.com/coupon/${encodedData}`;
       setText(couponUrl);
@@ -97,7 +94,7 @@ export default function QRCoupon({ setText, setChanged }: QRControlType) {
 
   // Input change handlers
   const handleInputChange =
-    (setter: React.Dispatch<React.SetStateAction<string>>) =>
+    (setter: Dispatch<SetStateAction<string>>) =>
     (
       event: React.ChangeEvent<
         HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
@@ -111,8 +108,13 @@ export default function QRCoupon({ setText, setChanged }: QRControlType) {
 
   return (
     <>
+      <div className="text-sm text-qrmory-purple-600 italic mb-2">
+        Create a digital coupon or special offer. Fields marked with * are
+        required.
+      </div>
+
       <label className="control-label block">
-        Business Name:
+        Business Name (optional):
         <input
           type="text"
           className="control-input w-full"
@@ -123,7 +125,7 @@ export default function QRCoupon({ setText, setChanged }: QRControlType) {
       </label>
 
       <label className="control-label block">
-        Deal Title:
+        Deal Title*:
         <input
           type="text"
           className="control-input w-full"
@@ -150,7 +152,7 @@ export default function QRCoupon({ setText, setChanged }: QRControlType) {
 
         {discountType !== "free" && discountType !== "bogo" && (
           <label className="control-label block">
-            Discount Amount:
+            Discount Amount (optional):
             <input
               type={discountType === "percent" ? "number" : "text"}
               className="control-input w-full"
@@ -254,13 +256,13 @@ export default function QRCoupon({ setText, setChanged }: QRControlType) {
       </div>
 
       {/* Preview */}
-      <div className={`mt-2 pt-3 rounded-lg border bg-white border-gray-200`}>
+      <div className={`pt-3 rounded-lg border bg-white border-gray-200`}>
         <p className={`px-3 text-xs font-medium uppercase text-neutral-500`}>
           Preview
         </p>
 
         <div
-          className={`mt-3 py-4 px-10 text-center rounded-md`}
+          className={`mt-3 py-3 px-10 text-center rounded-md`}
           style={{ backgroundColor: softBgColor }}
         >
           <div className={`mb-3 text-xl font-serif text-neutral-900`}>
@@ -268,7 +270,7 @@ export default function QRCoupon({ setText, setChanged }: QRControlType) {
           </div>
 
           <section
-            className={`pt-5 pb-4 rounded-md ${
+            className={`pt-5 pb-3 rounded-md ${
               bgTheme === "light"
                 ? "text-neutral-900 bg-white"
                 : "text-white bg-neutral-900"

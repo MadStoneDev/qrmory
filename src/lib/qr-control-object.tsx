@@ -8,7 +8,7 @@ import QRWebsite from "@/components/qr-website";
 import QRYoutube from "@/components/qr-youtube";
 import QRWifi from "@/components/qr-wifi";
 import QRVCard from "@/components/qr-vcard";
-import QRCoupon from "@/components/ui/qr-coupon";
+import QRCoupon from "@/components/qr-coupon";
 
 export const qrControls: QRControlsObject = {
   website: {

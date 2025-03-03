@@ -37,10 +37,26 @@ export default function CouponPage() {
       const decodedData = decodeURIComponent(escape(atob(code)));
       const jsonData = JSON.parse(decodedData) as CouponData;
 
-      // Validate that we have at least a title and business name
-      if (!jsonData.title || !jsonData.biz) {
-        setError("Incomplete coupon information");
+      // Only require the title, make business name, discount, and description optional
+      if (!jsonData.title) {
+        setError("Incomplete coupon information - missing title");
       } else {
+        // Apply default values for optional fields
+        if (!jsonData.biz) {
+          jsonData.biz = "Special Offer";
+        }
+
+        // The discount can be missing for "free" or "bogo" type coupons
+        if (
+          !jsonData.discount &&
+          jsonData.type !== "free" &&
+          jsonData.type !== "bogo"
+        ) {
+          jsonData.discount = "";
+        }
+
+        // Description is already optional
+
         setData(jsonData);
 
         // Check if the coupon is expired
