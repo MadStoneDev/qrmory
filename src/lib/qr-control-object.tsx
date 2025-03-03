@@ -6,6 +6,9 @@ import QRText from "@/components/qr-text";
 import QRTwitter from "@/components/qr-twitter";
 import QRWebsite from "@/components/qr-website";
 import QRYoutube from "@/components/qr-youtube";
+import QRWifi from "@/components/qr-wifi";
+import QRVCard from "@/components/qr-vcard";
+import QRCoupon from "@/components/ui/qr-coupon";
 
 export const qrControls: QRControlsObject = {
   website: {
@@ -53,7 +56,13 @@ export const qrControls: QRControlsObject = {
   //     "Share your profiles",
   //     <QRSocialMedia setText={setTextValue}  setChanged={setQRChanged} setNewQR={setNewQR} />,
   // ],
-  // eBusinessCard: ["E-Biz Card", "The modern business card"],
+  eBusinessCard: {
+    title: "E-Business Card",
+    description: "The modern business card",
+    component: (setText: Function, setChanged: Function) => (
+      <QRVCard setText={setText} setChanged={setChanged} />
+    ),
+  },
   // poll: ["Poll", "Run a quick poll"],
   // reviews: ["Reviews", "Collect customer reviews"],
   // event: ["Event", "Promote an event"],
@@ -70,6 +79,20 @@ export const qrControls: QRControlsObject = {
   //     "Preset an SMS",
   //     <QRSms setText={setTextValue}  setChanged={setQRChanged} setNewQR={setNewQR} />,
   // ],
+  coupon: {
+    title: "Coupon",
+    description: "Create a coupon or special offer",
+    component: (setText: Function, setChanged: Function) => (
+      <QRCoupon setText={setText} setChanged={setChanged} />
+    ),
+  },
+  wifi: {
+    title: "WiFi",
+    description: "Share WiFi details",
+    component: (setText: Function, setChanged: Function) => (
+      <QRWifi setText={setText} setChanged={setChanged} />
+    ),
+  },
   text: {
     title: "Text",
     description: "Display a text message",
@@ -77,7 +100,6 @@ export const qrControls: QRControlsObject = {
       <QRText setText={setText} setChanged={setChanged} />
     ),
   },
-  // wifi: ["WiFi", "Share WiFi details"],
   // location: ["Location", "Share a map address"],
   // bitcoin: ["Bitcoin", "Quick Bitcoin payments"],
   // ethereum: ["Ethereum", "Quick Ethereum payments"],

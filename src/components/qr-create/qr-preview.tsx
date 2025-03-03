@@ -1,7 +1,5 @@
-﻿import React from "react";
-
+﻿import React, { useMemo } from "react";
 import { useQRCode } from "next-qrcode";
-
 import { downloadToSVG } from "@/utils/qr-save";
 import d3ToPng from "d3-svg-to-png";
 
@@ -24,13 +22,18 @@ export default function QRPreview({
 }: Props) {
   const { SVG } = useQRCode();
 
+  // Determine which value to use for the QR code
+  const displayValue = useMemo(() => {
+    return qrShortCode || qrValue;
+  }, [qrShortCode, qrValue]);
+
   const handleDownload = (format: "png" | "jpg") => {
     const svgData = document.querySelector("#final-qr div svg");
     if (!svgData) return;
 
-    d3ToPng(`#final-qr div svg`, qrTitle, {
+    d3ToPng(`#final-qr div svg`, qrTitle || "qrmory-qr-code", {
       format: format,
-    }).then((r) => console.log(`Downloaded ${format} file`));
+    }).then(() => console.log(`Downloaded ${format} file`));
   };
 
   return (
@@ -44,7 +47,7 @@ export default function QRPreview({
       <div className="w-full">
         <h4 className="text-xs text-stone-400">Your QR Code Title</h4>
         <h5 className="text-base text-qrmory-purple-800 font-bold">
-          {qrTitle || null}
+          {qrTitle || "Untitled QR Code"}
         </h5>
       </div>
 
@@ -53,7 +56,7 @@ export default function QRPreview({
         className="my-6 lg:my-16 lg:mx-auto flex-grow grid place-content-center text-gray-600 dark:text-gray-600 text-sm"
       >
         <SVG
-          text={qrShortCode || qrValue}
+          text={displayValue}
           options={{
             errorCorrectionLevel: "M",
             color: {
@@ -64,6 +67,11 @@ export default function QRPreview({
             margin: 1,
           }}
         />
+        {qrChanged && (
+          <div className="text-center mt-2 text-stone-500 text-sm font-medium">
+            Click "Generate QR" to update
+          </div>
+        )}
       </div>
 
       <button
@@ -74,7 +82,7 @@ export default function QRPreview({
         }`}
         onClick={() => {
           const svgData = document.querySelector("#final-qr div svg");
-          downloadToSVG(svgData, qrTitle);
+          downloadToSVG(svgData, qrTitle || "qrmory-qr-code");
         }}
         disabled={qrChanged}
       >

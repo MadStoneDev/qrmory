@@ -1,5 +1,4 @@
 ﻿import { useState } from "react";
-
 import { QRControlType } from "@/types/qr-controls";
 
 export default function QRInstagram({ setText, setChanged }: QRControlType) {
@@ -8,6 +7,49 @@ export default function QRInstagram({ setText, setChanged }: QRControlType) {
 
   // Main Link
   const mainLink = `instagram.com/`;
+
+  // Update the parent component with the current value
+  const updateParentValue = (value: string) => {
+    if (value.length > 0) {
+      setText(`${mainLink}${value}`);
+    } else {
+      setText("");
+    }
+    setChanged(true);
+  };
+
+  // Handle input change
+  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const newValue = event.target.value;
+    setEnteredLink(newValue);
+    updateParentValue(newValue);
+  };
+
+  // Handle input blur (when focus leaves the input)
+  const handleInputBlur = () => {
+    if (enteredLink.length === 0) {
+      setText("");
+      return;
+    }
+
+    // Process and format the link properly
+    let fixedLink = enteredLink;
+
+    // Remove any prefixes like www., http://, https://
+    fixedLink = fixedLink
+      .replace(`www.${mainLink}`, mainLink)
+      .replace("http://", "")
+      .replace("https://", "");
+
+    // If the user pasted the full Instagram URL, extract just the username/path
+    if (fixedLink.substring(0, mainLink.length) === mainLink) {
+      fixedLink = fixedLink.substring(mainLink.length);
+    }
+
+    // Update state and parent
+    setEnteredLink(fixedLink);
+    setText(mainLink + fixedLink);
+  };
 
   return (
     <>
@@ -25,43 +67,15 @@ export default function QRInstagram({ setText, setChanged }: QRControlType) {
           <input
             type="text"
             className="control-input"
-            placeholder={`eg. https://instagram.com/qrmory or qrmory`}
+            placeholder="e.g. username"
             value={enteredLink}
             onKeyDown={(e) => {
               if (e.key === " ") {
                 e.preventDefault();
               }
             }}
-            onChange={(el) => {
-              if (el.target.value.length > 0) {
-                setText(`${mainLink}${el.target.value}`);
-              } else {
-                setText("");
-              }
-
-              setEnteredLink(el.target.value);
-              setChanged(true);
-            }}
-            onBlur={() => {
-              if (enteredLink.length === 0) {
-                setText("");
-                return;
-              }
-
-              let fixedLink = enteredLink;
-
-              fixedLink = fixedLink
-                .replace(`www.${mainLink}`, mainLink)
-                .replace("http://", "")
-                .replace("https://", "");
-
-              if (fixedLink.substring(0, mainLink.length) === mainLink) {
-                fixedLink = fixedLink.substring(mainLink.length);
-              }
-
-              setEnteredLink(fixedLink);
-              setText(mainLink + fixedLink);
-            }}
+            onChange={handleInputChange}
+            onBlur={handleInputBlur}
           />
         </div>
       </label>

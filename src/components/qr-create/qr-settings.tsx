@@ -41,36 +41,29 @@ export default function QRSettings({
   const [loadingDynamic, setLoadingDynamic] = useState(false);
   const [qrShortCode, setQRShortCode] = useState("");
 
-  const [qrControl, setQRControl] = useState(() =>
-    qrControls[activeSelector].component(
-      (value: string) => {
-        setTextValue(value);
+  // Functions
+  const updateTextValue = (value: string) => {
+    setTextValue(value);
+  };
 
-        if (value.length > 0) {
-          setQRChanged(true);
-        }
-      },
-      (changed: boolean) => {
-        if (changed) {
-          setQRChanged(true);
-        }
-      },
-    ),
+  const updateQRChanged = (changed: boolean) => {
+    setQRChanged(changed);
+  };
+
+  // Initialize the QR control component with correct callbacks
+  const [qrControl, setQRControl] = useState(() =>
+    qrControls[activeSelector].component(updateTextValue, updateQRChanged),
   );
 
-  // Functions
+  // Function to handle selector change
   const handleActiveSelector = (key: string) => {
     setTextValue("");
     setActiveSelector(key);
-    setQRControl(
-      qrControls[key].component((value: string) => {
-        setTextValue(value);
-        setQRChanged(false);
-      }, setQRChanged),
-    );
+    setQRControl(qrControls[key].component(updateTextValue, updateQRChanged));
     setQRChanged(true);
   };
 
+  // Function to generate the QR code
   const handleGenerateQR = () => {
     if (textValue.length > 0) {
       onUpdate({
@@ -105,9 +98,7 @@ export default function QRSettings({
     }, 1000);
   };
 
-  const handleSaveQR = () => {};
-
-  // Effects
+  // Update component when props change
   useEffect(() => {
     setQRTitle(initialQRTitle);
   }, [initialQRTitle]);
@@ -120,7 +111,19 @@ export default function QRSettings({
     setQRChanged(initialQRChanged);
   }, [initialQRChanged]);
 
+  // Notify parent of state changes when local state changes
   useEffect(() => {
+    // Prevent calling onUpdate during initialization
+    if (
+      qrTitle === initialQRTitle &&
+      textValue === initialTextValue &&
+      qrChanged === initialQRChanged &&
+      activeSelector === initialActiveSelector &&
+      qrShortCode === ""
+    ) {
+      return;
+    }
+
     onUpdate({
       qrTitle,
       textValue,
@@ -177,42 +180,75 @@ export default function QRSettings({
         <section
           className={`mt-8 flex flex-col md:flex-row items-center justify-between gap-2`}
         >
-          {/*{!user && (*/}
-          {/*  <article*/}
-          {/*    className={`flex flex-col md:flex-row items-center justify-between gap-2`}*/}
-          {/*  >*/}
-          {/*    <button*/}
-          {/*      className={`py-2.5 px-4 hover:enabled:translate-x-1 hover:enabled:-translate-y-1 flex items-center justify-center gap-2 border disabled:border-none border-qrmory-purple-800 ${*/}
-          {/*        isDynamic*/}
-          {/*          ? "bg-qrmory-purple-800 text-white"*/}
-          {/*          : "bg-white disabled:bg-stone-300 hover:enabled:bg-qrmory-purple-400 text-qrmory-purple-800 disabled:text-stone-600"*/}
-          {/*      } w-48 max-w-full text-xs lg:text-sm hover:enabled:text-white rounded uppercase font-semibold transition-all duration-300`}*/}
-          {/*      onClick={handleMakeDynamic}*/}
-          {/*      disabled={loadingDynamic}*/}
-          {/*    >*/}
-          {/*      <IconBolt*/}
-          {/*        className={`${*/}
-          {/*          loadingDynamic ? "animate-pulse duration-1000" : ""*/}
-          {/*        }`}*/}
-          {/*      />*/}
-          {/*      <span>Make Dynamic</span>*/}
-          {/*    </button>*/}
+          {/* Dynamic QR button section (commented out in original) */}
+          {/* {!user && (
+            <article className={`flex flex-col md:flex-row items-center justify-between gap-2`}>
+              <button
+                className={`py-2.5 px-4 hover:enabled:translate-x-1 hover:enabled:-translate-y-1 flex items-center justify-center gap-2 border disabled:border-none border-qrmory-purple-800 ${
+                  isDynamic
+                    ? "bg-qrmory-purple-800 text-white"
+                    : "bg-white disabled:bg-stone-300 hover:enabled:bg-qrmory-purple-400 text-qrmory-purple-800 disabled:text-stone-600"
+                } w-48 max-w-full text-xs lg:text-sm hover:enabled:text-white rounded uppercase font-semibold transition-all duration-300`}
+                onClick={handleMakeDynamic}
+                disabled={loadingDynamic}
+              >
+                <IconBolt
+                  className={`${
+                    loadingDynamic ? "animate-pulse duration-1000" : ""
+                  }`}
+                />
+                <span>Make Dynamic</span>
+              </button>
 
-          {/*    <button*/}
-          {/*      className={`py-2.5 px-4 hover:enabled:translate-x-1 hover:enabled:-translate-y-1 flex items-center justify-center gap-2 border disabled:border-none border-qrmory-purple-800 hover:enabled:border-qrmory-purple-400 bg-white disabled:bg-stone-300 hover:enabled:bg-qrmory-purple-400 text-qrmory-purple-800 disabled:text-stone-600 w-48 max-w-full text-xs lg:text-sm hover:enabled:text-white rounded uppercase font-semibold transition-all duration-300`}*/}
-          {/*      onClick={handleSaveQR}*/}
-          {/*      disabled={textValue.length === 0}*/}
-          {/*    >*/}
-          {/*      <IconDeviceFloppy />*/}
-          {/*      <span>Save QR Code</span>*/}
-          {/*    </button>*/}
-          {/*  </article>*/}
-          {/*)}*/}
+              <button
+                className={`py-2.5 px-4 hover:enabled:translate-x-1 hover:enabled:-translate-y-1 flex items-center justify-center gap-2 border disabled:border-none border-qrmory-purple-800 hover:enabled:border-qrmory-purple-400 bg-white disabled:bg-stone-300 hover:enabled:bg-qrmory-purple-400 text-qrmory-purple-800 disabled:text-stone-600 w-48 max-w-full text-xs lg:text-sm hover:enabled:text-white rounded uppercase font-semibold transition-all duration-300`}
+                onClick={handleSaveQR}
+                disabled={textValue.length === 0}
+              >
+                <IconDeviceFloppy />
+                <span>Save QR Code</span>
+              </button>
+            </article>
+          )} */}
 
           <button
-            className="py-2.5 hover:enabled:translate-x-1 hover:enabled:-translate-y-1 flex items-center justify-center gap-2 border disabled:border-none border-qrmory-purple-800 hover:enabled:border-qrmory-purple-400 bg-white disabled:bg-stone-300 hover:enabled:bg-qrmory-purple-400 w-48 max-w-full text-xs lg:text-sm text-qrmory-purple-800 disabled:text-stone-600 hover:enabled:text-white rounded uppercase font-semibold transition-all duration-300"
+            className={`
+              py-2.5 
+              hover:enabled:translate-x-1 
+              hover:enabled:-translate-y-1 
+              flex items-center 
+              justify-center 
+              gap-2 
+              border 
+              disabled:border-none 
+              border-qrmory-purple-800
+              hover:enabled:border-qrmory-purple-400
+              ${
+                textValue.length === 0
+                  ? "bg-stone-300 text-stone-600"
+                  : qrChanged
+                    ? "bg-qrmory-purple-800 text-white"
+                    : "bg-white text-qrmory-purple-800 hover:enabled:bg-qrmory-purple-400 hover:enabled:text-white"
+              }
+              w-48 
+              max-w-full 
+              text-xs 
+              lg:text-sm
+              rounded 
+              uppercase 
+              font-semibold 
+              transition-all 
+              duration-300
+            `}
             onClick={handleGenerateQR}
             disabled={textValue.length === 0 || !qrChanged}
+            title={
+              textValue.length === 0
+                ? "Please enter content first"
+                : !qrChanged
+                  ? "QR code is already up to date"
+                  : "Generate QR code with current content"
+            }
           >
             <span>Generate QR</span>
             <IconRocket />

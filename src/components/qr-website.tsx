@@ -13,6 +13,81 @@ const QRWebsite = ({ setText, setChanged }: QRControlType) => {
   const protocolRef = useRef<HTMLSelectElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  // Validate URL
+  const validateUrl = (url: string) => {
+    if (url.length === 0) return true;
+    return isValidURL(url);
+  };
+
+  // Update the parent component with the current URL value
+  const updateParentValue = (siteValue: string, protocolValue: string) => {
+    if (siteValue.length === 0) {
+      setText("");
+    } else {
+      setText(`${protocolValue}://${siteValue}`);
+    }
+    setChanged(true);
+  };
+
+  const handleSiteChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const newValue = event.target.value;
+    setSite(newValue);
+
+    if (isError) {
+      setIsError(false);
+      setErrorMessage("");
+    }
+
+    const isValid = validateUrl(newValue);
+    if (!isValid && newValue.length > 0) {
+      setIsError(true);
+    }
+
+    updateParentValue(newValue, protocol);
+  };
+
+  const handleProtocolChange = (
+    event: React.ChangeEvent<HTMLSelectElement>,
+  ) => {
+    const newProtocol = event.target.value;
+    setProtocol(newProtocol);
+
+    // Update parent with new protocol
+    updateParentValue(site, newProtocol);
+  };
+
+  const handleBlur = () => {
+    if (site.length === 0) return;
+
+    // Check if URL has its own protocol specified
+    if (site.match(/^http(s?):\/\//)) {
+      try {
+        const url = new URL(site);
+        // Extract protocol without the ://
+        const extractedProtocol = url.protocol.replace(":", "");
+        setProtocol(extractedProtocol);
+
+        // Remove protocol from site value
+        const newSite = site.replace(/^http(s?):\/\//, "");
+        setSite(newSite);
+
+        // Update parent with extracted values
+        updateParentValue(newSite, extractedProtocol);
+      } catch (error) {
+        // Invalid URL format, keep as is
+      }
+    }
+
+    // Final validation
+    const isValid = validateUrl(site);
+    setIsError(!isValid && site.length > 0);
+    if (!isValid && site.length > 0) {
+      setErrorMessage(
+        "That doesn't look like a valid URL. Are you sure it's correct?",
+      );
+    }
+  };
+
   return (
     <>
       <label className="control-label">
@@ -21,14 +96,8 @@ const QRWebsite = ({ setText, setChanged }: QRControlType) => {
           <select
             ref={protocolRef}
             className="mr-2 mt-1 ring-0 border-0 outline-none focus:bg-stone-100 rounded-xl text-sm md:text-base text-qrmory-purple-800 font-bold"
-            onChange={(event) => {
-              const siteProtocol = event.target.value;
-
-              setProtocol(siteProtocol);
-              setText(siteProtocol + "://" + site);
-
-              setChanged(true);
-            }}
+            value={protocol}
+            onChange={handleProtocolChange}
           >
             <option value="https">https://</option>
             <option value="http">http://</option>
@@ -37,60 +106,20 @@ const QRWebsite = ({ setText, setChanged }: QRControlType) => {
             ref={inputRef}
             type="text"
             value={site}
-            className="control-input"
+            className={`control-input ${isError ? "border-rose-400" : ""}`}
+            placeholder="example.com"
             onKeyDown={(e) => {
               if (e.key === " ") {
                 e.preventDefault();
               }
             }}
-            onChange={(event) => {
-              setIsError(false);
-              setErrorMessage("");
-
-              if (event.target.value.length === 0) {
-                setText("");
-              } else {
-                setText(protocol + "://" + site);
-              }
-
-              setSite(event.target.value);
-              setChanged(true);
-            }}
-            onBlur={() => {
-              if (site.length === 0) {
-                setText("");
-                return;
-              }
-
-              let siteUrl = site;
-
-              if (isValidURL(siteUrl)) {
-                const checkProtocol = siteUrl.match(/^http(s?):\/\//);
-                const siteProtocol = checkProtocol
-                  ? checkProtocol[0].replace("://", "")
-                  : protocol;
-
-                if (checkProtocol) {
-                  setProtocol(siteProtocol);
-                  protocolRef.current!.value = siteProtocol;
-                }
-
-                siteUrl = siteUrl.replace(/^http(s?):\/\//, "");
-                setSite(siteUrl);
-              } else {
-                setIsError(true);
-                setErrorMessage(
-                  "That doesn't look like a valid URL. Are you it's correct?",
-                );
-              }
-
-              setText(protocol + "://" + siteUrl);
-            }}
+            onChange={handleSiteChange}
+            onBlur={handleBlur}
           />
         </div>
-        <p className="mt-2 text-sm italic text-rose-600">
-          {isError ? errorMessage : null}
-        </p>
+        {isError && (
+          <p className="mt-2 text-sm italic text-rose-600">{errorMessage}</p>
+        )}
       </label>
     </>
   );

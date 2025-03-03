@@ -9,6 +9,8 @@ export async function middleware(request: NextRequest) {
   // Public Routes
   const publicRoutes = [
     "/",
+    "/coupon",
+    "/vcard",
     "/login",
     "/register",
     "/help",
