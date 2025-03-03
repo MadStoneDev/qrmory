@@ -3,7 +3,7 @@
 export default function DashboardPage() {
   return (
     <>
-      <article>something</article>
+      <article>Dashboard</article>
     </>
   );
 }
