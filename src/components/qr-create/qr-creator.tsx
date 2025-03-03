@@ -52,7 +52,7 @@ export default function QRCreator({
     <div
       id={`start-creating`}
       className={`${
-        withHeading ? "mx-auto mt-24 px-2 lg:px-6 max-w-6xl" : "px-2"
+        withHeading ? "mx-auto mt-24 px-2 lg:px-6 max-w-6xl" : ""
       } mb-16 w-full text-center text-qrmory-purple-800`}
     >
       {withHeading && (

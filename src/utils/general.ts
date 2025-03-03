@@ -114,6 +114,5 @@ export const generateShortCode = (codeLength: number, checkList?: string[]) => {
     newShortCode = shuffledArray.join("");
   } while (checkList?.includes(newShortCode));
 
-  console.log(newShortCode);
   return newShortCode;
 };

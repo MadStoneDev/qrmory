@@ -2,7 +2,11 @@
 import { QRControlType } from "@/types/qr-controls";
 import { getSoftBgColor } from "@/utils/colour-utils";
 
-export default function QRCoupon({ setText, setChanged }: QRControlType) {
+export default function QRCoupon({
+  setText,
+  setChanged,
+  setSaveData,
+}: QRControlType) {
   // States for coupon fields
   const [dealTitle, setDealTitle] = useState("");
   const [discount, setDiscount] = useState("");
@@ -33,25 +37,30 @@ export default function QRCoupon({ setText, setChanged }: QRControlType) {
     }
   };
 
-  // Base64 encode JSON data
-  const encodeCouponData = () => {
-    const data = {
+  const createSaveData = () => {
+    return {
       title: dealTitle,
       discount: discount,
       type: discountType,
       desc: description,
       cta: ctaText,
-      color: brandColor.replace("#", ""),
+      color: brandColor,
       theme: bgTheme,
       exp: expiryDate,
       biz: businessName,
+    };
+  };
+
+  // Base64 encode JSON data
+  const encodeCouponData = () => {
+    const data = {
+      ...createSaveData(),
+
       // Add timestamp to prevent caching issues
       ts: new Date().getTime(),
     };
 
-    // Convert to JSON and encode to Base64
     const jsonStr = JSON.stringify(data);
-    // For browser compatibility, we need to first encode to UTF-8
     const encodedData = btoa(unescape(encodeURIComponent(jsonStr)));
 
     return encodedData;
@@ -59,16 +68,22 @@ export default function QRCoupon({ setText, setChanged }: QRControlType) {
 
   // Update parent with coupon URL
   const updateParentValue = () => {
-    // Only create QR if at least title is provided
-    // Business name, discount amount, and description are all optional
     if (dealTitle) {
       const encodedData = encodeCouponData();
       const couponUrl = `https://qrmory.com/coupon/${encodedData}`;
       setText(couponUrl);
       setChanged(true);
+
+      if (setSaveData) {
+        setSaveData(createSaveData());
+      }
     } else {
       setText("");
       setChanged(true);
+
+      if (setSaveData) {
+        setSaveData(null);
+      }
     }
   };
 

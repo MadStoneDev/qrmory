@@ -1,7 +1,18 @@
-﻿import { useState } from "react";
+﻿import { useState, useEffect } from "react";
 import { QRControlType } from "@/types/qr-controls";
 
-export default function QRWifi({ setText, setChanged }: QRControlType) {
+interface WifiSaveData {
+  ssid: string;
+  password: string;
+  encryption: string;
+  hidden: boolean;
+}
+
+export default function QRWifi({
+  setText,
+  setChanged,
+  setSaveData,
+}: QRControlType) {
   // States
   const [ssid, setSsid] = useState("");
   const [password, setPassword] = useState("");
@@ -14,8 +25,24 @@ export default function QRWifi({ setText, setChanged }: QRControlType) {
     const wifiString = `WIFI:T:${encryption};S:${ssid};P:${password}${
       hidden ? ";H:true" : ""
     };`;
+
     setText(wifiString);
     setChanged(true);
+
+    // Update save data if ssid exists
+    if (setSaveData) {
+      if (ssid) {
+        const saveData: WifiSaveData = {
+          ssid,
+          password,
+          encryption,
+          hidden,
+        };
+        setSaveData(saveData);
+      } else {
+        setSaveData(null);
+      }
+    }
   };
 
   // Handle SSID change

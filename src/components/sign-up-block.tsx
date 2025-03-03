@@ -71,16 +71,12 @@ export default function SignUpBlock() {
     }
 
     try {
-      console.log("Client: Submitting sign-up form...");
-
       // Direct approach with try/catch
       const response = await SignUp({
         email: formData.email,
         password: formData.password,
         confirmPassword: formData.confirmPassword,
       });
-
-      console.log("Client: Sign-up response:", response);
 
       // Handle response
       if (response) {
@@ -149,7 +145,7 @@ export default function SignUpBlock() {
     formData.password === formData.confirmPassword;
 
   return (
-    <form onSubmit={handleSubmit} className={`grid gap-10 w-full max-w-sm`}>
+    <form onSubmit={handleSubmit} className={`p-4 grid gap-10 w-full max-w-sm`}>
       <article>
         <h1 className={`md:text-xl font-bold`}>Welcome to QRmory!</h1>
         <h2 className={`text-sm md:text-base text-neutral-600 font-light`}>

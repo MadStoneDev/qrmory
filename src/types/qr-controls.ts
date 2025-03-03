@@ -1,20 +1,23 @@
-﻿import { JSX } from "react";
+﻿// In @/types/qr-controls.ts
+import { ReactNode } from "react";
 
 export interface QRControlType {
-  setText: Function;
-  setChanged: Function;
+  setText: (text: string) => void;
+  setChanged: (changed: boolean) => void;
+  setSaveData?: (data: any) => void;
 }
 
-export interface QRType {
+export interface QRControlInfo {
   title: string;
   description: string;
-  icon?: JSX.Element;
+  icon: ReactNode;
   component: (
-    setText: (value: string) => void,
-    setChange: (change: boolean) => void,
-  ) => JSX.Element;
+    setText: (text: string) => void,
+    setChanged: (changed: boolean) => void,
+    setSaveData?: (data: any) => void,
+  ) => ReactNode;
 }
 
 export interface QRControlsObject {
-  [key: string]: QRType;
+  [key: string]: QRControlInfo;
 }

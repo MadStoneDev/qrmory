@@ -1,7 +1,11 @@
-﻿import { useState } from "react";
+﻿import { useState, useEffect } from "react";
 import { QRControlType } from "@/types/qr-controls";
 
-const QRText = ({ setText, setChanged }: QRControlType) => {
+interface TextSaveData {
+  text: string;
+}
+
+const QRText = ({ setText, setChanged, setSaveData }: QRControlType) => {
   // State to track the entered text
   const [enteredText, setEnteredText] = useState("");
 
@@ -13,6 +17,18 @@ const QRText = ({ setText, setChanged }: QRControlType) => {
     // Update parent component
     setText(newValue);
     setChanged(true);
+
+    // Update save data
+    if (setSaveData) {
+      if (newValue.length > 0) {
+        const saveData: TextSaveData = {
+          text: newValue,
+        };
+        setSaveData(saveData);
+      } else {
+        setSaveData(null);
+      }
+    }
   };
 
   return (

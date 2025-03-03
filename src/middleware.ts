@@ -1,88 +1,53 @@
 import { type NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/utils/supabase/client";
-import { updateSession } from "@/utils/supabase/middleware";
+import { createClient } from "@/utils/supabase/server";
 
 export async function middleware(request: NextRequest) {
   const path = request.nextUrl.pathname;
 
-  // Static Public Routes (exact matches)
-  const staticPublicRoutes = [
+  // Public routes that don't need auth
+  const publicPaths = [
     "/",
-    "/coupon",
-    "/vcard",
-    "/help",
-    "/help/contact",
-    "/privacy-policy",
-    "/terms-and-conditions",
-    "/cookies-policy",
-    "/error",
-    "/login", // Added this to match your redirect
-  ];
-
-  // Authentication related routes that should be public
-  const authRoutes = [
-    "/auth/check-email",
-    "/auth/reset-password",
-    "/auth/confirm",
+    "/login",
+    "/sign-up",
     "/auth/login",
     "/auth/sign-up",
-    "/auth/callback", // Make sure callback URL is public
+    "/auth/check-email",
+    "/auth/confirm",
+    "/auth/reset-password",
+    "/error",
   ];
 
-  // Dynamic Public Routes (path prefixes)
-  const dynamicPublicRoutes = ["/coupon/", "/vcard/", "/_next/", "/api/"];
+  // Check if the current path is a public path
+  const isPublicPath = publicPaths.some(
+    (publicPath) =>
+      path === publicPath ||
+      path.startsWith("/_next") ||
+      path.startsWith("/api"),
+  );
 
-  // Assets and static files
-  if (path.includes(".")) {
-    return NextResponse.next();
-  }
-
-  // Check if static public route
-  if (staticPublicRoutes.includes(path)) {
-    return NextResponse.next();
-  }
-
-  // Check if it's an auth route
-  if (
-    authRoutes.includes(path) ||
-    authRoutes.some((route) => path.startsWith(route))
-  ) {
-    return NextResponse.next();
-  }
-
-  // Check if dynamic public route
-  if (dynamicPublicRoutes.some((prefix) => path.startsWith(prefix))) {
+  // If it's a public path, allow access
+  if (isPublicPath) {
     return NextResponse.next();
   }
 
   try {
-    const supabase = createClient();
+    const supabase = await createClient();
+
     const { data } = await supabase.auth.getUser();
 
-    if (!data || !data.user) {
-      console.log(
-        `No authenticated user found, redirecting from ${path} to /auth/login`,
-      );
-      // Fix: changed /login to /auth/login to match your auth routes
+    if (!data?.user) {
       return NextResponse.redirect(new URL("/auth/login", request.url));
     }
 
-    return await updateSession(request);
+    return NextResponse.next();
   } catch (error) {
-    console.error("Middleware error:", error);
+    console.error("Auth check error:", error);
     return NextResponse.redirect(new URL("/error", request.url));
   }
 }
 
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * Feel free to modify this pattern to include more paths.
-     */
     "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };

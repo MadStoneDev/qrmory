@@ -1,7 +1,20 @@
 ﻿import { useState, useEffect } from "react";
 import { QRControlType } from "@/types/qr-controls";
 
-export default function QRVCard({ setText, setChanged }: QRControlType) {
+interface VCardSaveData {
+  fullName: string;
+  company: string;
+  email: string;
+  phone: string;
+  website: string;
+  position: string;
+}
+
+export default function QRVCard({
+  setText,
+  setChanged,
+  setSaveData,
+}: QRControlType) {
   // States for vCard fields
   const [fullName, setFullName] = useState("");
   const [company, setCompany] = useState("");
@@ -39,9 +52,23 @@ export default function QRVCard({ setText, setChanged }: QRControlType) {
       const vCardUrl = `https://qrmory.com/vcard/${encodedData}`;
       setText(vCardUrl);
       setChanged(true);
+
+      // Update save data
+      if (setSaveData) {
+        const saveData: VCardSaveData = {
+          fullName,
+          company,
+          email,
+          phone,
+          website,
+          position,
+        };
+        setSaveData(saveData);
+      }
     } else {
       setText("");
       setChanged(true);
+      if (setSaveData) setSaveData(null);
     }
   };
 

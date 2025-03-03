@@ -55,8 +55,6 @@ export default function QRLocation({ setText, setChanged }: QRControlType) {
     setHasSearched(true);
 
     try {
-      console.log("Searching for:", searchTerm);
-
       const response = await axios.get("/api/location-search", {
         params: { query: searchTerm },
         headers: {
@@ -64,8 +62,6 @@ export default function QRLocation({ setText, setChanged }: QRControlType) {
           "Content-Type": "application/json",
         },
       });
-
-      console.log("Search response:", response.data);
 
       if (response.data && Array.isArray(response.data.results)) {
         if (response.data.results.length === 0) {

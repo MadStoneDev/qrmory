@@ -1,8 +1,13 @@
-﻿import { useRef, useState } from "react";
+﻿import { useRef, useState, useEffect } from "react";
 import { QRControlType } from "@/types/qr-controls";
 import { isValidURL } from "@/utils/general";
 
-const QRWebsite = ({ setText, setChanged }: QRControlType) => {
+interface WebsiteSaveData {
+  protocol: string;
+  url: string;
+}
+
+const QRWebsite = ({ setText, setChanged, setSaveData }: QRControlType) => {
   // States
   const [site, setSite] = useState("");
   const [protocol, setProtocol] = useState("https");
@@ -23,8 +28,16 @@ const QRWebsite = ({ setText, setChanged }: QRControlType) => {
   const updateParentValue = (siteValue: string, protocolValue: string) => {
     if (siteValue.length === 0) {
       setText("");
+      if (setSaveData) setSaveData(null);
     } else {
       setText(`${protocolValue}://${siteValue}`);
+      if (setSaveData) {
+        const saveData: WebsiteSaveData = {
+          protocol: protocolValue,
+          url: siteValue,
+        };
+        setSaveData(saveData);
+      }
     }
     setChanged(true);
   };

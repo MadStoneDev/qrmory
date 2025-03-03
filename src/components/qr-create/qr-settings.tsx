@@ -4,6 +4,10 @@ import { qrControls } from "@/lib/qr-control-object";
 import { IconBolt, IconDeviceFloppy, IconRocket } from "@tabler/icons-react";
 
 import { generateShortCode } from "@/utils/general";
+import { createClient } from "@/utils/supabase/client";
+
+import { Toaster } from "@/components/ui/sonner";
+import { toast } from "sonner";
 
 interface Props {
   initialQRTitle: string;
@@ -41,6 +45,9 @@ export default function QRSettings({
   const [loadingDynamic, setLoadingDynamic] = useState(false);
   const [qrShortCode, setQRShortCode] = useState("");
 
+  const [saveData, setSaveData] = useState<any>(null);
+  const [saving, setSaving] = useState(false);
+
   // Functions
   const updateTextValue = (value: string) => {
     setTextValue(value);
@@ -50,16 +57,31 @@ export default function QRSettings({
     setQRChanged(changed);
   };
 
+  const updateSaveData = (data: any) => {
+    setSaveData(data);
+  };
+
   // Initialize the QR control component with correct callbacks
   const [qrControl, setQRControl] = useState(() =>
-    qrControls[activeSelector].component(updateTextValue, updateQRChanged),
+    qrControls[activeSelector].component(
+      updateTextValue,
+      updateQRChanged,
+      updateSaveData,
+    ),
   );
 
   // Function to handle selector change
   const handleActiveSelector = (key: string) => {
     setTextValue("");
+    setSaveData(null);
     setActiveSelector(key);
-    setQRControl(qrControls[key].component(updateTextValue, updateQRChanged));
+    setQRControl(
+      qrControls[key].component(
+        updateTextValue,
+        updateQRChanged,
+        updateSaveData,
+      ),
+    );
     setQRChanged(true);
   };
 
@@ -76,6 +98,44 @@ export default function QRSettings({
     }
   };
 
+  const handleSaveQR = async () => {
+    if (textValue.length === 0) return;
+
+    setSaving(true);
+
+    try {
+      const supabase = createClient();
+      const { data, error } = await supabase.from("qr_codes").insert({
+        user_id: user.id,
+        type: isDynamic ? "dynamic" : "static",
+        content: saveData,
+        shortcode: isDynamic ? qrShortCode : null,
+        is_active: true,
+        title: qrTitle || `${qrControls[activeSelector].title} QR`,
+        qr_value: textValue,
+      });
+
+      if (error) throw error;
+
+      toast("QR code saved successfully!", {
+        description: `Your ${
+          isDynamic ? "dynamic" : "static"
+        } QR code has been saved.`,
+      });
+    } catch (error) {
+      console.error("Error saving QR code:", error);
+      toast("Error saving QR code", {
+        description: "Something went wrong. Please try again later.",
+        style: {
+          backgroundColor: "rgb(254, 226, 226)",
+          color: "rgb(153, 27, 27)",
+        },
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const handleMakeDynamic = () => {
     if (isDynamic) {
       setQRShortCode("");
@@ -89,6 +149,33 @@ export default function QRSettings({
       const shortCode = generateShortCode(8);
       setQRShortCode(shortCode);
       setIsDynamic(true);
+
+      const dynamicUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/${shortCode}`;
+      toast("Dynamic QR Code Created", {
+        description: "Your unique URL is ready to be saved.",
+        action: {
+          label: "Copy URL",
+          onClick: () => {
+            navigator.clipboard
+              .writeText(dynamicUrl)
+              .then(() => {
+                toast("URL Copied!", {
+                  description: dynamicUrl,
+                  duration: 3000,
+                });
+              })
+              .catch((err) => {
+                console.error("Failed to copy URL:", err);
+                toast("Failed to copy URL", {
+                  style: {
+                    backgroundColor: "rgb(254, 226, 226)",
+                    color: "rgb(153, 27, 27)",
+                  },
+                });
+              });
+          },
+        },
+      });
     } catch (error) {
       console.error(error);
     }
@@ -182,8 +269,10 @@ export default function QRSettings({
           className={`mt-8 flex flex-col md:flex-row items-center justify-between gap-2`}
         >
           {/* Dynamic QR button section (commented out in original) */}
-          {/* {!user && (
-            <article className={`flex flex-col md:flex-row items-center justify-between gap-2`}>
+          {user && (
+            <article
+              className={`flex flex-col md:flex-row items-center justify-between gap-2`}
+            >
               <button
                 className={`py-2.5 px-4 hover:enabled:translate-x-1 hover:enabled:-translate-y-1 flex items-center justify-center gap-2 border disabled:border-none border-qrmory-purple-800 ${
                   isDynamic
@@ -210,7 +299,7 @@ export default function QRSettings({
                 <span>Save QR Code</span>
               </button>
             </article>
-          )} */}
+          )}
 
           <button
             className={`
@@ -267,6 +356,7 @@ export default function QRSettings({
           </section>
         )}
       </div>
+      <Toaster />
     </article>
   );
 }

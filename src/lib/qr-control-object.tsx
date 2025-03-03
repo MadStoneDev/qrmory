@@ -28,108 +28,120 @@ export const qrControls: QRControlsObject = {
     title: "Website",
     description: "Link to a page or site",
     icon: <IconWorld size={24} strokeWidth={1.5} />,
-    component: (setText: Function, setChanged: Function) => (
-      <QRWebsite setText={setText} setChanged={setChanged} />
+    component: (setText, setChanged, setSaveData) => (
+      <QRWebsite
+        setText={setText}
+        setChanged={setChanged}
+        setSaveData={setSaveData}
+      />
     ),
   },
   facebook: {
     title: "Facebook",
     description: "Facebook page/group",
     icon: <IconBrandFacebookFilled size={24} strokeWidth={1.5} />,
-    component: (setText: Function, setChanged: Function) => (
-      <QRFacebook setText={setText} setChanged={setChanged} />
+    component: (setText, setChanged, setSaveData) => (
+      <QRFacebook
+        setText={setText}
+        setChanged={setChanged}
+        setSaveData={setSaveData}
+      />
     ),
   },
   instagram: {
     title: "Instagram",
     description: "Instagram account",
     icon: <IconBrandInstagram size={24} strokeWidth={1.5} />,
-    component: (setText: Function, setChanged: Function) => (
-      <QRInstagram setText={setText} setChanged={setChanged} />
+    component: (setText, setChanged, setSaveData) => (
+      <QRInstagram
+        setText={setText}
+        setChanged={setChanged}
+        setSaveData={setSaveData}
+      />
     ),
   },
   twitter: {
     title: "X / Twitter",
     description: "X account",
     icon: <IconBrandXFilled size={24} strokeWidth={1.5} />,
-    component: (setText: Function, setChanged: Function) => (
-      <QRTwitter setText={setText} setChanged={setChanged} />
+    component: (setText, setChanged, setSaveData) => (
+      <QRTwitter
+        setText={setText}
+        setChanged={setChanged}
+        setSaveData={setSaveData}
+      />
     ),
   },
   youTube: {
     title: "YouTube",
     description: "YouTube video",
     icon: <IconBrandYoutubeFilled size={24} strokeWidth={1.5} />,
-    component: (setText: Function, setChanged: Function) => (
-      <QRYoutube setText={setText} setChanged={setChanged} />
+    component: (setText, setChanged, setSaveData) => (
+      <QRYoutube
+        setText={setText}
+        setChanged={setChanged}
+        setSaveData={setSaveData}
+      />
     ),
   },
-  // email: [
-  //     "Email",
-  //     "Preset an email",
-  //     <QREmail setText={setTextValue}  setChanged={setQRChanged} setNewQR={setNewQR} />,
-  // ],
-  // socialMedia: [
-  //     "Social Media",
-  //     "Share your profiles",
-  //     <QRSocialMedia setText={setTextValue}  setChanged={setQRChanged} setNewQR={setNewQR} />,
-  // ],
   eBusinessCard: {
     title: "E-Business Card",
     description: "The modern business card",
     icon: <IconIdBadge2 size={24} strokeWidth={1.5} />,
-    component: (setText: Function, setChanged: Function) => (
-      <QRVCard setText={setText} setChanged={setChanged} />
+    component: (setText, setChanged, setSaveData) => (
+      <QRVCard
+        setText={setText}
+        setChanged={setChanged}
+        setSaveData={setSaveData}
+      />
     ),
   },
-  // poll: ["Poll", "Run a quick poll"],
-  // reviews: ["Reviews", "Collect customer reviews"],
-  // event: ["Event", "Promote an event"],
-  // document: ["Document", "Share a PDF document"],
-  // audio: ["Audio", "Share an sound file"],
-  // video: ["Video", "Share a quick video"],
-  // phone: [
-  //     "Phone",
-  //     "Set up an easy call",
-  //     <QRPhone setText={setTextValue}  setChanged={setQRChanged} setNewQR={setNewQR} />,
-  // ],
-  // sms: [
-  //     "SMS",
-  //     "Preset an SMS",
-  //     <QRSms setText={setTextValue}  setChanged={setQRChanged} setNewQR={setNewQR} />,
-  // ],
   coupon: {
     title: "Coupon",
     description: "Create a coupon or special offer",
     icon: <IconTicket size={24} strokeWidth={1.5} />,
-    component: (setText: Function, setChanged: Function) => (
-      <QRCoupon setText={setText} setChanged={setChanged} />
+    component: (setText, setChanged, setSaveData) => (
+      <QRCoupon
+        setText={setText}
+        setChanged={setChanged}
+        setSaveData={setSaveData}
+      />
     ),
   },
   location: {
     title: "Location",
     description: "Share a map address",
     icon: <IconMapPin size={24} strokeWidth={1.5} />,
-    component: (setText: Function, setChanged: Function) => (
-      <QRLocation setText={setText} setChanged={setChanged} />
+    component: (setText, setChanged, setSaveData) => (
+      <QRLocation
+        setText={setText}
+        setChanged={setChanged}
+        setSaveData={setSaveData}
+      />
     ),
   },
   wifi: {
     title: "WiFi",
     description: "Share WiFi details",
     icon: <IconRouter size={24} strokeWidth={1.5} />,
-    component: (setText: Function, setChanged: Function) => (
-      <QRWifi setText={setText} setChanged={setChanged} />
+    component: (setText, setChanged, setSaveData) => (
+      <QRWifi
+        setText={setText}
+        setChanged={setChanged}
+        setSaveData={setSaveData}
+      />
     ),
   },
   text: {
     title: "Text",
     description: "Display a text message",
     icon: <IconNotes size={24} strokeWidth={1.5} />,
-    component: (setText: Function, setChanged: Function) => (
-      <QRText setText={setText} setChanged={setChanged} />
+    component: (setText, setChanged, setSaveData) => (
+      <QRText
+        setText={setText}
+        setChanged={setChanged}
+        setSaveData={setSaveData}
+      />
     ),
   },
-  // bitcoin: ["Bitcoin", "Quick Bitcoin payments"],
-  // ethereum: ["Ethereum", "Quick Ethereum payments"],
 };

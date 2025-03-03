@@ -1,75 +1,53 @@
-﻿"use client";
+﻿import MyCodeItem from "@/components/my-code-item";
+import { createClient } from "@/utils/supabase/server";
 
-import { useQRCode } from "next-qrcode";
-import { IconPencil } from "@tabler/icons-react";
+export const metadata = {
+  title: "My Codes | QRmory",
+  description: "Your QR Codes that you've created.",
+};
 
-export default function MyCodes() {
+async function fetchCodes() {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return [];
+  }
+
+  const { data, error } = await supabase
+    .from("qr_codes")
+    .select("*")
+    .eq("user_id", user.id);
+
+  if (error) {
+    console.error("Error fetching codes:", error);
+    return [];
+  }
+
+  return data || [];
+}
+
+export default async function MyCodes() {
+  const codes = await fetchCodes();
+
   return (
     <section className={`flex flex-col w-full`}>
       <h1 className={`mb-4 text-xl font-bold`}>My Codes</h1>
-      <MyCodeItem title={"Sample QR Code"} type={"Text"} qrValue={"Hello"} />
-      <MyCodeItem title={"Sample QR Code"} type={"Text"} qrValue={"Richard"} />
-      <MyCodeItem title={"Sample QR Code"} type={"Text"} qrValue={"Hello"} />
-      <MyCodeItem title={"Sample QR Code"} type={"Text"} qrValue={"Richard"} />
-      <MyCodeItem title={"Sample QR Code"} type={"Text"} qrValue={"Hello"} />
-      <MyCodeItem title={"Sample QR Code"} type={"Text"} qrValue={"Richard"} />
-      <MyCodeItem title={"Sample QR Code"} type={"Text"} qrValue={"Hello"} />
-      <MyCodeItem title={"Sample QR Code"} type={"Text"} qrValue={"Richard"} />
-      <MyCodeItem title={"Sample QR Code"} type={"Text"} qrValue={"Hello"} />
-      <MyCodeItem title={"Sample QR Code"} type={"Text"} qrValue={"Richard"} />
-      <MyCodeItem title={"Sample QR Code"} type={"Text"} qrValue={"Hello"} />
-      <MyCodeItem title={"Sample QR Code"} type={"Text"} qrValue={"Richard"} />
-      <MyCodeItem title={"Sample QR Code"} type={"Text"} qrValue={"Hello"} />
-      <MyCodeItem
-        title={"This is the title of a really long sample QR Code"}
-        type={"Text"}
-        qrValue={"Richard"}
-      />
+      {codes.length === 0 && (
+        <p className={`text-neutral-400`}>You haven't created any codes yet.</p>
+      )}
+
+      {codes.map((code) => (
+        <MyCodeItem
+          key={code.id}
+          title={code.name}
+          type={code.type}
+          qrValue={code.content}
+        />
+      ))}
     </section>
-  );
-}
-
-interface MyCodeItemProps {
-  title: string;
-  type: string;
-  qrValue: string;
-}
-
-function MyCodeItem({
-  title = "No Title",
-  type = "Text",
-  qrValue = "No Value",
-}: MyCodeItemProps) {
-  const { SVG } = useQRCode();
-
-  return (
-    <article
-      className={`py-3 sm:py-4 flex flex-row items-center gap-4 w-full h-full [&:not(:last-of-type)]:border-b border-stone-200/70`}
-    >
-      <div className={`flex min-w7-12 items-center justify-center`}>
-        <div className={`w-full`}>
-          <SVG
-            text={qrValue}
-            options={{
-              errorCorrectionLevel: "M",
-              color: { dark: "#1E073E", light: "#FFFFFF00" },
-              margin: 1,
-            }}
-          />
-        </div>
-      </div>
-
-      <div className={`flex-grow`}>
-        <h2 className={`font-serif text-sm sm:text-base font-bold`}>{title}</h2>
-        <h3 className={`font-sans text-xs md:text-sm`}>{type}</h3>
-      </div>
-
-      {/* Separator */}
-      <div className={`w-[1px] h-full bg-stone-300`}></div>
-
-      <div>
-        <IconPencil />
-      </div>
-    </article>
   );
 }

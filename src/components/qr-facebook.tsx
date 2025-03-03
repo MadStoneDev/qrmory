@@ -1,7 +1,15 @@
-﻿import { useState } from "react";
+﻿import { useState, useEffect } from "react";
 import { QRControlType } from "@/types/qr-controls";
 
-export default function QRFacebook({ setText, setChanged }: QRControlType) {
+interface FacebookSaveData {
+  username: string;
+}
+
+export default function QRFacebook({
+  setText,
+  setChanged,
+  setSaveData,
+}: QRControlType) {
   // States
   const [enteredLink, setEnteredLink] = useState("");
 
@@ -12,8 +20,15 @@ export default function QRFacebook({ setText, setChanged }: QRControlType) {
   const updateParentValue = (value: string) => {
     if (value.length > 0) {
       setText(`${mainLink}${value}`);
+      if (setSaveData) {
+        const saveData: FacebookSaveData = {
+          username: value,
+        };
+        setSaveData(saveData);
+      }
     } else {
       setText("");
+      if (setSaveData) setSaveData(null);
     }
     setChanged(true);
   };
@@ -29,6 +44,7 @@ export default function QRFacebook({ setText, setChanged }: QRControlType) {
   const handleInputBlur = () => {
     if (enteredLink.length === 0) {
       setText("");
+      if (setSaveData) setSaveData(null);
       return;
     }
 
@@ -48,7 +64,7 @@ export default function QRFacebook({ setText, setChanged }: QRControlType) {
 
     // Update state and parent
     setEnteredLink(fixedLink);
-    setText(mainLink + fixedLink);
+    updateParentValue(fixedLink);
   };
 
   return (

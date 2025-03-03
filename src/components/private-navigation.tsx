@@ -85,7 +85,6 @@ interface NavItemType {
 function NavItem({ href, title, children }: NavItemType) {
   // Hooks
   const pathname = usePathname();
-  console.log(pathname);
 
   return (
     <Link

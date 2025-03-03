@@ -3,11 +3,11 @@
 import Link from "next/link";
 import { ChangeEvent, FormEvent, useState, useEffect } from "react";
 
-import AuthText from "@/components/auth-text";
 import {
   loginWithMagicLink,
   loginWithPassword,
 } from "@/app/(auth)/auth/login/actions";
+import AuthText from "@/components/auth-text";
 import { IconEye } from "@tabler/icons-react";
 
 export const LoginBlock = () => {
@@ -28,11 +28,9 @@ export const LoginBlock = () => {
   });
 
   // Effects
-
-  // Handle countdown timer
   useEffect(() => {
-    // If we have a saved timestamp in localStorage, initialize from that
     const savedData = localStorage.getItem("magicLinkData");
+
     if (savedData) {
       try {
         const { timestamp, email } = JSON.parse(savedData);
@@ -45,12 +43,10 @@ export const LoginBlock = () => {
           setMagicLinkSent(true);
           setCountdownTime(60 - elapsedSeconds);
 
-          // If this was for the same email, populate the email field
           if (email) {
             setFormData((prev) => ({ ...prev, email }));
           }
         } else {
-          // Clear expired data
           localStorage.removeItem("magicLinkData");
         }
       } catch (e) {
@@ -60,7 +56,6 @@ export const LoginBlock = () => {
     }
   }, []);
 
-  // Handle the countdown timer
   useEffect(() => {
     let timer: NodeJS.Timeout;
 
@@ -85,7 +80,7 @@ export const LoginBlock = () => {
   // Functions
   const handleChange = (event: ChangeEvent) => {
     const target = event.target as HTMLInputElement;
-    setError(""); // Clear errors when user makes changes
+    setError("");
 
     setFormData({
       ...formData,
@@ -95,7 +90,7 @@ export const LoginBlock = () => {
 
   const toggleLoginMethod = () => {
     setUseMagicLink(!useMagicLink);
-    setError(""); // Clear errors when switching methods
+    setError("");
   };
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
@@ -111,64 +106,60 @@ export const LoginBlock = () => {
       return;
     }
 
-    try {
-      if (useMagicLink) {
-        // Check if we're still in cooldown
-        if (magicLinkSent && countdownTime > 0) {
-          setError(
-            `Please wait ${countdownTime} seconds before requesting another magic link.`,
-          );
-          setIsLoading(false);
-          return;
-        }
-
-        const response = await loginWithMagicLink({
-          email: formData.email.trim(),
-        });
-
-        if (response.success) {
-          // Store timestamp and email in localStorage
-          const timestamp = new Date().getTime();
-          localStorage.setItem(
-            "magicLinkData",
-            JSON.stringify({
-              timestamp,
-              email: formData.email.trim(),
-            }),
-          );
-
-          setLastSentTimestamp(timestamp);
-          setMagicLinkSent(true);
-          setCountdownTime(60);
-        } else {
-          setError(response.error || "Failed to send magic link");
-        }
-      } else {
-        if (!formData.password) {
-          setError("Password is required");
-          setIsLoading(false);
-          return;
-        }
-
-        const loginResponse = await loginWithPassword({
-          email: formData.email.trim(),
-          password: formData.password,
-        });
-
-        if (loginResponse?.error) {
-          setError(loginResponse.error);
-          setIsLoading(false);
-          return;
-        }
-      }
-    } catch (error) {
-      if (error instanceof Error && error.message.includes("NEXT_REDIRECT")) {
+    if (useMagicLink) {
+      // Check if we're still in cooldown
+      if (magicLinkSent && countdownTime > 0) {
+        setError(
+          `Please wait ${countdownTime} seconds before requesting another magic link.`,
+        );
+        setIsLoading(false);
         return;
       }
 
-      setError("An unexpected error occurred. Please try again later.");
-    } finally {
-      setIsLoading(false);
+      const response = await loginWithMagicLink({
+        email: formData.email.trim(),
+      });
+
+      if (response.success) {
+        // Store timestamp and email in localStorage
+        const timestamp = new Date().getTime();
+        localStorage.setItem(
+          "magicLinkData",
+          JSON.stringify({
+            timestamp,
+            email: formData.email.trim(),
+          }),
+        );
+
+        setLastSentTimestamp(timestamp);
+        setMagicLinkSent(true);
+        setCountdownTime(60);
+      } else {
+        setError(response.error || "Failed to send magic link");
+      }
+    } else {
+      if (!formData.password) {
+        setError("Password is required");
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        await loginWithPassword({
+          email: formData.email.trim(),
+          password: formData.password,
+        });
+      } catch (error) {
+        if (error instanceof Error && error.message.includes("NEXT_REDIRECT")) {
+          // This is expected during redirect - do nothing
+          return;
+        }
+
+        console.error("Login error:", error);
+        setError("An unexpected error occurred. Please try again later.");
+      } finally {
+        setIsLoading(false);
+      }
     }
   };
 
@@ -196,11 +187,12 @@ export const LoginBlock = () => {
           We've sent you a magic link to{" "}
           <span className={"font-bold"}>{formData.email}</span>
         </span>
-        {countdownTime > 0 ? (
-          <span className="mt-2 text-sm">
-            You can request another link in {countdownTime} seconds
-          </span>
-        ) : (
+        <span className="mt-2 text-sm">
+          {countdownTime > 0
+            ? `You can request another link in ${countdownTime} seconds`
+            : "You can now request another link"}
+        </span>
+        {countdownTime === 0 && (
           <button
             onClick={() => setMagicLinkSent(false)}
             className="mt-2 self-center px-4 py-1 bg-white text-emerald-600 rounded-md text-sm font-semibold"

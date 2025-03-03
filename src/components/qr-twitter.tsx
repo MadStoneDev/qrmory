@@ -1,7 +1,16 @@
-﻿import { useState } from "react";
+﻿import { useState, useEffect } from "react";
 import { QRControlType } from "@/types/qr-controls";
 
-export default function QRTwitter({ setText, setChanged }: QRControlType) {
+interface TwitterSaveData {
+  username: string;
+  domain: string;
+}
+
+export default function QRTwitter({
+  setText,
+  setChanged,
+  setSaveData,
+}: QRControlType) {
   // States
   const [enteredLink, setEnteredLink] = useState("");
   const [mainLink, setMainLink] = useState(`twitter.com/`);
@@ -11,8 +20,16 @@ export default function QRTwitter({ setText, setChanged }: QRControlType) {
   const updateParentValue = (value: string) => {
     if (value.length > 0) {
       setText(`${mainLink}${value}`);
+      if (setSaveData) {
+        const saveData: TwitterSaveData = {
+          username: value,
+          domain: mainLink.replace("/", ""),
+        };
+        setSaveData(saveData);
+      }
     } else {
       setText("");
+      if (setSaveData) setSaveData(null);
     }
     setChanged(true);
   };
@@ -24,10 +41,30 @@ export default function QRTwitter({ setText, setChanged }: QRControlType) {
     updateParentValue(newValue);
   };
 
+  // Handle toggling between Twitter and X domains
+  const handleToggleDomain = () => {
+    const temp = mainLink;
+    setMainLink(altLink);
+    setAltLink(temp);
+
+    // Update with new domain
+    if (enteredLink.length > 0) {
+      setText(`${altLink}${enteredLink}`);
+      if (setSaveData) {
+        const saveData: TwitterSaveData = {
+          username: enteredLink,
+          domain: altLink.replace("/", ""),
+        };
+        setSaveData(saveData);
+      }
+    }
+  };
+
   // Handle input blur (when focus leaves the input)
   const handleInputBlur = () => {
     if (enteredLink.length === 0) {
       setText("");
+      if (setSaveData) setSaveData(null);
       return;
     }
 
@@ -81,7 +118,7 @@ export default function QRTwitter({ setText, setChanged }: QRControlType) {
 
     // Update state and parent
     setEnteredLink(fixedLink);
-    setText(mainLink + fixedLink);
+    updateParentValue(fixedLink);
   };
 
   return (
@@ -94,7 +131,11 @@ export default function QRTwitter({ setText, setChanged }: QRControlType) {
           the username)
         </p>
         <div className="flex flex-row flex-nowrap">
-          <p className="pt-2 text-qrmory-purple-400 font-bold text-sm md:text-lg">
+          <p
+            className="pt-2 text-qrmory-purple-400 font-bold text-sm md:text-lg cursor-pointer hover:text-qrmory-purple-600"
+            onClick={handleToggleDomain}
+            title="Click to toggle between twitter.com and x.com"
+          >
             https://{mainLink}
           </p>
           <input
