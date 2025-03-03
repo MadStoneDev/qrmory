@@ -11,8 +11,6 @@ export async function middleware(request: NextRequest) {
     "/",
     "/coupon",
     "/vcard",
-    "/login",
-    "/register",
     "/help",
     "/help/contact",
     "/privacy-policy",
@@ -26,7 +24,8 @@ export async function middleware(request: NextRequest) {
     "/auth/check-email",
     "/auth/reset-password",
     "/auth/confirm",
-    "/auth/signup",
+    "/auth/login",
+    "/auth/sign-up",
   ];
 
   // Dynamic Public Routes (path prefixes)
