@@ -25,13 +25,14 @@ export default function VCardPage() {
     try {
       const code = params.code as string;
       if (!code) {
-        setError("Invalid contact information");
+        setError("Invalid coupon information");
         setLoading(false);
         return;
       }
 
-      // Decode the base64 data
-      const decodedData = decodeURIComponent(escape(atob(code)));
+      const decodedCode = decodeURIComponent(code);
+      const decodedData = atob(decodedCode);
+
       const jsonData = JSON.parse(decodedData) as VCardData;
 
       // Validate that we have at least a name and contact method
@@ -120,9 +121,15 @@ export default function VCardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-lg mx-auto px-4">
-        <div className="bg-white rounded-xl shadow-md overflow-hidden">
+    <div
+      className={`px-4 flex flex-col items-center justify-between min-h-dvh bg-neutral-200`}
+    >
+      <main
+        className={`flex-grow py-8 flex items-center justify-center w-full`}
+      >
+        <div
+          className={`flex flex-col w-full max-w-md bg-white rounded-2xl shadow-lg overflow-hidden`}
+        >
           {/* Header */}
           <div className="bg-qrmory-purple-800 px-6 py-4">
             <h1 className="text-white text-xl font-bold">
@@ -239,18 +246,17 @@ export default function VCardPage() {
               </button>
             </div>
           </div>
-
-          {/* Footer */}
-          <div className="px-6 py-4 bg-gray-50 text-center">
-            <p className="text-sm text-gray-600">
-              Created with{" "}
-              <Link href="/" className="text-qrmory-purple-800 hover:underline">
-                QRmory
-              </Link>
-            </p>
-          </div>
         </div>
-      </div>
+      </main>
+      {/* Footer */}
+      <footer className="px-6 py-2 text-center border-t border-qrmory-purple-500">
+        <div className={`text-sm text-gray-600`}>
+          Created with{" "}
+          <Link href="/" className="text-qrmory-purple-800 hover:underline">
+            QRmory
+          </Link>
+        </div>
+      </footer>
     </div>
   );
 }

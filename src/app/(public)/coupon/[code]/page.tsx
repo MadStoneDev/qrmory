@@ -33,10 +33,7 @@ export default function CouponPage() {
         return;
       }
 
-      // First decode any URL-encoded characters in the code
       const decodedCode = decodeURIComponent(code);
-
-      // Then decode the base64
       const decodedData = atob(decodedCode);
 
       const jsonData = JSON.parse(decodedData) as CouponData;
@@ -248,7 +245,7 @@ export default function CouponPage() {
       </main>
 
       {/* Footer */}
-      <footer className="px-6 py-2 text-center border-t border-gray-200">
+      <footer className="px-6 py-2 text-center border-t border-qrmory-purple-500">
         <div className={`text-sm text-gray-600`}>
           Created with{" "}
           <Link href="/" className="text-qrmory-purple-800 hover:underline">
