@@ -33,8 +33,22 @@ export default function CouponPage() {
         return;
       }
 
-      // Decode the base64 data
-      const decodedData = decodeURIComponent(escape(atob(code)));
+      // More robust decoding approach
+      let decodedData;
+      try {
+        // Try the standard approach first
+        decodedData = decodeURIComponent(escape(atob(code)));
+      } catch (decodeError) {
+        // If that fails, try an alternative approach
+        try {
+          decodedData = atob(code);
+        } catch (atobError) {
+          // If simple atob also fails, try with a URL-safe base64 fix
+          const fixedCode = code.replace(/-/g, "+").replace(/_/g, "/");
+          decodedData = atob(fixedCode);
+        }
+      }
+
       const jsonData = JSON.parse(decodedData) as CouponData;
 
       // Only require the title, make business name, discount, and description optional
