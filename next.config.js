@@ -1,6 +1,7 @@
 module.exports = {
   async redirects() {
     return [
+      // Permanent Redirects
       {
         source: "/sign-up",
         destination: "/auth/sign-up",
@@ -11,7 +12,18 @@ module.exports = {
         destination: "/auth/login",
         permanent: true,
       },
-      // Add more redirects as needed
+
+      // Temporary Redirects
+      {
+        source: "/vcard",
+        destination: "/",
+        permanent: false, // Set to false for temporary redirects
+      },
+      {
+        source: "/coupon",
+        destination: "/",
+        permanent: false, // Set to false for temporary redirects
+      },
     ];
   },
 };

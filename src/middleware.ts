@@ -6,8 +6,8 @@ import { updateSession } from "@/utils/supabase/middleware";
 export async function middleware(request: NextRequest) {
   const path = request.nextUrl.pathname;
 
-  // Public Routes
-  const publicRoutes = [
+  // Static Public Routes (exact matches)
+  const staticPublicRoutes = [
     "/",
     "/coupon",
     "/vcard",
@@ -21,15 +21,21 @@ export async function middleware(request: NextRequest) {
     "/error",
   ];
 
-  if (
-    path.startsWith("/_next") ||
-    path.startsWith("/api") ||
-    path.includes(".")
-  ) {
+  // Dynamic Public Routes (path prefixes)
+  const dynamicPublicRoutes = ["/coupon/", "/vcard/", "/_next/", "/api/"];
+
+  // Assets and static files
+  if (path.includes(".")) {
     return NextResponse.next();
   }
 
-  if (publicRoutes.includes(path)) {
+  // Check if static public route
+  if (staticPublicRoutes.includes(path)) {
+    return NextResponse.next();
+  }
+
+  // Check if dynamic public route
+  if (dynamicPublicRoutes.some((prefix) => path.startsWith(prefix))) {
     return NextResponse.next();
   }
 
