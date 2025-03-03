@@ -1,6 +1,6 @@
 ﻿"use server";
 
-import { rateLimit } from "@/utils/rate-limit";
+import { authRateLimiter } from "@/utils/rate-limit";
 import { createClient } from "@/utils/supabase/server";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -10,7 +10,7 @@ export async function loginWithPassword(formData: {
   password: string;
 }) {
   try {
-    const { success: rateLimiter } = await rateLimit.limit(
+    const { success: rateLimiter } = await authRateLimiter.limit(
       formData.email.toLowerCase(),
     );
 
@@ -55,7 +55,7 @@ export async function loginWithPassword(formData: {
 
 export async function loginWithMagicLink(formData: { email: string }) {
   try {
-    const { success: rateLimiter } = await rateLimit.limit(
+    const { success: rateLimiter } = await authRateLimiter.limit(
       formData.email.toLowerCase(),
     );
 

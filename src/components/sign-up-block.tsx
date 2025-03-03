@@ -62,12 +62,55 @@ export default function SignUpBlock() {
     setIsLoading(true);
     setError("");
 
+    // Client-side validation
+    if (!validateForm()) {
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      console.log("Client: Submitting sign-up form...");
+
+      // Direct approach with try/catch
+      const response = await SignUp({
+        email: formData.email,
+        password: formData.password,
+        confirmPassword: formData.confirmPassword,
+      });
+
+      console.log("Client: Sign-up response:", response);
+
+      // Handle response
+      if (response) {
+        if (response.error) {
+          setError(
+            response.error ||
+              "There was an issue creating your account. Please try again.",
+          );
+        } else if (response.success) {
+          // This shouldn't happen due to the redirect, but just in case
+          setError(
+            "Sign-up successful! Please check your email to confirm your account.",
+          );
+        }
+      } else {
+        setError("No response received from the server. Please try again.");
+      }
+    } catch (error: any) {
+      console.error("Client: Sign up error:", error);
+      setError("An unexpected error occurred. Please try again later.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Form validation
+  const validateForm = () => {
     // Validate email
     const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
     if (!emailRegex.test(formData.email.trim())) {
       setError("Please enter a valid email address.");
-      setIsLoading(false);
-      return;
+      return false;
     }
 
     // Validate password requirements
@@ -80,63 +123,16 @@ export default function SignUpBlock() {
 
     if (passwordError) {
       setError("Password does not meet the minimum requirements");
-      setIsLoading(false);
-      return;
+      return false;
     }
 
     // Validate password match
     if (formData.password !== formData.confirmPassword) {
       setError("Passwords do not match");
-      setIsLoading(false);
-      return;
+      return false;
     }
 
-    try {
-      console.log("Submitting sign-up form...");
-      const response = await SignUp({
-        email: formData.email,
-        password: formData.password,
-        confirmPassword: formData.confirmPassword,
-      });
-
-      // Log the full response for debugging
-      console.log("Sign-up response:", response);
-
-      // Check if response contains an error message
-      if (response && response.error) {
-        // Show a user-friendly error message
-        if (response.error.includes("already registered")) {
-          setError("This email is already registered. Please log in instead.");
-        } else if (response.error.toLowerCase().includes("rate limit")) {
-          setError("Too many attempts. Please try again later.");
-        } else {
-          // Generic user-friendly message for other errors
-          setError(
-            "There was an issue creating your account. Please try again.",
-          );
-        }
-      }
-      // If successful but no redirect happened (should be rare in production)
-      else if (response && response.success) {
-        setError(
-          "Sign-up successful! Please check your email to confirm your account.",
-        );
-      }
-      // If no clear status is returned
-      else {
-        setError(
-          "Unable to create your account at this time. Please try again later.",
-        );
-      }
-    } catch (error: any) {
-      // Log the full error to console for debugging
-      console.error("Sign up error:", error);
-
-      // Show a generic user-friendly error message
-      setError("An unexpected error occurred. Please try again later.");
-    } finally {
-      setIsLoading(false);
-    }
+    return true;
   };
 
   // Validate all password requirements are met
@@ -147,15 +143,8 @@ export default function SignUpBlock() {
   // Check if form is valid for submission
   const isFormValid =
     formData.email.length >= 6 &&
-    emailIsValid(formData.email) &&
     allPasswordRequirementsMet &&
     formData.password === formData.confirmPassword;
-
-  // Simple email validation function
-  function emailIsValid(email: string) {
-    const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-    return emailRegex.test(email.trim());
-  }
 
   return (
     <form onSubmit={handleSubmit} className={`p-4 grid gap-10 w-full max-w-sm`}>
