@@ -2,9 +2,11 @@
 
 import Link from "next/link";
 import { ChangeEvent, FormEvent, useState } from "react";
-import { IconEye } from "@tabler/icons-react";
+
 import AuthText from "@/components/auth-text";
 import { SignUp } from "@/app/(auth)/auth/sign-up/actions";
+
+import { IconEye } from "@tabler/icons-react";
 
 export default function SignUpBlock() {
   // States
@@ -147,7 +149,7 @@ export default function SignUpBlock() {
     formData.password === formData.confirmPassword;
 
   return (
-    <form onSubmit={handleSubmit} className={`p-4 grid gap-10 w-full max-w-sm`}>
+    <form onSubmit={handleSubmit} className={`grid gap-10 w-full max-w-sm`}>
       <article>
         <h1 className={`md:text-xl font-bold`}>Welcome to QRmory!</h1>
         <h2 className={`text-sm md:text-base text-neutral-600 font-light`}>

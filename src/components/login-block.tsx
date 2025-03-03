@@ -1,30 +1,91 @@
 ﻿"use client";
 
 import Link from "next/link";
-import { ChangeEvent, FormEvent, useState } from "react";
+import { ChangeEvent, FormEvent, useState, useEffect } from "react";
 
 import AuthText from "@/components/auth-text";
 import {
   loginWithMagicLink,
   loginWithPassword,
 } from "@/app/(auth)/auth/login/actions";
+import { IconEye } from "@tabler/icons-react";
 
 export const LoginBlock = () => {
   // States
   const [showPassword, setShowPassword] = useState(false);
   const [useMagicLink, setUseMagicLink] = useState(false);
   const [magicLinkSent, setMagicLinkSent] = useState(false);
+  const [countdownTime, setCountdownTime] = useState(60);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [lastSentTimestamp, setLastSentTimestamp] = useState<number | null>(
+    null,
+  );
 
   const [formData, setFormData] = useState({
     email: "",
     password: "",
   });
 
+  // Effects
+
+  // Handle countdown timer
+  useEffect(() => {
+    // If we have a saved timestamp in localStorage, initialize from that
+    const savedData = localStorage.getItem("magicLinkData");
+    if (savedData) {
+      try {
+        const { timestamp, email } = JSON.parse(savedData);
+        const currentTime = new Date().getTime();
+        const elapsedSeconds = Math.floor((currentTime - timestamp) / 1000);
+
+        // If the countdown is still active
+        if (elapsedSeconds < 60) {
+          setLastSentTimestamp(timestamp);
+          setMagicLinkSent(true);
+          setCountdownTime(60 - elapsedSeconds);
+
+          // If this was for the same email, populate the email field
+          if (email) {
+            setFormData((prev) => ({ ...prev, email }));
+          }
+        } else {
+          // Clear expired data
+          localStorage.removeItem("magicLinkData");
+        }
+      } catch (e) {
+        console.error("Error parsing stored magic link data:", e);
+        localStorage.removeItem("magicLinkData");
+      }
+    }
+  }, []);
+
+  // Handle the countdown timer
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+
+    if (magicLinkSent && countdownTime > 0) {
+      timer = setInterval(() => {
+        setCountdownTime((prevTime) => {
+          const newTime = prevTime - 1;
+          if (newTime <= 0) {
+            clearInterval(timer);
+            return 0;
+          }
+          return newTime;
+        });
+      }, 1000);
+    }
+
+    return () => {
+      if (timer) clearInterval(timer);
+    };
+  }, [magicLinkSent, countdownTime]);
+
   // Functions
   const handleChange = (event: ChangeEvent) => {
     const target = event.target as HTMLInputElement;
+    setError(""); // Clear errors when user makes changes
 
     setFormData({
       ...formData,
@@ -32,11 +93,17 @@ export const LoginBlock = () => {
     });
   };
 
+  const toggleLoginMethod = () => {
+    setUseMagicLink(!useMagicLink);
+    setError(""); // Clear errors when switching methods
+  };
+
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
     setError("");
 
+    // Validate email
     const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
     if (!emailRegex.test(formData.email.trim())) {
       setError("Please enter a valid email address.");
@@ -46,12 +113,33 @@ export const LoginBlock = () => {
 
     try {
       if (useMagicLink) {
+        // Check if we're still in cooldown
+        if (magicLinkSent && countdownTime > 0) {
+          setError(
+            `Please wait ${countdownTime} seconds before requesting another magic link.`,
+          );
+          setIsLoading(false);
+          return;
+        }
+
         const response = await loginWithMagicLink({
           email: formData.email.trim(),
         });
 
         if (response.success) {
+          // Store timestamp and email in localStorage
+          const timestamp = new Date().getTime();
+          localStorage.setItem(
+            "magicLinkData",
+            JSON.stringify({
+              timestamp,
+              email: formData.email.trim(),
+            }),
+          );
+
+          setLastSentTimestamp(timestamp);
           setMagicLinkSent(true);
+          setCountdownTime(60);
         } else {
           setError(response.error || "Failed to send magic link");
         }
@@ -78,13 +166,26 @@ export const LoginBlock = () => {
         return;
       }
 
-      console.error("Unexpected error during login:", error);
       setError("An unexpected error occurred. Please try again later.");
     } finally {
       setIsLoading(false);
     }
   };
 
+  // Determine if login button should be enabled
+  const isLoginButtonEnabled = () => {
+    const isEmailValid = formData.email.length >= 6;
+
+    if (useMagicLink) {
+      // For magic link, only need valid email and not be in a cooldown period
+      return isEmailValid && (!magicLinkSent || countdownTime === 0);
+    } else {
+      // For password login, need valid email and non-empty password
+      return isEmailValid && formData.password.trim().length > 0;
+    }
+  };
+
+  // Render magic link sent confirmation
   if (magicLinkSent) {
     return (
       <div className="mt-16 flex flex-col w-full max-w-full lg:max-w-2xl bg-emerald-500 p-4 rounded-2xl text-white">
@@ -95,6 +196,18 @@ export const LoginBlock = () => {
           We've sent you a magic link to{" "}
           <span className={"font-bold"}>{formData.email}</span>
         </span>
+        {countdownTime > 0 ? (
+          <span className="mt-2 text-sm">
+            You can request another link in {countdownTime} seconds
+          </span>
+        ) : (
+          <button
+            onClick={() => setMagicLinkSent(false)}
+            className="mt-2 self-center px-4 py-1 bg-white text-emerald-600 rounded-md text-sm font-semibold"
+          >
+            Send a new link
+          </button>
+        )}
       </div>
     );
   }
@@ -108,6 +221,16 @@ export const LoginBlock = () => {
         </h2>
       </article>
 
+      <button
+        type="button"
+        className={`-my-4 w-fit text-qrmory-purple-500 font-bold text-xs`}
+        onClick={toggleLoginMethod}
+      >
+        {useMagicLink
+          ? "Login with password instead?"
+          : "Login with magic link instead?"}
+      </button>
+
       <AuthText
         type={"email"}
         name={"email"}
@@ -118,30 +241,24 @@ export const LoginBlock = () => {
       />
 
       {!useMagicLink && (
-        <AuthText
-          type={"password"}
-          name={"password"}
-          label={"Password"}
-          placeholder={"eg. 1173!Ciri"}
-          value={formData.password}
-          onChange={handleChange}
-        />
-      )}
+        <div className={`relative`}>
+          <AuthText
+            type={showPassword ? "text" : "password"}
+            name={"password"}
+            label={"Password"}
+            placeholder={"eg. 1173!Ciri"}
+            value={formData.password}
+            onChange={handleChange}
+          />
 
-      {useMagicLink ? (
-        <button
-          className={`-my-4 mx-auto w-fit text-qrmory-purple-500 font-bold text-sm`}
-          onClick={() => setUseMagicLink(false)}
-        >
-          Login with password instead?
-        </button>
-      ) : (
-        <button
-          className={`-my-4 mx-auto w-fit text-qrmory-purple-500 font-bold text-sm`}
-          onClick={() => setUseMagicLink(true)}
-        >
-          Login with magic link instead?
-        </button>
+          <button
+            type={`button`}
+            className={`absolute right-2 bottom-3 text-neutral-300 hover:text-qrmory-purple-500 transition-all duration-300 ease-in-out`}
+            onClick={() => setShowPassword(!showPassword)}
+          >
+            <IconEye size={24} strokeWidth={2} />
+          </button>
+        </div>
       )}
 
       {error && <p className="text-red-600 text-sm">{error}</p>}
@@ -149,7 +266,7 @@ export const LoginBlock = () => {
       <article className={`grid gap-3`}>
         <button
           type="submit"
-          disabled={formData.email.length < 6 || isLoading}
+          disabled={!isLoginButtonEnabled() || isLoading}
           className={`py-2 w-full bg-qrmory-purple-500 disabled:bg-stone-300 rounded-md text-white text-sm md:text-base font-bold`}
         >
           {isLoading

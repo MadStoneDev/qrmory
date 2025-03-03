@@ -1,5 +1,4 @@
 import { type NextRequest, NextResponse } from "next/server";
-
 import { createClient } from "@/utils/supabase/client";
 import { updateSession } from "@/utils/supabase/middleware";
 
@@ -17,6 +16,7 @@ export async function middleware(request: NextRequest) {
     "/terms-and-conditions",
     "/cookies-policy",
     "/error",
+    "/login", // Added this to match your redirect
   ];
 
   // Authentication related routes that should be public
@@ -26,6 +26,7 @@ export async function middleware(request: NextRequest) {
     "/auth/confirm",
     "/auth/login",
     "/auth/sign-up",
+    "/auth/callback", // Make sure callback URL is public
   ];
 
   // Dynamic Public Routes (path prefixes)
@@ -60,9 +61,10 @@ export async function middleware(request: NextRequest) {
 
     if (!data || !data.user) {
       console.log(
-        `No authenticated user found, redirecting from ${path} to /login`,
+        `No authenticated user found, redirecting from ${path} to /auth/login`,
       );
-      return NextResponse.redirect(new URL("/login", request.url));
+      // Fix: changed /login to /auth/login to match your auth routes
+      return NextResponse.redirect(new URL("/auth/login", request.url));
     }
 
     return await updateSession(request);

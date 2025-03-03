@@ -1,9 +1,10 @@
 ﻿"use server";
 
-import { authRateLimiter } from "@/utils/rate-limit";
-import { createClient } from "@/utils/supabase/server";
-import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
+
+import { createClient } from "@/utils/supabase/server";
+import { authRateLimiter } from "@/utils/rate-limit";
 
 export async function loginWithPassword(formData: {
   email: string;
@@ -45,16 +46,13 @@ export async function loginWithPassword(formData: {
       };
     }
 
-    console.error("Unexpected error during login:", error);
-    return {
-      error: "An unexpected error occurred. Please try again later.",
-      success: false,
-    };
+    throw error;
   }
 }
 
 export async function loginWithMagicLink(formData: { email: string }) {
   try {
+    // Rate limiter check
     const { success: rateLimiter } = await authRateLimiter.limit(
       formData.email.toLowerCase(),
     );
@@ -68,11 +66,11 @@ export async function loginWithMagicLink(formData: { email: string }) {
 
     const supabase = await createClient();
 
-    const { error } = await supabase.auth.signInWithOtp({
+    const { error, data } = await supabase.auth.signInWithOtp({
       email: formData.email,
       options: {
         shouldCreateUser: false,
-        emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`,
+        emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/dashboard`,
       },
     });
 
