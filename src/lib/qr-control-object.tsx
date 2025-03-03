@@ -9,6 +9,7 @@ import QRYoutube from "@/components/qr-youtube";
 import QRWifi from "@/components/qr-wifi";
 import QRVCard from "@/components/qr-vcard";
 import QRCoupon from "@/components/qr-coupon";
+import QRLocation from "@/components/qr-location";
 
 export const qrControls: QRControlsObject = {
   website: {
@@ -86,6 +87,13 @@ export const qrControls: QRControlsObject = {
       <QRCoupon setText={setText} setChanged={setChanged} />
     ),
   },
+  location: {
+    title: "Location",
+    description: "Share a map address",
+    component: (setText: Function, setChanged: Function) => (
+      <QRLocation setText={setText} setChanged={setChanged} />
+    ),
+  },
   wifi: {
     title: "WiFi",
     description: "Share WiFi details",
@@ -100,7 +108,6 @@ export const qrControls: QRControlsObject = {
       <QRText setText={setText} setChanged={setChanged} />
     ),
   },
-  // location: ["Location", "Share a map address"],
   // bitcoin: ["Bitcoin", "Quick Bitcoin payments"],
   // ethereum: ["Ethereum", "Quick Ethereum payments"],
 };
