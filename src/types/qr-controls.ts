@@ -8,6 +8,7 @@ export interface QRControlType {
 export interface QRType {
   title: string;
   description: string;
+  icon?: JSX.Element;
   component: (
     setText: (value: string) => void,
     setChange: (change: boolean) => void,

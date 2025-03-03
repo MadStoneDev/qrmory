@@ -10,11 +10,24 @@ import QRWifi from "@/components/qr-wifi";
 import QRVCard from "@/components/qr-vcard";
 import QRCoupon from "@/components/qr-coupon";
 import QRLocation from "@/components/qr-location";
+import {
+  IconBrandFacebookFilled,
+  IconBrandInstagram,
+  IconBrandXFilled,
+  IconBrandYoutubeFilled,
+  IconIdBadge2,
+  IconMapPin,
+  IconNotes,
+  IconRouter,
+  IconTicket,
+  IconWorld,
+} from "@tabler/icons-react";
 
 export const qrControls: QRControlsObject = {
   website: {
     title: "Website",
     description: "Link to a page or site",
+    icon: <IconWorld size={24} strokeWidth={1.5} />,
     component: (setText: Function, setChanged: Function) => (
       <QRWebsite setText={setText} setChanged={setChanged} />
     ),
@@ -22,6 +35,7 @@ export const qrControls: QRControlsObject = {
   facebook: {
     title: "Facebook",
     description: "Facebook page/group",
+    icon: <IconBrandFacebookFilled size={24} strokeWidth={1.5} />,
     component: (setText: Function, setChanged: Function) => (
       <QRFacebook setText={setText} setChanged={setChanged} />
     ),
@@ -29,13 +43,15 @@ export const qrControls: QRControlsObject = {
   instagram: {
     title: "Instagram",
     description: "Instagram account",
+    icon: <IconBrandInstagram size={24} strokeWidth={1.5} />,
     component: (setText: Function, setChanged: Function) => (
       <QRInstagram setText={setText} setChanged={setChanged} />
     ),
   },
   twitter: {
-    title: "Twitter",
-    description: "Twitter account",
+    title: "X / Twitter",
+    description: "X account",
+    icon: <IconBrandXFilled size={24} strokeWidth={1.5} />,
     component: (setText: Function, setChanged: Function) => (
       <QRTwitter setText={setText} setChanged={setChanged} />
     ),
@@ -43,6 +59,7 @@ export const qrControls: QRControlsObject = {
   youTube: {
     title: "YouTube",
     description: "YouTube video",
+    icon: <IconBrandYoutubeFilled size={24} strokeWidth={1.5} />,
     component: (setText: Function, setChanged: Function) => (
       <QRYoutube setText={setText} setChanged={setChanged} />
     ),
@@ -60,6 +77,7 @@ export const qrControls: QRControlsObject = {
   eBusinessCard: {
     title: "E-Business Card",
     description: "The modern business card",
+    icon: <IconIdBadge2 size={24} strokeWidth={1.5} />,
     component: (setText: Function, setChanged: Function) => (
       <QRVCard setText={setText} setChanged={setChanged} />
     ),
@@ -83,6 +101,7 @@ export const qrControls: QRControlsObject = {
   coupon: {
     title: "Coupon",
     description: "Create a coupon or special offer",
+    icon: <IconTicket size={24} strokeWidth={1.5} />,
     component: (setText: Function, setChanged: Function) => (
       <QRCoupon setText={setText} setChanged={setChanged} />
     ),
@@ -90,6 +109,7 @@ export const qrControls: QRControlsObject = {
   location: {
     title: "Location",
     description: "Share a map address",
+    icon: <IconMapPin size={24} strokeWidth={1.5} />,
     component: (setText: Function, setChanged: Function) => (
       <QRLocation setText={setText} setChanged={setChanged} />
     ),
@@ -97,6 +117,7 @@ export const qrControls: QRControlsObject = {
   wifi: {
     title: "WiFi",
     description: "Share WiFi details",
+    icon: <IconRouter size={24} strokeWidth={1.5} />,
     component: (setText: Function, setChanged: Function) => (
       <QRWifi setText={setText} setChanged={setChanged} />
     ),
@@ -104,6 +125,7 @@ export const qrControls: QRControlsObject = {
   text: {
     title: "Text",
     description: "Display a text message",
+    icon: <IconNotes size={24} strokeWidth={1.5} />,
     component: (setText: Function, setChanged: Function) => (
       <QRText setText={setText} setChanged={setChanged} />
     ),

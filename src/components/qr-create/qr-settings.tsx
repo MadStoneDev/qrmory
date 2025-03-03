@@ -144,7 +144,7 @@ export default function QRSettings({
       <div className="mb-4 pb-4 flex flex-row flex-wrap justify-start items-center content-end self-start border-b-2 border-stone-100 transition-all">
         {Object.keys(qrControls).map((key) => (
           <article
-            className={`${
+            className={`flex gap-2 items-center ${
               activeSelector === key
                 ? "bg-qrmory-purple-800 text-white"
                 : "bg-white hover:bg-qrmory-purple-500 border-stone-400 hover:border-qrmory-purple-500 text-stone-500 hover:text-white"
@@ -153,6 +153,7 @@ export default function QRSettings({
             data-selector={key}
             onClick={() => handleActiveSelector(key)}
           >
+            {qrControls[key].icon}
             {qrControls[key].title}
           </article>
         ))}
