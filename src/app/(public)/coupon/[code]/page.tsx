@@ -33,21 +33,11 @@ export default function CouponPage() {
         return;
       }
 
-      // More robust decoding approach
-      let decodedData;
-      try {
-        // Try the standard approach first
-        decodedData = decodeURIComponent(escape(atob(code)));
-      } catch (decodeError) {
-        // If that fails, try an alternative approach
-        try {
-          decodedData = atob(code);
-        } catch (atobError) {
-          // If simple atob also fails, try with a URL-safe base64 fix
-          const fixedCode = code.replace(/-/g, "+").replace(/_/g, "/");
-          decodedData = atob(fixedCode);
-        }
-      }
+      // First decode any URL-encoded characters in the code
+      const decodedCode = decodeURIComponent(code);
+
+      // Then decode the base64
+      const decodedData = atob(decodedCode);
 
       const jsonData = JSON.parse(decodedData) as CouponData;
 
@@ -180,31 +170,30 @@ export default function CouponPage() {
 
   return (
     <div
-      className="min-h-screen flex items-center justify-center py-8 px-4"
-      style={{ backgroundColor: "#f9fafb" }}
+      className={`px-4 flex flex-col items-center justify-between min-h-dvh bg-neutral-200`}
     >
-      <div className="w-full max-w-md">
+      <main
+        className={`flex-grow py-8 flex items-center justify-center w-full`}
+      >
         <div
-          className="rounded-2xl shadow-lg overflow-hidden"
-          style={{ backgroundColor: "white" }}
+          className={`flex flex-col w-full max-w-md bg-white rounded-2xl shadow-lg overflow-hidden`}
         >
-          {/* Coupon Header */}
-          <div className="px-6 py-4 border-b border-gray-200">
-            <h1 className="text-xl font-bold text-gray-800">Special Offer</h1>
-          </div>
-
           {isExpired && (
-            <div className="mx-6 mt-4 py-2 px-4 bg-rose-100 text-rose-800 rounded-md text-center">
+            <div
+              className={`mx-6 mt-4 py-2 px-4 bg-rose-100 text-rose-800 rounded-md text-center`}
+            >
               This coupon has expired
             </div>
           )}
 
           {/* Coupon Content */}
           <div
-            className="m-4 p-6 rounded-lg"
+            className={`flex-grow pt-3 rounded-lg`}
             style={{ backgroundColor: softBgColor }}
           >
-            <div className="mb-3 text-xl font-serif text-neutral-900 text-center">
+            <div
+              className={`mb-4 text-xl font-serif text-neutral-900 text-center`}
+            >
               {data?.biz}
             </div>
 
@@ -255,23 +244,18 @@ export default function CouponPage() {
               )}
             </section>
           </div>
-
-          {/* Footer */}
-          <div className="px-6 py-4 text-center border-t border-gray-200">
-            <div className="text-xs text-gray-500">
-              Present this coupon at time of purchase. Cannot be combined with
-              other offers.
-            </div>
-
-            <div className="mt-4 text-sm text-gray-600">
-              Created with{" "}
-              <Link href="/" className="text-qrmory-purple-800 hover:underline">
-                QRmory
-              </Link>
-            </div>
-          </div>
         </div>
-      </div>
+      </main>
+
+      {/* Footer */}
+      <footer className="px-6 py-2 text-center border-t border-gray-200">
+        <div className={`text-sm text-gray-600`}>
+          Created with{" "}
+          <Link href="/" className="text-qrmory-purple-800 hover:underline">
+            QRmory
+          </Link>
+        </div>
+      </footer>
     </div>
   );
 }

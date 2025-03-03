@@ -108,11 +108,6 @@ export default function QRCoupon({ setText, setChanged }: QRControlType) {
 
   return (
     <>
-      <div className="text-sm text-qrmory-purple-600 italic mb-2">
-        Create a digital coupon or special offer. Fields marked with * are
-        required.
-      </div>
-
       <label className="control-label block">
         Business Name (optional):
         <input
@@ -262,10 +257,10 @@ export default function QRCoupon({ setText, setChanged }: QRControlType) {
         </p>
 
         <div
-          className={`mt-3 py-3 px-10 text-center rounded-md`}
+          className={`mt-3 text-center rounded-md`}
           style={{ backgroundColor: softBgColor }}
         >
-          <div className={`mb-3 text-xl font-serif text-neutral-900`}>
+          <div className={`py-3 text-xl font-serif text-neutral-900`}>
             {businessName || "Your Business"}
           </div>
 
