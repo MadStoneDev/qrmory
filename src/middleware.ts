@@ -21,6 +21,14 @@ export async function middleware(request: NextRequest) {
     "/error",
   ];
 
+  // Authentication related routes that should be public
+  const authRoutes = [
+    "/auth/check-email",
+    "/auth/reset-password",
+    "/auth/confirm",
+    "/auth/signup",
+  ];
+
   // Dynamic Public Routes (path prefixes)
   const dynamicPublicRoutes = ["/coupon/", "/vcard/", "/_next/", "/api/"];
 
@@ -34,6 +42,14 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
+  // Check if it's an auth route
+  if (
+    authRoutes.includes(path) ||
+    authRoutes.some((route) => path.startsWith(route))
+  ) {
+    return NextResponse.next();
+  }
+
   // Check if dynamic public route
   if (dynamicPublicRoutes.some((prefix) => path.startsWith(prefix))) {
     return NextResponse.next();
@@ -43,13 +59,16 @@ export async function middleware(request: NextRequest) {
     const supabase = createClient();
     const { data } = await supabase.auth.getUser();
 
-    if (!data) {
+    if (!data || !data.user) {
+      console.log(
+        `No authenticated user found, redirecting from ${path} to /login`,
+      );
       return NextResponse.redirect(new URL("/login", request.url));
     }
 
     return await updateSession(request);
   } catch (error) {
-    console.error(error);
+    console.error("Middleware error:", error);
     return NextResponse.redirect(new URL("/error", request.url));
   }
 }
