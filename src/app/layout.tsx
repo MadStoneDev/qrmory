@@ -1,5 +1,8 @@
 ﻿import "@/app/globals.css";
+
 import React from "react";
+
+import { GoogleAnalytics } from "@next/third-parties/google";
 import { Toaster } from "@/components/ui/sonner";
 
 export default function RootLayout({
@@ -10,6 +13,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>{children}</body>
+      <GoogleAnalytics gaId={`G-DQR24DJNH3`} />
       <Toaster
         position={`top-right`}
         toastOptions={{
