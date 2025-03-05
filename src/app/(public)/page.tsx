@@ -1,13 +1,24 @@
-import HomeHero from "@/components/home-hero-section";
-import QRCreator from "@/components/qr-create/qr-creator";
-import HomeInfo from "@/components/home-info-section";
-import MainNavigation from "@/components/main-navigation";
 import React from "react";
-import MainFooter from "@/components/main-footer";
 
-export default function Home() {
-  // User
-  const user = null;
+import HomeHero from "@/components/home-hero-section";
+import HomeInfo from "@/components/home-info-section";
+import QRCreator from "@/components/qr-create/qr-creator";
+import MainNavigation from "@/components/main-navigation";
+import MainFooter from "@/components/main-footer";
+import { createClient } from "@/utils/supabase/server";
+
+async function fetchUser() {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  return user;
+}
+
+export default async function Home() {
+  const user = await fetchUser();
 
   return (
     <>

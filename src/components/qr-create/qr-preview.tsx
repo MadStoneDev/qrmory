@@ -1,4 +1,6 @@
-﻿import React, { useMemo } from "react";
+﻿"use client";
+
+import React, { useMemo } from "react";
 import { useQRCode } from "next-qrcode";
 import { downloadToSVG } from "@/utils/qr-save";
 import d3ToPng from "d3-svg-to-png";

@@ -12,14 +12,16 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>{children}</body>
-      <GoogleAnalytics gaId={`G-DQR24DJNH3`} />
-      <Toaster
-        position={`top-right`}
-        toastOptions={{
-          duration: 3000,
-        }}
-      />
+      <body>
+        {children}
+        <GoogleAnalytics gaId={`G-DQR24DJNH3`} />
+        <Toaster
+          position={`top-right`}
+          toastOptions={{
+            duration: 3000,
+          }}
+        />
+      </body>
     </html>
   );
 }

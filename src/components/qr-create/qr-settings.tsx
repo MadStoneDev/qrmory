@@ -1,4 +1,6 @@
-﻿import React, { useState, useEffect } from "react";
+﻿"use client";
+
+import React, { useState, useEffect } from "react";
 
 import { qrControls } from "@/lib/qr-control-object";
 import { IconBolt, IconDeviceFloppy, IconRocket } from "@tabler/icons-react";
