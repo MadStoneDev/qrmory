@@ -38,7 +38,7 @@ export default function QRPreview({
 
   return (
     <article
-      className={`mx-auto p-4 lg:pt-8 lg:pb-10 lg:px-10 self-start lg:self-auto flex flex-col items-center lg:items-auto justify-between lg:w-qr-preview w-full sm:max-w-xs bg-white ${
+      className={`mx-auto p-4 lg:pt-8 lg:pb-10 lg:px-10 self-start lg:self-auto flex flex-col lg:w-qr-preview w-full sm:max-w-xs bg-white ${
         shadow
           ? "rounded-3xl shadow-xl shadow-stone-300/50"
           : "lg:rounded-3xl lg:shadow-xl lg:shadow-stone-300/50"
@@ -53,7 +53,7 @@ export default function QRPreview({
 
       <div
         id={`final-qr`}
-        className="my-6 lg:my-16 lg:mx-auto flex-grow grid place-content-center text-gray-600 dark:text-gray-600 text-sm"
+        className="my-6 lg:my-16 lg:mx-auto grid place-content-center text-gray-600 dark:text-gray-600 text-sm"
       >
         <SVG
           text={displayValue}

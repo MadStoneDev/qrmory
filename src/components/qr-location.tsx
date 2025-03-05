@@ -85,11 +85,11 @@ export default function QRLocation({ setText, setChanged }: QRControlType) {
         console.error("API Error:", { status, data: errorData });
 
         if (status === 405) {
-          setSearchError(
+          console.error(
             "API endpoint method not allowed. Check if your API route is correctly implemented.",
           );
         } else {
-          setSearchError(
+          console.error(
             errorData?.error ||
               `Failed to search locations (Status: ${status || "unknown"})`,
           );
