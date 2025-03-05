@@ -28,20 +28,18 @@ export default function QRLocation({ setText, setChanged }: QRControlType) {
   // Update parent with location data
   const updateParentValue = () => {
     if (useManualCoords && manualCoords.lat && manualCoords.lng) {
-      // Format for manual coordinates: "geo:latitude,longitude"
       const geoUri = `geo:${manualCoords.lat},${manualCoords.lng}`;
+
       setText(geoUri);
       setChanged(true);
     } else if (selectedLocation) {
-      // Format for searched location: "geo:latitude,longitude?q=name"
-      // This allows mapping apps to both show the exact coordinates and display a place label
       const encodedName = encodeURIComponent(selectedLocation.name);
       const geoUri = `geo:${selectedLocation.lat},${selectedLocation.lng}?q=${encodedName}`;
+
       setText(geoUri);
       setChanged(true);
     } else {
       setText("");
-      setChanged(false);
     }
   };
 
@@ -118,14 +116,6 @@ export default function QRLocation({ setText, setChanged }: QRControlType) {
         ...prev,
         [field]: value,
       }));
-    }
-  };
-
-  // Toggle between search and manual coordinates
-  const toggleManualCoords = () => {
-    setUseManualCoords(!useManualCoords);
-    if (!useManualCoords) {
-      setSelectedLocation(null);
     }
   };
 
