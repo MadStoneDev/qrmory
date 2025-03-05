@@ -12,6 +12,6 @@ export default async function CodeReroute({
 
   // TODO: Check if code exists in database
   // TODO: If it does, redirect to the code page
-  router.push(`https://ravenci.solutions`);
+  // router.push(`https://ravenci.solutions`);
   // TODO: If it doesn't, redirect to the 404 page
 }
