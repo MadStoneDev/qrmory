@@ -71,30 +71,33 @@ export default function SignUpBlock() {
     }
 
     try {
-      // Direct approach with try/catch
       const response = await SignUp({
         email: formData.email,
         password: formData.password,
         confirmPassword: formData.confirmPassword,
       });
 
-      // Handle response
-      if (response) {
-        if (response.error) {
-          setError(
-            response.error ||
-              "There was an issue creating your account. Please try again.",
-          );
-        } else if (response.success) {
-          // This shouldn't happen due to the redirect, but just in case
-          setError(
-            "Sign-up successful! Please check your email to confirm your account.",
-          );
-        }
-      } else {
+      // If we get here, it means no redirect happened
+      // Handle the response accordingly
+      if (response?.error) {
+        setError(
+          response.error ||
+            "There was an issue creating your account. Please try again.",
+        );
+      } else if (response?.success) {
+        setError(
+          "Sign-up successful! Please check your email to confirm your account.",
+        );
+      } else if (!response) {
         setError("No response received from the server. Please try again.");
       }
     } catch (error: any) {
+      // Check if this is a Next.js redirect error
+      if (error instanceof Error && error.message.includes("NEXT_REDIRECT")) {
+        // This is expected, the auth function is handling the redirect
+        return;
+      }
+
       console.error("Client: Sign up error:", error);
       setError("An unexpected error occurred. Please try again later.");
     } finally {

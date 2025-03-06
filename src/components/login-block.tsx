@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ChangeEvent, FormEvent, useState, useEffect } from "react";
 
 import {
@@ -11,6 +12,9 @@ import AuthText from "@/components/auth-text";
 import { IconEye } from "@tabler/icons-react";
 
 export const LoginBlock = () => {
+  // Hooks
+  const router = useRouter();
+
   // States
   const [showPassword, setShowPassword] = useState(false);
   const [useMagicLink, setUseMagicLink] = useState(false);
@@ -130,26 +134,37 @@ export const LoginBlock = () => {
         return;
       }
 
-      const response = await loginWithMagicLink({
-        email: formData.email.trim(),
-      });
+      try {
+        const response = await loginWithMagicLink({
+          email: formData.email.trim(),
+        });
 
-      if (response.success) {
-        // Store timestamp and email in localStorage
-        const timestamp = new Date().getTime();
-        localStorage.setItem(
-          "magicLinkData",
-          JSON.stringify({
-            timestamp,
-            email: formData.email.trim(),
-          }),
-        );
+        if (response.success) {
+          const timestamp = new Date().getTime();
+          localStorage.setItem(
+            "magicLinkData",
+            JSON.stringify({
+              timestamp,
+              email: formData.email.trim(),
+            }),
+          );
 
-        setLastSentTimestamp(timestamp);
-        setMagicLinkSent(true);
-        setCountdownTime(60);
-      } else {
-        setError(response.error || "Failed to send magic link");
+          setLastSentTimestamp(timestamp);
+          setMagicLinkSent(true);
+          setCountdownTime(60);
+        } else {
+          setError(response.error || "Failed to send magic link");
+        }
+      } catch (error: any) {
+        if (error instanceof Error && error.message.includes("NEXT_REDIRECT")) {
+          // This is expected, the auth function is handling the redirect
+          return;
+        }
+
+        console.error("Magic link error:", error);
+        setError("An unexpected error occurred. Please try again later.");
+      } finally {
+        setIsLoading(false);
       }
     } else {
       if (!formData.password) {
@@ -159,13 +174,22 @@ export const LoginBlock = () => {
       }
 
       try {
-        await loginWithPassword({
+        const response = await loginWithPassword({
           email: formData.email.trim(),
           password: formData.password,
         });
-      } catch (error) {
+
+        // If we get here, it means no redirect happened
+        if (response?.success) {
+          router.push("/dashboard");
+          return;
+        } else if (response?.error) {
+          setError(response.error || "Invalid email or password");
+        } else {
+          setError("An unexpected error occurred. Please try again later.");
+        }
+      } catch (error: any) {
         if (error instanceof Error && error.message.includes("NEXT_REDIRECT")) {
-          // This is expected during redirect - do nothing
           return;
         }
 
@@ -200,10 +224,9 @@ export const LoginBlock = () => {
       <div className={`p-4 grid gap-10 w-full lg:max-w-sm`}>
         <article>
           <h1 className={`text-xl font-bold`}>Magic Link Sent!</h1>
-          <h2 className={`text-base text-neutral-600 font-light`}>
-            We've sent you a magic link to your email address.
-            <br />
-            Remember to check your junk folder too just in case.
+          <h2 className={`text-base text-neutral-600 font-light max-w-sm`}>
+            We've sent you a magic link to your email address. Remember to check
+            your junk folder too just in case.
           </h2>
         </article>
 
