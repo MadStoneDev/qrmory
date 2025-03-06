@@ -12,7 +12,7 @@ const AuthText = ({
 }) => {
   return (
     <div className={`grid gap-1`} {...props}>
-      <label htmlFor={id} className={`text-xs text-neutral-500 font-light`}>
+      <label htmlFor={id} className={`text-sm text-neutral-500 font-light`}>
         {label}
       </label>
       <input

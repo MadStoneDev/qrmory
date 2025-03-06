@@ -39,7 +39,7 @@ export async function loginWithPassword(formData: {
     revalidatePath(`/`);
     redirect(`/dashboard`);
   } catch (error) {
-    if (error instanceof Error && error.message.includes("NEXT_REDIRECT")) {
+    if (error instanceof Error && !error.message.includes("NEXT_REDIRECT")) {
       return {
         error: "An unexpected error occurred. Please try again later.",
         success: false,
@@ -73,6 +73,9 @@ export async function loginWithMagicLink(formData: { email: string }) {
         emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/dashboard`,
       },
     });
+
+    console.log(`${process.env.NEXT_PUBLIC_SITE_URL}/dashboard`);
+    console.log("Supabase auth response:", data);
 
     if (error) {
       return {

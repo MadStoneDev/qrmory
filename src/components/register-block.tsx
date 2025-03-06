@@ -145,10 +145,13 @@ export default function SignUpBlock() {
     formData.password === formData.confirmPassword;
 
   return (
-    <form onSubmit={handleSubmit} className={`p-4 grid gap-10 w-full max-w-sm`}>
+    <form
+      onSubmit={handleSubmit}
+      className={`p-4 grid gap-10 w-full lg:max-w-sm`}
+    >
       <article>
-        <h1 className={`md:text-xl font-bold`}>Welcome to QRmory!</h1>
-        <h2 className={`text-sm md:text-base text-neutral-600 font-light`}>
+        <h1 className={`text-xl font-bold`}>Welcome to QRmory!</h1>
+        <h2 className={`text-base text-neutral-600 font-light`}>
           Let's create a new account
         </h2>
       </article>
@@ -269,11 +272,11 @@ export default function SignUpBlock() {
         <button
           type="submit"
           disabled={isLoading || !isFormValid}
-          className={`py-2 w-full bg-qrmory-purple-500 disabled:bg-stone-300 rounded-md text-white text-sm md:text-base font-bold`}
+          className={`py-2 w-full bg-qrmory-purple-500 disabled:bg-stone-300 rounded-md text-white text-base font-bold`}
         >
           {isLoading ? "Creating..." : "Create!"}
         </button>
-        <h4 className={`text-xs md:text-sm font-light text-center`}>
+        <h4 className={`text-sm font-light text-center`}>
           Already have an account?{" "}
           <Link href={"/login"} className={`group relative font-bold`}>
             Login here

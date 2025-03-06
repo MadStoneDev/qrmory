@@ -65,6 +65,7 @@ export const LoginBlock = () => {
           const newTime = prevTime - 1;
           if (newTime <= 0) {
             clearInterval(timer);
+            setMagicLinkSent(false); // Reset magicLinkSent when timer reaches 0
             return 0;
           }
           return newTime;
@@ -76,6 +77,20 @@ export const LoginBlock = () => {
       if (timer) clearInterval(timer);
     };
   }, [magicLinkSent, countdownTime]);
+
+  // Test function that only activates the timer without sending an actual link
+  const testTimer = () => {
+    // Only run the test if we're not already in a countdown
+    if (!magicLinkSent || countdownTime === 0) {
+      setCountdownTime(60);
+      setMagicLinkSent(true); // This is crucial to activate the timer
+
+      // We're not actually sending a magic link here, just testing the timer
+      console.log("TESTING: Timer started");
+    } else {
+      console.log("TESTING: Timer already running");
+    }
+  };
 
   // Functions
   const handleChange = (event: ChangeEvent) => {
@@ -107,7 +122,6 @@ export const LoginBlock = () => {
     }
 
     if (useMagicLink) {
-      // Check if we're still in cooldown
       if (magicLinkSent && countdownTime > 0) {
         setError(
           `Please wait ${countdownTime} seconds before requesting another magic link.`,
@@ -163,31 +177,37 @@ export const LoginBlock = () => {
     }
   };
 
-  // Determine if login button should be enabled
-  const isLoginButtonEnabled = () => {
-    const isEmailValid = formData.email.length >= 6;
+  // Get the button text based on current state
+  const getButtonText = () => {
+    if (isLoading) {
+      return "Logging you in...";
+    }
 
     if (useMagicLink) {
-      // For magic link, only need valid email and not be in a cooldown period
-      return isEmailValid && (!magicLinkSent || countdownTime === 0);
-    } else {
-      // For password login, need valid email and non-empty password
-      return isEmailValid && formData.password.trim().length > 0;
+      if (magicLinkSent && countdownTime > 0) {
+        return `You can retry in (${countdownTime})`;
+      } else {
+        return "Send Magic Link";
+      }
     }
+
+    return "Login";
   };
 
   // Render magic link sent confirmation
   if (magicLinkSent) {
     return (
-      <div className="mt-16 flex flex-col w-full max-w-full lg:max-w-2xl bg-emerald-500 p-4 rounded-2xl text-white">
-        <span className="text-lg font-bold">
-          Check your email for the login link.
-        </span>
-        <span className="text-sm italic text-center">
-          We've sent you a magic link to{" "}
-          <span className={"font-bold"}>{formData.email}</span>
-        </span>
-        <span className="mt-2 text-sm">
+      <div className={`p-4 grid gap-10 w-full lg:max-w-sm`}>
+        <article>
+          <h1 className={`text-xl font-bold`}>Magic Link Sent!</h1>
+          <h2 className={`text-base text-neutral-600 font-light`}>
+            We've sent you a magic link to your email address.
+            <br />
+            Remember to check your junk folder too just in case.
+          </h2>
+        </article>
+
+        <span className="mt-2 text-sm text-neutral-600 ">
           {countdownTime > 0
             ? `You can request another link in ${countdownTime} seconds`
             : "You can now request another link"}
@@ -205,17 +225,20 @@ export const LoginBlock = () => {
   }
 
   return (
-    <form onSubmit={handleSubmit} className={`p-4 grid gap-10 w-full max-w-sm`}>
+    <form
+      onSubmit={handleSubmit}
+      className={`p-4 grid gap-10 w-full lg:max-w-sm`}
+    >
       <article>
-        <h1 className={`md:text-xl font-bold`}>Welcome Back!</h1>
-        <h2 className={`text-sm md:text-base text-neutral-600 font-light`}>
+        <h1 className={`text-xl font-bold`}>Welcome Back!</h1>
+        <h2 className={`text-base text-neutral-600 font-light`}>
           Let's get you back into your account
         </h2>
       </article>
 
       <button
         type="button"
-        className={`-my-4 w-fit text-qrmory-purple-500 font-bold text-xs`}
+        className={`-my-4 w-fit text-qrmory-purple-500 font-bold text-sm`}
         onClick={toggleLoginMethod}
       >
         {useMagicLink
@@ -258,17 +281,17 @@ export const LoginBlock = () => {
       <article className={`grid gap-3`}>
         <button
           type="submit"
-          disabled={!isLoginButtonEnabled() || isLoading}
-          className={`py-2 w-full bg-qrmory-purple-500 disabled:bg-stone-300 rounded-md text-white text-sm md:text-base font-bold`}
+          disabled={
+            (useMagicLink && magicLinkSent && countdownTime > 0) ||
+            formData.email.length < 6 ||
+            isLoading
+          }
+          className={`py-2 w-full bg-qrmory-purple-500 disabled:bg-stone-300 rounded-md text-white text-base font-bold`}
         >
-          {isLoading
-            ? "Logging you in..."
-            : useMagicLink
-              ? "Send Magic Link"
-              : "Login"}
+          {getButtonText()}
         </button>
 
-        <h4 className={`text-xs md:text-sm font-light text-center`}>
+        <h4 className={`text-sm font-light text-center`}>
           Don't have an account yet?{" "}
           <Link href={"/register"} className={`group relative font-bold`}>
             Create one here

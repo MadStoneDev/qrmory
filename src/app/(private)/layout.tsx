@@ -2,6 +2,7 @@ import React from "react";
 
 import MainNavigation from "@/components/main-navigation";
 import PrivateNavigation from "@/components/private-navigation";
+import { Toaster } from "@/components/ui/sonner";
 
 export default function PrivateLayout({
   children,
@@ -40,6 +41,12 @@ export default function PrivateLayout({
       >
         <p className={``}>&copy; 2024 QRmory</p>
       </footer>
+      <Toaster
+        position={`top-right`}
+        toastOptions={{
+          duration: 3000,
+        }}
+      />
     </div>
   );
 }
