@@ -2,12 +2,32 @@
 import { QRControlType } from "@/types/qr-controls";
 
 interface TextSaveData {
+  controlType: string;
   text: string;
 }
 
-const QRText = ({ setText, setChanged, setSaveData }: QRControlType) => {
+const QRText = ({
+  setText,
+  setChanged,
+  setSaveData,
+  initialData,
+}: QRControlType) => {
   // State to track the entered text
-  const [enteredText, setEnteredText] = useState("");
+  const [enteredText, setEnteredText] = useState(initialData?.text || "");
+  const [isInitialized, setIsInitialized] = useState(false);
+
+  // Initialize from saved data if available
+  useEffect(() => {
+    if (initialData && !isInitialized) {
+      setEnteredText(initialData.text || "");
+      setIsInitialized(true);
+
+      // Update parent with initial value
+      if (initialData.text) {
+        setText(initialData.text);
+      }
+    }
+  }, [initialData, isInitialized, setText]);
 
   // Handle input change
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -22,6 +42,7 @@ const QRText = ({ setText, setChanged, setSaveData }: QRControlType) => {
     if (setSaveData) {
       if (newValue.length > 0) {
         const saveData: TextSaveData = {
+          controlType: "text",
           text: newValue,
         };
         setSaveData(saveData);

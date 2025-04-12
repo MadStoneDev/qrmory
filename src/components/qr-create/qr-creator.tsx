@@ -5,17 +5,34 @@ import React, { useState, useEffect } from "react";
 import QRPreview from "./qr-preview";
 import QRSettings from "./qr-settings";
 import { suggestedTitles } from "@/data/defaults/suggested-titles";
+import { UserSettings } from "@/lib/default-settings";
+
+interface QuotaInfo {
+  currentCount: number;
+  maxQuota: number;
+  subscriptionLevel: string;
+  subscriptionStatus: string;
+}
 
 interface QRCreatorProps {
   withHeading?: boolean;
   shadow?: boolean;
   user: any;
+  userSettings: UserSettings;
+  quotaInfo?: QuotaInfo;
 }
 
 export default function QRCreator({
   withHeading = true,
   shadow = false,
   user = null,
+  userSettings,
+  quotaInfo = {
+    currentCount: 0,
+    maxQuota: 3,
+    subscriptionLevel: "free",
+    subscriptionStatus: "inactive",
+  },
 }: QRCreatorProps) {
   const [qrTitle, setQRTitle] = useState("");
   const [qrValue, setQRValue] = useState("Welcome to QRmory!");
@@ -76,6 +93,8 @@ export default function QRCreator({
           initialActiveSelector={activeSelector}
           shadow={shadow}
           user={user}
+          userSettings={userSettings}
+          quotaInfo={quotaInfo}
           onUpdate={handleQRSettingsUpdate}
         />
 
@@ -86,6 +105,7 @@ export default function QRCreator({
           qrChanged={qrChanged}
           shadow={shadow}
           user={user}
+          userSettings={userSettings}
         />
       </section>
     </div>

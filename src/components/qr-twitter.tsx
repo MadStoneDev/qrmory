@@ -2,6 +2,7 @@
 import { QRControlType } from "@/types/qr-controls";
 
 interface TwitterSaveData {
+  controlType: string;
   username: string;
   domain: string;
 }
@@ -10,11 +11,17 @@ export default function QRTwitter({
   setText,
   setChanged,
   setSaveData,
+  initialData,
 }: QRControlType) {
   // States
-  const [enteredLink, setEnteredLink] = useState("");
-  const [mainLink, setMainLink] = useState(`twitter.com/`);
-  const [altLink, setAltLink] = useState(`x.com/`);
+  const [enteredLink, setEnteredLink] = useState(initialData?.username || "");
+  const [mainLink, setMainLink] = useState(
+    initialData?.domain ? `${initialData.domain}/` : `twitter.com/`,
+  );
+  const [altLink, setAltLink] = useState(
+    initialData?.domain === "x.com" ? `twitter.com/` : `x.com/`,
+  );
+  const [isInitialized, setIsInitialized] = useState(false);
 
   // Update the parent component with the current value
   const updateParentValue = (value: string) => {
@@ -22,6 +29,7 @@ export default function QRTwitter({
       setText(`${mainLink}${value}`);
       if (setSaveData) {
         const saveData: TwitterSaveData = {
+          controlType: "twitter",
           username: value,
           domain: mainLink.replace("/", ""),
         };
@@ -33,6 +41,23 @@ export default function QRTwitter({
     }
     setChanged(true);
   };
+
+  // Initialize from saved data if available
+  useEffect(() => {
+    if (initialData && !isInitialized) {
+      setEnteredLink(initialData.username || "");
+      if (initialData.domain) {
+        setMainLink(`${initialData.domain}/`);
+        setAltLink(initialData.domain === "x.com" ? `twitter.com/` : `x.com/`);
+      }
+      setIsInitialized(true);
+
+      // Update parent with initial value
+      if (initialData.username) {
+        updateParentValue(initialData.username);
+      }
+    }
+  }, [initialData, isInitialized]);
 
   // Handle input change
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -52,6 +77,7 @@ export default function QRTwitter({
       setText(`${altLink}${enteredLink}`);
       if (setSaveData) {
         const saveData: TwitterSaveData = {
+          controlType: "twitter",
           username: enteredLink,
           domain: altLink.replace("/", ""),
         };

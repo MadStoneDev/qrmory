@@ -2,21 +2,59 @@
 import { QRControlType } from "@/types/qr-controls";
 import { getSoftBgColor } from "@/utils/colour-utils";
 
+interface CouponSaveData {
+  controlType: string;
+  title: string;
+  discount: string;
+  type: string;
+  desc: string;
+  cta: string;
+  color: string;
+  theme: string;
+  exp: string;
+  biz: string;
+}
+
 export default function QRCoupon({
   setText,
   setChanged,
   setSaveData,
+  initialData,
 }: QRControlType) {
   // States for coupon fields
-  const [dealTitle, setDealTitle] = useState("");
-  const [discount, setDiscount] = useState("");
-  const [discountType, setDiscountType] = useState("percent"); // percent, amount, free, bogo
-  const [description, setDescription] = useState("");
-  const [ctaText, setCtaText] = useState("Redeem Offer");
-  const [brandColor, setBrandColor] = useState("#3B82F6"); // Default blue
-  const [bgTheme, setBgTheme] = useState("light"); // light or dark
-  const [expiryDate, setExpiryDate] = useState("");
-  const [businessName, setBusinessName] = useState("");
+  const [dealTitle, setDealTitle] = useState(initialData?.title || "");
+  const [discount, setDiscount] = useState(initialData?.discount || "");
+  const [discountType, setDiscountType] = useState(
+    initialData?.type || "percent",
+  ); // percent, amount, free, bogo
+  const [description, setDescription] = useState(initialData?.desc || "");
+  const [ctaText, setCtaText] = useState(initialData?.cta || "Redeem Offer");
+  const [brandColor, setBrandColor] = useState(initialData?.color || "#3B82F6"); // Default blue
+  const [bgTheme, setBgTheme] = useState(initialData?.theme || "light"); // light or dark
+  const [expiryDate, setExpiryDate] = useState(initialData?.exp || "");
+  const [businessName, setBusinessName] = useState(initialData?.biz || "");
+  const [isInitialized, setIsInitialized] = useState(false);
+
+  // Initialize from saved data if available
+  useEffect(() => {
+    if (initialData && !isInitialized) {
+      setDealTitle(initialData.title || "");
+      setDiscount(initialData.discount || "");
+      setDiscountType(initialData.type || "percent");
+      setDescription(initialData.desc || "");
+      setCtaText(initialData.cta || "Redeem Offer");
+      setBrandColor(initialData.color || "#3B82F6");
+      setBgTheme(initialData.theme || "light");
+      setExpiryDate(initialData.exp || "");
+      setBusinessName(initialData.biz || "");
+      setIsInitialized(true);
+
+      // If we have a deal title, update the parent value
+      if (initialData.title) {
+        setTimeout(updateParentValue, 0);
+      }
+    }
+  }, [initialData, isInitialized]);
 
   // Format the discount value based on type
   const formatDiscount = () => {
@@ -39,6 +77,7 @@ export default function QRCoupon({
 
   const createSaveData = () => {
     return {
+      controlType: "coupon", // Add controlType
       title: dealTitle,
       discount: discount,
       type: discountType,
@@ -54,8 +93,15 @@ export default function QRCoupon({
   // Base64 encode JSON data
   const encodeCouponData = () => {
     const data = {
-      ...createSaveData(),
-
+      title: dealTitle,
+      discount: discount,
+      type: discountType,
+      desc: description,
+      cta: ctaText,
+      color: brandColor,
+      theme: bgTheme,
+      exp: expiryDate,
+      biz: businessName,
       // Add timestamp to prevent caching issues
       ts: new Date().getTime(),
     };

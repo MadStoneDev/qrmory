@@ -1,21 +1,19 @@
-import { type NextRequest, NextResponse } from "next/server";
+import { type NextRequest } from "next/server";
 import { updateSession } from "@/utils/supabase/middleware";
 
 export async function middleware(request: NextRequest) {
-  const path = request.nextUrl.pathname;
-
-  if (path.startsWith("/dashboard")) {
-    // For dashboard routes, apply full auth check with redirects
-    return await updateSession(request);
-  }
-
-  // For all other routes, just refresh the session but don't redirect
-  return NextResponse.next();
+  return await updateSession(request);
 }
 
 export const config = {
   matcher: [
-    // Include all routes except static assets
+    /*
+     * Match all request paths except for the ones starting with:
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     * Feel free to modify this pattern to include more paths.
+     */
     "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };

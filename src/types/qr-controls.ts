@@ -5,6 +5,7 @@ export interface QRControlType {
   setText: (text: string) => void;
   setChanged: (changed: boolean) => void;
   setSaveData?: (data: any) => void;
+  initialData?: any;
 }
 
 export interface QRControlInfo {

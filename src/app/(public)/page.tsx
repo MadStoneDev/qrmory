@@ -2,23 +2,114 @@ import React from "react";
 
 import HomeHero from "@/components/home-hero-section";
 import HomeInfo from "@/components/home-info-section";
+
 import QRCreator from "@/components/qr-create/qr-creator";
+
 import MainNavigation from "@/components/main-navigation";
 import MainFooter from "@/components/main-footer";
-import { createClient } from "@/utils/supabase/server";
 
-async function fetchUser() {
+import { createClient } from "@/utils/supabase/server";
+import { DEFAULT_SETTINGS } from "@/lib/default-settings";
+
+async function fetchUserProfile(userId: string) {
+  if (!userId) return null;
+
   const supabase = await createClient();
 
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("subscription_level, dynamic_qr_quota, subscription_status")
+    .eq("id", userId)
+    .single();
+
+  if (error || !data) {
+    console.error("Error fetching user profile:", error);
+    return null;
+  }
+
+  return data;
+}
+
+async function fetchUserSettings(userId: string) {
+  if (!userId) return DEFAULT_SETTINGS;
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("user_settings")
+    .select("settings")
+    .eq("user_id", userId)
+    .single();
+
+  if (error || !data) {
+    console.error("Error fetching user settings:", error);
+    return DEFAULT_SETTINGS;
+  }
+
+  return {
+    ...DEFAULT_SETTINGS,
+    ...data.settings,
+  };
+}
+
+async function fetchUserDynamicQRCount(userId: string) {
+  if (!userId) return 0;
+
+  const supabase = await createClient();
+
+  const { count, error } = await supabase
+    .from("qr_codes")
+    .select("*", { count: "exact", head: true })
+    .eq("user_id", userId)
+    .eq("type", "dynamic");
+
+  if (error) {
+    console.error("Error fetching dynamic QR count:", error);
+    return 0;
+  }
+
+  return count || 0;
+}
+
+async function fetchUserData() {
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  return user;
+  if (!user) {
+    return {
+      user: null,
+      settings: DEFAULT_SETTINGS,
+      profile: null,
+      dynamicQRCount: 0,
+    };
+  }
+
+  const [settings, profile, dynamicQRCount] = await Promise.all([
+    fetchUserSettings(user.id),
+    fetchUserProfile(user.id),
+    fetchUserDynamicQRCount(user.id),
+  ]);
+
+  return {
+    user,
+    settings,
+    profile,
+    dynamicQRCount,
+  };
 }
 
 export default async function Home() {
-  const user = await fetchUser();
+  const { user, settings, profile, dynamicQRCount } = await fetchUserData();
+
+  // Default quota for free users
+  const defaultQuota = 3;
+  const quotaInfo = {
+    currentCount: dynamicQRCount,
+    maxQuota: profile?.dynamic_qr_quota || defaultQuota,
+    subscriptionLevel: profile?.subscription_level || "free",
+    subscriptionStatus: profile?.subscription_status || "inactive",
+  };
 
   return (
     <>
@@ -27,7 +118,12 @@ export default async function Home() {
 
         <HomeHero />
 
-        <QRCreator shadow={true} user={user} />
+        <QRCreator
+          shadow={true}
+          user={user}
+          userSettings={settings}
+          quotaInfo={quotaInfo}
+        />
 
         <HomeInfo />
 

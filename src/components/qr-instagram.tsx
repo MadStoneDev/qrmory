@@ -2,6 +2,7 @@
 import { QRControlType } from "@/types/qr-controls";
 
 interface InstagramSaveData {
+  controlType: string;
   username: string;
 }
 
@@ -9,9 +10,11 @@ export default function QRInstagram({
   setText,
   setChanged,
   setSaveData,
+  initialData,
 }: QRControlType) {
   // States
-  const [enteredLink, setEnteredLink] = useState("");
+  const [enteredLink, setEnteredLink] = useState(initialData?.username || "");
+  const [isInitialized, setIsInitialized] = useState(false);
 
   // Main Link
   const mainLink = `instagram.com/`;
@@ -22,6 +25,7 @@ export default function QRInstagram({
       setText(`${mainLink}${value}`);
       if (setSaveData) {
         const saveData: InstagramSaveData = {
+          controlType: "instagram",
           username: value,
         };
         setSaveData(saveData);
@@ -32,6 +36,19 @@ export default function QRInstagram({
     }
     setChanged(true);
   };
+
+  // Initialize from saved data if available
+  useEffect(() => {
+    if (initialData && !isInitialized) {
+      setEnteredLink(initialData.username || "");
+      setIsInitialized(true);
+
+      // Update parent with initial value
+      if (initialData.username) {
+        updateParentValue(initialData.username);
+      }
+    }
+  }, [initialData, isInitialized]);
 
   // Handle input change
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {

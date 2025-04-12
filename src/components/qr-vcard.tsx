@@ -2,6 +2,7 @@
 import { QRControlType } from "@/types/qr-controls";
 
 interface VCardSaveData {
+  controlType: string;
   fullName: string;
   company: string;
   email: string;
@@ -14,14 +15,35 @@ export default function QRVCard({
   setText,
   setChanged,
   setSaveData,
+  initialData,
 }: QRControlType) {
   // States for vCard fields
-  const [fullName, setFullName] = useState("");
-  const [company, setCompany] = useState("");
-  const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
-  const [website, setWebsite] = useState("");
-  const [position, setPosition] = useState("");
+  const [fullName, setFullName] = useState(initialData?.fullName || "");
+  const [company, setCompany] = useState(initialData?.company || "");
+  const [email, setEmail] = useState(initialData?.email || "");
+  const [phone, setPhone] = useState(initialData?.phone || "");
+  const [website, setWebsite] = useState(initialData?.website || "");
+  const [position, setPosition] = useState(initialData?.position || "");
+  const [isInitialized, setIsInitialized] = useState(false);
+
+  // Initialize from saved data if available
+  useEffect(() => {
+    if (initialData && !isInitialized) {
+      setFullName(initialData.fullName || "");
+      setCompany(initialData.company || "");
+      setEmail(initialData.email || "");
+      setPhone(initialData.phone || "");
+      setWebsite(initialData.website || "");
+      setPosition(initialData.position || "");
+      setIsInitialized(true);
+
+      // Only update parent if we have required fields
+      if (initialData.fullName && (initialData.email || initialData.phone)) {
+        // Trigger update to recreate the QR code value
+        setTimeout(updateParentValue, 0);
+      }
+    }
+  }, [initialData, isInitialized]);
 
   // Base64 encode JSON data for privacy
   const encodeVCardData = () => {
@@ -56,6 +78,7 @@ export default function QRVCard({
       // Update save data
       if (setSaveData) {
         const saveData: VCardSaveData = {
+          controlType: "vcard",
           fullName,
           company,
           email,

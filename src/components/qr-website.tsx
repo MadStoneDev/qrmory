@@ -3,20 +3,41 @@ import { QRControlType } from "@/types/qr-controls";
 import { isValidURL } from "@/utils/general";
 
 interface WebsiteSaveData {
+  controlType: string;
   protocol: string;
   url: string;
 }
 
-const QRWebsite = ({ setText, setChanged, setSaveData }: QRControlType) => {
+const QRWebsite = ({
+  setText,
+  setChanged,
+  setSaveData,
+  initialData,
+}: QRControlType) => {
   // States
-  const [site, setSite] = useState("");
-  const [protocol, setProtocol] = useState("https");
+  const [site, setSite] = useState(initialData?.url || "");
+  const [protocol, setProtocol] = useState(initialData?.protocol || "https");
   const [isError, setIsError] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [isInitialized, setIsInitialized] = useState(false);
 
   // Refs
   const protocolRef = useRef<HTMLSelectElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Initialize from saved data if available
+  useEffect(() => {
+    if (initialData && !isInitialized) {
+      setSite(initialData.url || "");
+      setProtocol(initialData.protocol || "https");
+      setIsInitialized(true);
+
+      // If we have initial data, update the parent value
+      if (initialData.url) {
+        updateParentValue(initialData.url, initialData.protocol || "https");
+      }
+    }
+  }, [initialData, isInitialized]);
 
   // Validate URL
   const validateUrl = (url: string) => {
@@ -33,6 +54,7 @@ const QRWebsite = ({ setText, setChanged, setSaveData }: QRControlType) => {
       setText(`${protocolValue}://${siteValue}`);
       if (setSaveData) {
         const saveData: WebsiteSaveData = {
+          controlType: "website",
           protocol: protocolValue,
           url: siteValue,
         };

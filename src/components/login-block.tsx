@@ -4,23 +4,24 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ChangeEvent, FormEvent, useState, useEffect } from "react";
 
-import {
-  loginWithMagicLink,
-  loginWithPassword,
-} from "@/app/(auth)/login/actions";
+import { handleAuth, verifyOtp } from "@/app/(auth)/login/actions";
 import AuthText from "@/components/auth-text";
-import { IconEye } from "@tabler/icons-react";
+import OTPInput from "@/components/otp-input";
 
 export const LoginBlock = () => {
   // Hooks
   const router = useRouter();
 
   // States
-  const [showPassword, setShowPassword] = useState(false);
-  const [useMagicLink, setUseMagicLink] = useState(false);
-  const [magicLinkSent, setMagicLinkSent] = useState(false);
+  const [magicCodeSent, setMagicCodeSent] = useState(false);
+  const [otp, setOtp] = useState("");
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isValidEmail, setIsValidEmail] = useState(false);
+  const [isEmailDirty, setIsEmailDirty] = useState(false);
+
   const [countdownTime, setCountdownTime] = useState(60);
-  const [error, setError] = useState("");
+  const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [lastSentTimestamp, setLastSentTimestamp] = useState<number | null>(
     null,
@@ -28,8 +29,107 @@ export const LoginBlock = () => {
 
   const [formData, setFormData] = useState({
     email: "",
-    password: "",
   });
+
+  // Functions
+  const handleVerifyOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (otp.length < 6) {
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const formDataObj = new FormData();
+      formDataObj.append("email", formData.email);
+      formDataObj.append("otp", otp);
+
+      const response = await verifyOtp(formDataObj);
+
+      if (!response.success) {
+        setIsSubmitting(false);
+        return;
+      }
+
+      if (response.redirectTo) {
+        router.push(response.redirectTo);
+      }
+    } catch (error) {
+      console.error("OTP verification error:", error);
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleChange = (e: ChangeEvent) => {
+    const target = e.target as HTMLInputElement;
+
+    if (target.name === "email") {
+      // Prevent spaces completely by removing any space the user tries to type
+      const noSpacesValue = target.value.replace(/\s/g, "");
+
+      // Update the form data with the no-spaces value
+      setFormData({
+        ...formData,
+        [target.name]: noSpacesValue,
+      });
+
+      if (!isEmailDirty) setIsEmailDirty(true);
+      validateEmail(noSpacesValue);
+    } else {
+      setFormData({
+        ...formData,
+        [target.name]: target.value,
+      });
+    }
+  };
+
+  const validateEmail = (value: string) => {
+    // More comprehensive email regex that prevents consecutive dots and requires proper domain format
+    const emailRegex =
+      /^[a-zA-Z0-9](?:[a-zA-Z0-9._-]*[a-zA-Z0-9])?@[a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?)+$/;
+    setIsValidEmail(emailRegex.test(value));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!isValidEmail) return;
+
+    setIsLoading(true);
+    setIsSubmitting(true);
+    setError(null);
+
+    // Create FormData object
+    const formDataObj = new FormData();
+    formDataObj.append("email", formData.email);
+
+    try {
+      const response = await handleAuth(formDataObj);
+
+      if (!response.success) {
+        setError(response.error || "Something went wrong");
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Show OTP input
+      setMagicCodeSent(true);
+      // Store email in session storage for potential recovery
+      try {
+        sessionStorage.setItem("authEmail", formData.email);
+      } catch (e) {
+        console.error("Storage error:", e);
+      }
+    } catch (error) {
+      console.error("Form submission error:", error);
+      setError("An unexpected error occurred. Please try again.");
+    } finally {
+      setIsLoading(false);
+      setIsSubmitting(false);
+    }
+  };
 
   // Effects
   useEffect(() => {
@@ -44,7 +144,7 @@ export const LoginBlock = () => {
         // If the countdown is still active
         if (elapsedSeconds < 60) {
           setLastSentTimestamp(timestamp);
-          setMagicLinkSent(true);
+          setMagicCodeSent(true);
           setCountdownTime(60 - elapsedSeconds);
 
           if (email) {
@@ -63,13 +163,12 @@ export const LoginBlock = () => {
   useEffect(() => {
     let timer: NodeJS.Timeout;
 
-    if (magicLinkSent && countdownTime > 0) {
+    if (magicCodeSent && countdownTime > 0) {
       timer = setInterval(() => {
         setCountdownTime((prevTime) => {
           const newTime = prevTime - 1;
           if (newTime <= 0) {
             clearInterval(timer);
-            setMagicLinkSent(false); // Reset magicLinkSent when timer reaches 0
             return 0;
           }
           return newTime;
@@ -80,155 +179,41 @@ export const LoginBlock = () => {
     return () => {
       if (timer) clearInterval(timer);
     };
-  }, [magicLinkSent, countdownTime]);
-
-  // Test function that only activates the timer without sending an actual link
-  const testTimer = () => {
-    // Only run the test if we're not already in a countdown
-    if (!magicLinkSent || countdownTime === 0) {
-      setCountdownTime(60);
-      setMagicLinkSent(true); // This is crucial to activate the timer
-
-      // We're not actually sending a magic link here, just testing the timer
-      console.log("TESTING: Timer started");
-    } else {
-      console.log("TESTING: Timer already running");
-    }
-  };
-
-  // Functions
-  const handleChange = (event: ChangeEvent) => {
-    const target = event.target as HTMLInputElement;
-    setError("");
-
-    setFormData({
-      ...formData,
-      [target.name]: target.value,
-    });
-  };
-
-  const toggleLoginMethod = () => {
-    setUseMagicLink(!useMagicLink);
-    setError("");
-  };
-
-  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setError("");
-
-    // Validate email
-    const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-    if (!emailRegex.test(formData.email.trim())) {
-      setError("Please enter a valid email address.");
-      setIsLoading(false);
-      return;
-    }
-
-    if (useMagicLink) {
-      if (magicLinkSent && countdownTime > 0) {
-        setError(
-          `Please wait ${countdownTime} seconds before requesting another magic link.`,
-        );
-        setIsLoading(false);
-        return;
-      }
-
-      try {
-        const response = await loginWithMagicLink({
-          email: formData.email.trim(),
-        });
-
-        if (response.success) {
-          const timestamp = new Date().getTime();
-          localStorage.setItem(
-            "magicLinkData",
-            JSON.stringify({
-              timestamp,
-              email: formData.email.trim(),
-            }),
-          );
-
-          setLastSentTimestamp(timestamp);
-          setMagicLinkSent(true);
-          setCountdownTime(60);
-        } else {
-          setError(response.error || "Failed to send magic link");
-        }
-      } catch (error: any) {
-        if (error instanceof Error && error.message.includes("NEXT_REDIRECT")) {
-          // This is expected, the auth function is handling the redirect
-          return;
-        }
-
-        console.error("Magic link error:", error);
-        setError("An unexpected error occurred. Please try again later.");
-      } finally {
-        setIsLoading(false);
-      }
-    } else {
-      if (!formData.password) {
-        setError("Password is required");
-        setIsLoading(false);
-        return;
-      }
-
-      try {
-        const response = await loginWithPassword({
-          email: formData.email.trim(),
-          password: formData.password,
-        });
-
-        // If we get here, it means no redirect happened
-        if (response?.success) {
-          router.push("/dashboard");
-          return;
-        } else if (response?.error) {
-          setError(response.error || "Invalid email or password");
-        } else {
-          setError("An unexpected error occurred. Please try again later.");
-        }
-      } catch (error: any) {
-        if (error instanceof Error && error.message.includes("NEXT_REDIRECT")) {
-          return;
-        }
-
-        console.error("Login error:", error);
-        setError("An unexpected error occurred. Please try again later.");
-      } finally {
-        setIsLoading(false);
-      }
-    }
-  };
-
-  // Get the button text based on current state
-  const getButtonText = () => {
-    if (isLoading) {
-      return "Logging you in...";
-    }
-
-    if (useMagicLink) {
-      if (magicLinkSent && countdownTime > 0) {
-        return `You can retry in (${countdownTime})`;
-      } else {
-        return "Send Magic Link";
-      }
-    }
-
-    return "Login";
-  };
+  }, [magicCodeSent, countdownTime]);
 
   // Render magic link sent confirmation
-  if (magicLinkSent) {
+  if (magicCodeSent) {
     return (
-      <div className={`p-4 grid gap-10 w-full lg:max-w-sm`}>
+      <form
+        onSubmit={handleVerifyOtp}
+        className={`p-4 grid gap-10 w-full lg:max-w-sm`}
+      >
         <article>
-          <h1 className={`text-xl font-bold`}>Magic Link Sent!</h1>
+          <h1 className={`text-xl font-bold`}>Magic Code Sent!</h1>
           <h2 className={`text-base text-neutral-600 font-light max-w-sm`}>
-            We've sent you a magic link to your email address. Remember to check
+            We've sent you a magic code to your email address. Remember to check
             your junk folder too just in case.
           </h2>
         </article>
+
+        <OTPInput
+          length={6}
+          value={otp}
+          onChange={(value) => setOtp(value)}
+          className={`flex w-full`}
+          inputClassName={`h-12 w-12 bg-transparent text-xl text-qrmory-purple-600 border-neutral-300 focus:border-qrmory-purple-600 font-bold`}
+          autoFocus
+        />
+
+        <button
+          type={`submit`}
+          className={`p-3 rounded-lg bg-qrmory-purple-500 text-neutral-50 font-bold ${
+            isSubmitting ? "opacity-70" : ""
+          }`}
+          disabled={otp.length !== 6 || isSubmitting}
+        >
+          {isSubmitting ? "Verifying..." : "Verify Code"}
+        </button>
 
         <span className="mt-2 text-sm text-neutral-600 ">
           {countdownTime > 0
@@ -237,94 +222,59 @@ export const LoginBlock = () => {
         </span>
         {countdownTime === 0 && (
           <button
-            onClick={() => setMagicLinkSent(false)}
+            type={`button`}
+            onClick={() => setMagicCodeSent(false)}
             className="mt-2 self-center px-4 py-1 bg-white text-emerald-600 rounded-md text-sm font-semibold"
           >
             Send a new link
           </button>
         )}
-      </div>
+      </form>
     );
   }
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className={`p-4 grid gap-10 w-full lg:max-w-sm`}
-    >
-      <article>
-        <h1 className={`text-xl font-bold`}>Welcome Back!</h1>
-        <h2 className={`text-base text-neutral-600 font-light`}>
-          Let's get you back into your account
-        </h2>
-      </article>
-
-      <button
-        type="button"
-        className={`-my-4 w-fit text-qrmory-purple-500 font-bold text-sm`}
-        onClick={toggleLoginMethod}
+    <>
+      <form
+        onSubmit={handleSubmit}
+        className={`p-4 grid gap-10 w-full lg:max-w-sm`}
       >
-        {useMagicLink
-          ? "Login with password instead?"
-          : "Login with magic link instead?"}
-      </button>
+        <article>
+          <h1 className={`text-xl font-bold`}>Welcome Back!</h1>
+          <h2 className={`text-base text-neutral-600 font-light`}>
+            Let's get you back into your account
+          </h2>
+        </article>
 
-      <AuthText
-        type={"email"}
-        name={"email"}
-        label={"Email Address"}
-        placeholder={"eg. geralt@rivia.com"}
-        value={formData.email}
-        onChange={handleChange}
-      />
+        <AuthText
+          type={"email"}
+          name={"email"}
+          label={"Email Address"}
+          placeholder={"eg. geralt@rivia.com"}
+          value={formData.email}
+          onChange={handleChange}
+        />
 
-      {!useMagicLink && (
-        <div className={`relative`}>
-          <AuthText
-            type={showPassword ? "text" : "password"}
-            name={"password"}
-            label={"Password"}
-            placeholder={"eg. 1173!Ciri"}
-            value={formData.password}
-            onChange={handleChange}
-          />
+        {error && <p className="text-red-600 text-sm">{error}</p>}
 
+        <article className={`grid gap-3`}>
           <button
-            type={`button`}
-            className={`absolute right-2 bottom-3 text-neutral-300 hover:text-qrmory-purple-500 transition-all duration-300 ease-in-out`}
-            onClick={() => setShowPassword(!showPassword)}
+            type="submit"
+            disabled={
+              (magicCodeSent && countdownTime > 0) ||
+              formData.email.length < 6 ||
+              isLoading
+            }
+            className={`py-2 w-full bg-qrmory-purple-500 disabled:bg-stone-300 rounded-md text-white text-base font-bold`}
           >
-            <IconEye size={24} strokeWidth={2} />
+            {isLoading
+              ? "Logging you in..."
+              : magicCodeSent && countdownTime > 0
+                ? `You can retry in (${countdownTime})`
+                : "Send Magic Code"}
           </button>
-        </div>
-      )}
-
-      {error && <p className="text-red-600 text-sm">{error}</p>}
-
-      <article className={`grid gap-3`}>
-        <button
-          type="submit"
-          disabled={
-            (useMagicLink && magicLinkSent && countdownTime > 0) ||
-            formData.email.length < 6 ||
-            isLoading
-          }
-          className={`py-2 w-full bg-qrmory-purple-500 disabled:bg-stone-300 rounded-md text-white text-base font-bold`}
-        >
-          {getButtonText()}
-        </button>
-
-        <h4 className={`text-sm font-light text-center`}>
-          Don't have an account yet?{" "}
-          <Link href={"/register"} className={`group relative font-bold`}>
-            Create one here
-            <div
-              className={`absolute left-0 -bottom-0.5 w-0 group-hover:w-full h-[1px] bg-qrmory-purple-500 transition-all duration-300`}
-            ></div>
-          </Link>
-          .
-        </h4>
-      </article>
-    </form>
+        </article>
+      </form>
+    </>
   );
 };

@@ -73,6 +73,14 @@ export default function PrivateNavigation({
             className={`hidden sm:block w-8 h-[1px] border-b border-stone-200/60`}
           ></div>
 
+          <NavItem href={"/dashboard/settings"} title={"Settings"}>
+            <IconSettings size={30} strokeWidth={1.75} />
+          </NavItem>
+
+          <div
+            className={`hidden sm:block w-8 h-[1px] border-b border-stone-200/60`}
+          ></div>
+
           <NavItem
             action={async () => {
               const { error } = await supabase.auth.signOut();
@@ -83,14 +91,6 @@ export default function PrivateNavigation({
             title={"Logout"}
           >
             <IconPower size={30} strokeWidth={1.75} />
-          </NavItem>
-
-          <div
-            className={`hidden sm:block w-8 h-[1px] border-b border-stone-200/60`}
-          ></div>
-
-          <NavItem href={"/dashboard/settings"} title={"Settings"}>
-            <IconSettings size={30} strokeWidth={1.75} />
           </NavItem>
         </article>
       </section>
@@ -114,7 +114,8 @@ function NavItem({ href, action, title, children }: NavItemType) {
 
   const iconClassName = `p-2 aspect-square ${
     href && href === pathname
-      ? "bg-qrmory-purple-400 group-hover:bg-transparent rounded-full text-white transition-all duration-300 ease-in-out"
+      ? "bg-qrmory-purple-800 group-hover:bg-transparent rounded-full text-white transition-all duration-300" +
+        " ease-in-out"
       : ""
   }`;
 

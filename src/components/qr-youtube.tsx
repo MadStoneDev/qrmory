@@ -2,6 +2,7 @@
 import { QRControlType } from "@/types/qr-controls";
 
 interface YoutubeSaveData {
+  controlType: string;
   videoId: string;
   linkFormat: string;
 }
@@ -10,11 +11,19 @@ export default function QRYoutube({
   setText,
   setChanged,
   setSaveData,
+  initialData,
 }: QRControlType) {
   // States
-  const [enteredLink, setEnteredLink] = useState("");
-  const [mainLink, setMainLink] = useState(`https://www.youtube.com/`);
-  const [altLink, setAltLink] = useState(`https://www.youtube.com/watch?v=`);
+  const [enteredLink, setEnteredLink] = useState(initialData?.videoId || "");
+  const [mainLink, setMainLink] = useState(
+    initialData?.linkFormat || `https://www.youtube.com/`,
+  );
+  const [altLink, setAltLink] = useState(
+    initialData?.linkFormat === `https://www.youtube.com/watch?v=`
+      ? `https://www.youtube.com/`
+      : `https://www.youtube.com/watch?v=`,
+  );
+  const [isInitialized, setIsInitialized] = useState(false);
 
   // Update the parent component with the current value
   const updateParentValue = (value: string) => {
@@ -25,6 +34,7 @@ export default function QRYoutube({
       // Update save data
       if (setSaveData) {
         const saveData: YoutubeSaveData = {
+          controlType: "youtube",
           videoId: value,
           linkFormat: mainLink,
         };
@@ -36,6 +46,27 @@ export default function QRYoutube({
     }
     setChanged(true);
   };
+
+  // Initialize from saved data if available
+  useEffect(() => {
+    if (initialData && !isInitialized) {
+      setEnteredLink(initialData.videoId || "");
+      if (initialData.linkFormat) {
+        setMainLink(initialData.linkFormat);
+        setAltLink(
+          initialData.linkFormat === `https://www.youtube.com/watch?v=`
+            ? `https://www.youtube.com/`
+            : `https://www.youtube.com/watch?v=`,
+        );
+      }
+      setIsInitialized(true);
+
+      // Update parent with initial value
+      if (initialData.videoId) {
+        updateParentValue(initialData.videoId);
+      }
+    }
+  }, [initialData, isInitialized]);
 
   // Handle input change
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -58,6 +89,7 @@ export default function QRYoutube({
       // Update save data with new format
       if (setSaveData && enteredLink.length > 0) {
         const saveData: YoutubeSaveData = {
+          controlType: "youtube",
           videoId: enteredLink,
           linkFormat: altLink,
         };
@@ -114,6 +146,7 @@ export default function QRYoutube({
     // Update save data
     if (setSaveData) {
       const saveData: YoutubeSaveData = {
+        controlType: "youtube",
         videoId: fixedLink,
         linkFormat: mainLink,
       };

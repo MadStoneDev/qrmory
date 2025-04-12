@@ -1,98 +1,144 @@
 ﻿"use server";
 
-import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 
 import { createClient } from "@/utils/supabase/server";
 import { authRateLimiter } from "@/utils/rate-limit";
 
-export async function loginWithPassword(formData: {
-  email: string;
-  password: string;
-}) {
-  try {
-    const { success: rateLimiter } = await authRateLimiter.limit(
-      formData.email.toLowerCase(),
-    );
+type AuthResponse = {
+  error: string | null;
+  success: boolean;
+  redirectTo?: string;
+};
 
-    if (!rateLimiter) {
-      return {
-        error: "Too many attempts. Please try again later.",
-        success: false,
-      };
-    }
+export async function handleAuth(formData: FormData): Promise<AuthResponse> {
+  const email = formData.get("email") as string;
 
-    const supabase = await createClient();
-
-    const { error, data } = await supabase.auth.signInWithPassword({
-      email: formData.email,
-      password: formData.password,
-    });
-
-    if (error) {
-      return {
-        error: error.message,
-        success: false,
-      };
-    }
-
-    revalidatePath(`/`);
-    redirect(`/dashboard`);
-  } catch (error) {
-    if (error instanceof Error && !error.message.includes("NEXT_REDIRECT")) {
-      return {
-        error: "An unexpected error occurred. Please try again later.",
-        success: false,
-      };
-    }
-
-    throw error;
+  if (!email) {
+    return {
+      error: "Oops! No email? Do you go to the movies and watch the side wall?",
+      success: false,
+    };
   }
-}
 
-export async function loginWithMagicLink(formData: { email: string }) {
   try {
-    // Rate limiter check
     const { success: rateLimiter } = await authRateLimiter.limit(
-      formData.email.toLowerCase(),
+      email.toLowerCase(),
     );
 
     if (!rateLimiter) {
       return {
-        error: "Too many attempts. Please try again later.",
+        error:
+          "Woah! You're faster than post-credit scenes in Marvel movies. Try again in a bit, please?",
         success: false,
       };
     }
 
     const supabase = await createClient();
 
-    const { error, data } = await supabase.auth.signInWithOtp({
-      email: formData.email,
+    const { error: authError } = await supabase.auth.signInWithOtp({
+      email,
       options: {
-        shouldCreateUser: false,
-        emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/dashboard`,
+        shouldCreateUser: true,
       },
     });
 
-    console.log(`${process.env.NEXT_PUBLIC_SITE_URL}/dashboard`);
-    console.log("Supabase auth response:", data);
+    if (authError) {
+      console.error("Supabase auth error:", authError);
 
-    if (error) {
+      if (authError.message.includes("Invalid email")) {
+        return {
+          error:
+            "That email looks more fictional than Wakanda. Please enter a real email address!",
+          success: false,
+        };
+      }
+
+      if (authError.message.includes("rate limit")) {
+        return {
+          error:
+            "You're sending emails faster than John Wick reloads! Please wait a few minutes before trying again.",
+          success: false,
+        };
+      }
+
       return {
-        error: error.message,
+        error:
+          "Plot twist! Something went wrong with our authentication system. Try again in a bit?",
         success: false,
       };
     }
+
+    revalidatePath("/");
 
     return {
       error: null,
       success: true,
-      message: "Check your email for the login link.",
     };
   } catch (error) {
-    console.error("Unexpected magic link error:", error);
+    console.error("Unexpected error during authentication:", error);
     return {
-      error: "Unable to send login link. Please try again.",
+      error: "An unexpected error occurred. Please try again later.",
+      success: false,
+    };
+  }
+}
+
+export async function verifyOtp(formData: FormData): Promise<AuthResponse> {
+  const email = formData.get("email") as string;
+  const otp = formData.get("otp") as string;
+
+  if (!email || !otp) {
+    return {
+      error: "Missing email or verification code",
+      success: false,
+    };
+  }
+
+  try {
+    const supabase = await createClient();
+
+    const { error } = await supabase.auth.verifyOtp({
+      email,
+      token: otp,
+      type: "email",
+    });
+
+    if (error) {
+      console.error("OTP verification error:", error);
+
+      if (error.message.includes("Invalid OTP")) {
+        return {
+          error: "That code isn't right. Double-check and try again.",
+          success: false,
+        };
+      }
+
+      if (error.message.includes("expired")) {
+        return {
+          error: "This code has expired. Please request a new one.",
+          success: false,
+        };
+      }
+
+      return {
+        error: "Verification failed. Please try again.",
+        success: false,
+      };
+    }
+
+    revalidatePath("/");
+
+    // Redirect to user profile after successful verification
+    return {
+      error: null,
+      success: true,
+      redirectTo: "/dashboard",
+    };
+  } catch (error) {
+    console.error("Unexpected error during OTP verification:", error);
+    return {
+      error: "An unexpected error occurred. Please try again later.",
       success: false,
     };
   }

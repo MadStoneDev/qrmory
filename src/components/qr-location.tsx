@@ -10,7 +10,21 @@ interface LocationResult {
   place_id: string;
 }
 
-export default function QRLocation({ setText, setChanged }: QRControlType) {
+interface LocationSaveData {
+  controlType: string;
+  lat: string | number;
+  lng: string | number;
+  name?: string;
+  address?: string;
+  isManual: boolean;
+}
+
+export default function QRLocation({
+  setText,
+  setChanged,
+  setSaveData,
+  initialData,
+}: QRControlType) {
   // States
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedLocation, setSelectedLocation] =
@@ -19,27 +33,84 @@ export default function QRLocation({ setText, setChanged }: QRControlType) {
   const [isSearching, setIsSearching] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
   const [manualCoords, setManualCoords] = useState({
-    lat: "",
-    lng: "",
+    lat: initialData?.isManual ? String(initialData.lat) || "" : "",
+    lng: initialData?.isManual ? String(initialData.lng) || "" : "",
   });
-  const [useManualCoords, setUseManualCoords] = useState(false);
+  const [useManualCoords, setUseManualCoords] = useState(
+    initialData?.isManual || false,
+  );
   const [hasSearched, setHasSearched] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
+
+  // Initialize from saved data if available
+  useEffect(() => {
+    if (initialData && !isInitialized) {
+      // Set up based on whether it's manual coordinates or a selected location
+      if (initialData.isManual) {
+        setUseManualCoords(true);
+        setManualCoords({
+          lat: String(initialData.lat) || "",
+          lng: String(initialData.lng) || "",
+        });
+      } else if (initialData.name && initialData.lat && initialData.lng) {
+        // Create a synthetic location result from the saved data
+        setSelectedLocation({
+          name: initialData.name,
+          address: initialData.address || "",
+          lat: Number(initialData.lat),
+          lng: Number(initialData.lng),
+          place_id:
+            initialData.place_id || `${initialData.lat}-${initialData.lng}`,
+        });
+      }
+
+      setIsInitialized(true);
+
+      // Update parent value with initial data
+      setTimeout(updateParentValue, 0);
+    }
+  }, [initialData, isInitialized]);
 
   // Update parent with location data
   const updateParentValue = () => {
     if (useManualCoords && manualCoords.lat && manualCoords.lng) {
       const geoUri = `geo:${manualCoords.lat},${manualCoords.lng}`;
-
       setText(geoUri);
       setChanged(true);
+
+      // Add save data for manual coordinates
+      if (setSaveData) {
+        const saveData: LocationSaveData = {
+          controlType: "location",
+          lat: manualCoords.lat,
+          lng: manualCoords.lng,
+          isManual: true,
+        };
+        setSaveData(saveData);
+      }
     } else if (selectedLocation) {
       const encodedName = encodeURIComponent(selectedLocation.name);
       const geoUri = `geo:${selectedLocation.lat},${selectedLocation.lng}?q=${encodedName}`;
-
       setText(geoUri);
       setChanged(true);
+
+      // Add save data for selected location
+      if (setSaveData) {
+        const saveData: LocationSaveData = {
+          controlType: "location",
+          lat: selectedLocation.lat,
+          lng: selectedLocation.lng,
+          name: selectedLocation.name,
+          address: selectedLocation.address,
+          isManual: false,
+        };
+        setSaveData(saveData);
+      }
     } else {
       setText("");
+      if (setSaveData) {
+        setSaveData(null);
+      }
     }
   };
 

@@ -4,6 +4,7 @@ import React, { useMemo } from "react";
 import { useQRCode } from "next-qrcode";
 import { downloadToSVG } from "@/utils/qr-save";
 import d3ToPng from "d3-svg-to-png";
+import { UserSettings } from "@/lib/default-settings";
 
 interface Props {
   qrTitle: string;
@@ -12,6 +13,7 @@ interface Props {
   qrShortCode: string;
   shadow?: boolean;
   user: any;
+  userSettings: UserSettings;
 }
 
 export default function QRPreview({
@@ -21,6 +23,7 @@ export default function QRPreview({
   qrShortCode,
   shadow,
   user,
+  userSettings,
 }: Props) {
   const { SVG } = useQRCode();
 
@@ -60,7 +63,7 @@ export default function QRPreview({
         <SVG
           text={displayValue}
           options={{
-            errorCorrectionLevel: "M",
+            errorCorrectionLevel: userSettings.qrErrorCorrectionLevel,
             color: {
               dark: qrChanged ? "#78716c" : "#000000",
               light: "#0000",
