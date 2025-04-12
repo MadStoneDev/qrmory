@@ -1,6 +1,4 @@
-﻿"use server";
-
-import { NextRequest, NextResponse } from "next/server";
+﻿import { NextRequest, NextResponse } from "next/server";
 import { Redis } from "@upstash/redis";
 import { createClient } from "@/utils/supabase/server";
 
