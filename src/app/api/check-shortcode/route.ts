@@ -2,6 +2,9 @@
 import { Redis } from "@upstash/redis";
 import { createClient } from "@/utils/supabase/server";
 
+// Mark this route as dynamic
+export const dynamic = "force-dynamic";
+
 // Initialize Redis client
 const redis = new Redis({
   url: process.env.UPSTASH_REDIS_REST_URL!,
