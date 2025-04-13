@@ -16,6 +16,10 @@ interface Props {
   userSettings: UserSettings;
 }
 
+interface QRSizes {
+  [key: string]: number;
+}
+
 export default function QRPreview({
   qrTitle,
   qrValue,
@@ -27,18 +31,72 @@ export default function QRPreview({
 }: Props) {
   const { SVG } = useQRCode();
 
+  // Define size lookup based on user settings
+  const qrSizeLookup: QRSizes = {
+    small: 120,
+    medium: 250,
+    large: 500,
+  };
+
   // Determine which value to use for the QR code
   const displayValue = useMemo(() => {
     return qrShortCode || qrValue;
   }, [qrShortCode, qrValue]);
 
-  const handleDownload = (format: "png" | "jpg") => {
-    const svgData = document.querySelector("#final-qr div svg");
-    if (!svgData) return;
+  const handleDownload = (format: "svg" | "png" | "jpg") => {
+    const svgSelector = "#final-qr div svg";
+    const originalSvg = document.querySelector(svgSelector);
 
-    d3ToPng(`#final-qr div svg`, qrTitle || "qrmory-qr-code", {
-      format: format,
-    }).then(() => console.log(`Downloaded ${format} file`));
+    if (!originalSvg) {
+      console.error("QR code element not found");
+      return;
+    }
+
+    // Get the size from user settings
+    const size = qrSizeLookup[userSettings.qrSize] || 250;
+
+    if (format === "svg") {
+      // For SVG, download directly
+      downloadToSVG(originalSvg, qrTitle || "qrmory-qr-code");
+      console.log(`Downloaded SVG file (${userSettings.qrSize} size)`);
+    } else {
+      // For PNG/JPG, clone and resize before download
+      const clonedSvg = originalSvg.cloneNode(true) as SVGElement;
+
+      // Set the dimensions
+      clonedSvg.setAttribute("width", `${size}`);
+      clonedSvg.setAttribute("height", `${size}`);
+      clonedSvg.setAttribute(
+        "viewBox",
+        originalSvg.getAttribute("viewBox") || "0 0 29 29",
+      );
+
+      // Create a temporary container
+      const tempContainer = document.createElement("div");
+      tempContainer.style.position = "absolute";
+      tempContainer.style.opacity = "0";
+      tempContainer.style.pointerEvents = "none";
+      tempContainer.id = "temp-qr-container";
+      tempContainer.appendChild(clonedSvg);
+      document.body.appendChild(tempContainer);
+
+      // Use d3ToPng with the temporary container
+      d3ToPng("#temp-qr-container svg", qrTitle || "qrmory-qr-code", {
+        format: format,
+      })
+        .then(() => {
+          console.log(
+            `Downloaded ${format.toUpperCase()} file (${
+              userSettings.qrSize
+            } size)`,
+          );
+          document.body.removeChild(tempContainer);
+        })
+        .catch((err) => {
+          console.error("Error downloading QR code:", err);
+          document.body.removeChild(tempContainer);
+        });
+    }
   };
 
   return (
@@ -85,10 +143,7 @@ export default function QRPreview({
             ? "bg-neutral-300 text-white"
             : "cursor-pointer bg-white hover:bg-qrmory-purple-400 border border-qrmory-purple-800 text-qrmory-purple-800 hover:text-white hover:-translate-y-1 hover:translate-x-1"
         }`}
-        onClick={() => {
-          const svgData = document.querySelector("#final-qr div svg");
-          downloadToSVG(svgData, qrTitle || "qrmory-qr-code");
-        }}
+        onClick={() => handleDownload("svg")}
         disabled={qrChanged}
       >
         Download SVG
