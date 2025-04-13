@@ -10,6 +10,7 @@ import MainFooter from "@/components/main-footer";
 
 import { createClient } from "@/utils/supabase/server";
 import { DEFAULT_SETTINGS } from "@/lib/default-settings";
+import Head from "next/head";
 
 async function fetchUserProfile(userId: string) {
   if (!userId) return null;
@@ -113,6 +114,10 @@ export default async function Home() {
 
   return (
     <>
+      <Head>
+        <link rel="canonical" href="https://qrmory.com/" />
+      </Head>
+
       <main className="mb-8 flex min-h-screen flex-col items-center justify-between">
         <MainNavigation />
 
