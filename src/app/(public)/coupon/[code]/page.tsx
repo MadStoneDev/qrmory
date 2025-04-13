@@ -116,10 +116,10 @@ export default function CouponPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-neutral-50 flex items-center justify-center">
         <div className="text-center p-8">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-qrmory-purple-800 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading coupon...</p>
+          <p className="mt-4 text-neutral-600">Loading coupon...</p>
         </div>
       </div>
     );
@@ -127,7 +127,7 @@ export default function CouponPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-neutral-50 flex items-center justify-center">
         <div className="text-center p-8 max-w-md">
           <div className="bg-white rounded-lg shadow-md p-6">
             <svg
@@ -143,8 +143,8 @@ export default function CouponPage() {
                 d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
               />
             </svg>
-            <h1 className="text-xl font-bold mt-4 text-gray-800">{error}</h1>
-            <p className="mt-2 text-gray-600">
+            <h1 className="text-xl font-bold mt-4 text-neutral-800">{error}</h1>
+            <p className="mt-2 text-neutral-600">
               This QR code doesn't contain valid coupon information.
             </p>
             <Link
@@ -213,7 +213,7 @@ export default function CouponPage() {
               {data?.desc && (
                 <div
                   className={`mx-auto mt-2 text-sm max-w-56 ${
-                    isDarkTheme ? "text-gray-300" : "text-gray-600"
+                    isDarkTheme ? "text-neutral-300" : "text-neutral-600"
                   }`}
                 >
                   {data.desc}
@@ -232,7 +232,7 @@ export default function CouponPage() {
               {data?.exp && (
                 <div
                   className={`mt-2 text-xs ${
-                    isDarkTheme ? "text-gray-400" : "text-gray-500"
+                    isDarkTheme ? "text-neutral-400" : "text-neutral-500"
                   }`}
                 >
                   {isExpired ? "Expired on:" : "Valid until:"}{" "}
@@ -246,7 +246,7 @@ export default function CouponPage() {
 
       {/* Footer */}
       <footer className="px-6 py-2 text-center border-t border-qrmory-purple-500">
-        <div className={`text-sm text-gray-600`}>
+        <div className={`text-sm text-neutral-600`}>
           Created with{" "}
           <Link href="/" className="text-qrmory-purple-800 hover:underline">
             QRmory

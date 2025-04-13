@@ -289,7 +289,7 @@ export default function QRCoupon({
                 checked={bgTheme === "light"}
                 onChange={() => setBgTheme("light")}
               />
-              <span className="ml-2 bg-white border border-gray-200 px-3 py-1 rounded-md">
+              <span className="ml-2 bg-white border border-neutral-200 px-3 py-1 rounded-md">
                 Light
               </span>
             </label>
@@ -303,7 +303,7 @@ export default function QRCoupon({
                 checked={bgTheme === "dark"}
                 onChange={() => setBgTheme("dark")}
               />
-              <span className="ml-2 bg-gray-900 text-white px-3 py-1 rounded-md">
+              <span className="ml-2 bg-neutral-900 text-white px-3 py-1 rounded-md">
                 Dark
               </span>
             </label>
@@ -312,7 +312,7 @@ export default function QRCoupon({
       </div>
 
       {/* Preview */}
-      <div className={`pt-3 rounded-lg border bg-white border-gray-200`}>
+      <div className={`pt-3 rounded-lg border bg-white border-neutral-200`}>
         <p className={`px-3 text-xs font-medium uppercase text-neutral-500`}>
           Preview
         </p>
@@ -343,7 +343,7 @@ export default function QRCoupon({
             {description && (
               <div
                 className={`mx-auto mt-2 text-sm ${
-                  bgTheme === "light" ? "text-gray-600" : "text-gray-300"
+                  bgTheme === "light" ? "text-neutral-600" : "text-neutral-300"
                 } max-w-56`}
               >
                 {description}
@@ -360,7 +360,7 @@ export default function QRCoupon({
             {expiryDate && (
               <div
                 className={`mt-2 text-xs ${
-                  bgTheme === "light" ? "text-gray-500" : "text-gray-400"
+                  bgTheme === "light" ? "text-neutral-500" : "text-neutral-400"
                 }`}
               >
                 Valid until: {new Date(expiryDate).toLocaleDateString()}
@@ -370,7 +370,7 @@ export default function QRCoupon({
         </div>
       </div>
 
-      <div className="text-xs text-gray-500 mt-2">
+      <div className="text-xs text-neutral-500 mt-2">
         Your coupon information will be encoded in the QR code URL for privacy.
       </div>
     </>

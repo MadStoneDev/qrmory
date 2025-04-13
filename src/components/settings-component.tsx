@@ -59,7 +59,7 @@ export default function SettingsComponent({
   const qrSizeLookup: QRSizes = {
     small: 60,
     medium: 90,
-    large: 180,
+    large: 120,
   };
 
   // Update settings in database when they change
@@ -254,6 +254,10 @@ export default function SettingsComponent({
               margin: 1,
             }}
           />
+          <p className="text-sm text-stone-500">
+            This sizing takes effect when downloading the QR code to PNG and
+            JPG.
+          </p>
         </div>
         <SelectSwitch
           options={[
@@ -268,12 +272,12 @@ export default function SettingsComponent({
       </div>
 
       {/* Separator */}
-      <div className="w-full h-[1px] bg-stone-200"></div>
+      <div className="w-full h-[1px] bg-neutral-200"></div>
 
       <div className="py-2 flex flex-col md:flex-row justify-between md:items-center gap-4">
         <div className="flex flex-col gap-1">
           <h4 className="font-sans font-semibold">Error Correction Level</h4>
-          <p className="text-sm text-stone-500">
+          <p className="text-sm text-neutral-500">
             Higher levels make QR codes more resistant to damage but increase
             density
           </p>
@@ -292,7 +296,7 @@ export default function SettingsComponent({
       </div>
 
       {/* Separator */}
-      <div className="w-full h-[1px] bg-stone-200"></div>
+      <div className="w-full h-[1px] bg-neutral-200"></div>
 
       <h3 className="mt-8 text-lg font-bold text-qrmory-purple-800 uppercase">
         Account
@@ -301,15 +305,15 @@ export default function SettingsComponent({
       <div className="py-4 flex flex-col md:flex-row justify-between md:items-start gap-4">
         <div className="flex flex-col gap-1">
           <h4 className="font-sans font-semibold">Default QR Logo</h4>
-          <p className="text-sm text-stone-500">
+          <p className="text-sm text-neutral-500">
             SVG format is preferred for best quality. PNG and JPG should be
             150×150px.
           </p>
-          <p className="text-sm text-stone-500">Maximum file size: 2MB</p>
+          <p className="text-sm text-neutral-500">Maximum file size: 2MB</p>
         </div>
 
         <div className="flex flex-col items-center gap-3">
-          <div className="w-24 h-24 border-2 border-dashed border-gray-300 rounded-md flex items-center justify-center overflow-hidden relative">
+          <div className="w-24 h-24 border-2 border-dashed border-neutral-300 rounded-md flex items-center justify-center overflow-hidden relative">
             {logoUrl ? (
               <Image
                 src={logoUrl}
@@ -319,7 +323,7 @@ export default function SettingsComponent({
                 className="object-contain"
               />
             ) : (
-              <div className="text-gray-400 text-sm text-center p-2">
+              <div className="text-neutral-400 text-sm text-center p-2">
                 No logo uploaded
               </div>
             )}
@@ -361,7 +365,7 @@ export default function SettingsComponent({
       </div>
 
       {/* Separator */}
-      <div className="w-full h-[1px] bg-stone-200"></div>
+      <div className="w-full h-[1px] bg-neutral-200"></div>
 
       <h3 className="mt-8 text-lg font-bold text-rose-800 uppercase">
         Danger Zone

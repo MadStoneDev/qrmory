@@ -2,7 +2,7 @@
   return (
     <section
       id={`learn-more`}
-      className="pt-14 pb-10 px-6 lg:px-12 bg-stone-100 w-full rounded-lg text-qrmory-purple-800 text-center"
+      className="pt-14 pb-10 px-6 lg:px-12 bg-neutral-100 w-full rounded-lg text-qrmory-purple-800 text-center"
     >
       <h3 className="text-lg sm:text-xl uppercase font-bold">
         Hey there, QR code creators!

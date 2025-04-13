@@ -41,6 +41,10 @@ interface MyCodeItemProps {
   settings: UserSettings;
 }
 
+interface QRSizes {
+  [key: string]: number;
+}
+
 export default function MyCodeItem({
   id,
   title = "No Title",
@@ -55,11 +59,20 @@ export default function MyCodeItem({
   const { SVG } = useQRCode();
   const [isEditing, setIsEditing] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
+
   const [editedTitle, setEditedTitle] = useState(title);
   const [editedContent, setEditedContent] = useState(content);
   const [editedQRValue, setEditedQRValue] = useState(qr_value);
-  const [saving, setSaving] = useState(false);
+
   const [qrChanged, setQrChanged] = useState(false);
+
+  const [saving, setSaving] = useState(false);
+
+  const qrSizeLookup: QRSizes = {
+    small: 120,
+    medium: 250,
+    large: 500,
+  };
 
   // For dynamic QR codes, get the display value (shortcode URL)
   const displayValue =
@@ -148,9 +161,9 @@ export default function MyCodeItem({
   // Handle QR code downloads
   const handleDownload = (format: "svg" | "png" | "jpg") => {
     const svgSelector = `#qr-code-${id} svg`;
-    const svgElement = document.querySelector(svgSelector);
+    const originalSvg = document.querySelector(svgSelector);
 
-    if (!svgElement) {
+    if (!originalSvg) {
       toast("Error downloading QR code", {
         description: "QR code element not found",
         style: {
@@ -161,15 +174,50 @@ export default function MyCodeItem({
       return;
     }
 
+    const size = qrSizeLookup[settings.qrSize] || 250;
+
     if (format === "svg") {
-      downloadToSVG(svgElement, title || "qrmory-qr-code");
-      toast("QR code downloaded as SVG");
+      // For SVG downloads we can directly use the original element
+      downloadToSVG(originalSvg, title || "qrmory-qr-code");
+      toast(`QR code downloaded as SVG (${settings.qrSize} size)`);
     } else {
-      d3ToPng(svgSelector, title || "qrmory-qr-code", {
+      // For PNG/JPG, we need to clone and resize before download
+      const clonedSvg = originalSvg.cloneNode(true) as SVGElement;
+
+      // Set the dimensions to the size from settings
+      clonedSvg.setAttribute("width", `${size}`);
+      clonedSvg.setAttribute("height", `${size}`);
+      clonedSvg.setAttribute(
+        "viewBox",
+        originalSvg.getAttribute("viewBox") || "0 0 29 29",
+      );
+
+      // Create a temporary container
+      const tempContainer = document.createElement("div");
+      tempContainer.style.position = "absolute";
+      tempContainer.style.opacity = "0";
+      tempContainer.style.pointerEvents = "none";
+      tempContainer.id = `temp-svg-container-${id}`;
+      tempContainer.appendChild(clonedSvg);
+      document.body.appendChild(tempContainer);
+
+      // Use d3ToPng with the temporary container
+      d3ToPng(`#temp-svg-container-${id} svg`, title || "qrmory-qr-code", {
         format: format,
-      }).then(() => {
-        toast(`QR code downloaded as ${format.toUpperCase()}`);
-      });
+      })
+        .then(() => {
+          toast(
+            `QR code downloaded as ${format.toUpperCase()} (${
+              settings.qrSize
+            } size)`,
+          );
+          document.body.removeChild(tempContainer);
+        })
+        .catch((err) => {
+          console.error("Error downloading QR code:", err);
+          toast("Failed to download QR code");
+          document.body.removeChild(tempContainer);
+        });
     }
   };
 
@@ -295,7 +343,7 @@ export default function MyCodeItem({
     <article className="border rounded-lg shadow-sm bg-white overflow-hidden mb-6">
       {/* QR Code Header */}
       <div
-        className={`py-3 px-4 flex flex-row items-center gap-4 w-full border-b border-stone-200/70`}
+        className={`py-3 px-4 flex flex-row items-center gap-4 w-full border-b border-neutral-200/70`}
       >
         <div
           id={`qr-code-${id}`}
@@ -323,15 +371,17 @@ export default function MyCodeItem({
             />
           ) : (
             <>
-              <h2 className="font-serif text-sm sm:text-base font-bold">
+              <h2
+                className={`text-qrmory-purple-800 font-serif text-sm sm:text-base font-bold`}
+              >
                 {title}
               </h2>
-              <h3 className="font-sans text-xs md:text-sm text-gray-500">
+              <h3 className="font-sans text-xs md:text-sm text-neutral-500">
                 {type === "dynamic" ? "Dynamic" : "Static"} • Created:{" "}
                 {new Date(created_at).toLocaleDateString()}
               </h3>
               {type === "dynamic" && shortcode && (
-                <div className="text-xs text-gray-500">
+                <div className="text-xs text-neutral-500">
                   Shortcode: {shortcode}
                 </div>
               )}
@@ -352,7 +402,7 @@ export default function MyCodeItem({
 
           <button
             onClick={() => setIsExpanded(!isExpanded)}
-            className="p-2 text-qrmory-purple-800 hover:bg-qrmory-purple-100 rounded transition-colors"
+            className="p-2 text-qrmory-purple-800 hover:bg-qrmory-purple-800 hover:text-white rounded transition-all duration-300 ease-in-out"
             title={isExpanded ? "Collapse" : "Expand"}
           >
             {isExpanded ? (
@@ -366,17 +416,17 @@ export default function MyCodeItem({
 
       {/* Expanded content */}
       {isExpanded && (
-        <div className="p-4 bg-gray-50">
+        <div className="p-4 bg-neutral-50">
           {isEditing ? (
             <div className="space-y-4">
-              <h3 className="font-medium text-gray-700">Edit QR Code</h3>
+              <h3 className="font-medium text-neutral-700">Edit QR Code</h3>
               <div className="bg-white p-4 rounded-md border">
                 {renderEditor()}
               </div>
               <div className="flex justify-end space-x-3">
                 <button
                   onClick={toggleEdit}
-                  className="px-4 py-2 text-gray-700 border border-gray-300 rounded-md hover:bg-gray-100"
+                  className="px-4 py-2 text-neutral-700 border border-neutral-300 rounded-md hover:bg-neutral-100"
                   disabled={saving}
                 >
                   Cancel
@@ -393,7 +443,9 @@ export default function MyCodeItem({
             </div>
           ) : (
             <div className="space-y-4">
-              <h3 className="font-medium text-gray-700">Download QR Code</h3>
+              <h3 className={`font-bold text-qrmory-purple-800`}>
+                Download QR Code
+              </h3>
               <div className="flex flex-col sm:flex-row items-center justify-center sm:justify-start gap-3">
                 <div className="w-32 h-32">
                   <SVG

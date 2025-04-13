@@ -130,7 +130,7 @@ const QRWebsite = ({
         <div className="flex flex-row flex-nowrap">
           <select
             ref={protocolRef}
-            className="mr-2 mt-1 ring-0 border-0 outline-none focus:bg-stone-100 rounded-xl text-sm md:text-base text-qrmory-purple-800 font-bold"
+            className="mr-2 mt-1 ring-0 border-0 outline-none focus:bg-neutral-100 rounded-xl text-sm md:text-base text-qrmory-purple-800 font-bold"
             value={protocol}
             onChange={handleProtocolChange}
           >

@@ -217,7 +217,7 @@ export default function QRLocation({
           className={`px-3 py-1 text-sm rounded ${
             !useManualCoords
               ? "bg-qrmory-purple-800 text-white"
-              : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+              : "bg-neutral-100 text-neutral-700 hover:bg-neutral-200"
           }`}
           onClick={() => setUseManualCoords(false)}
         >
@@ -228,7 +228,7 @@ export default function QRLocation({
           className={`px-3 py-1 text-sm rounded ${
             useManualCoords
               ? "bg-qrmory-purple-800 text-white"
-              : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+              : "bg-neutral-100 text-neutral-700 hover:bg-neutral-200"
           }`}
           onClick={() => setUseManualCoords(true)}
         >
@@ -274,14 +274,14 @@ export default function QRLocation({
                   {searchResults.map((location) => (
                     <li
                       key={location.place_id}
-                      className="p-3 hover:bg-gray-100 cursor-pointer"
+                      className="p-3 hover:bg-neutral-100 cursor-pointer"
                       onClick={() => handleLocationSelect(location)}
                     >
                       <div className="font-medium">{location.name}</div>
-                      <div className="text-sm text-gray-600">
+                      <div className="text-sm text-neutral-600">
                         {location.address}
                       </div>
-                      <div className="text-xs text-gray-500">
+                      <div className="text-xs text-neutral-500">
                         {location.lat.toFixed(6)}, {location.lng.toFixed(6)}
                       </div>
                     </li>
@@ -297,7 +297,7 @@ export default function QRLocation({
               !searchError &&
               !selectedLocation &&
               hasSearched && (
-                <div className="mt-2 p-2 text-sm text-gray-600 bg-gray-50 rounded-md">
+                <div className="mt-2 p-2 text-sm text-neutral-600 bg-neutral-50 rounded-md">
                   No locations found for "{searchTerm}". Try a different search
                   term.
                 </div>
@@ -306,13 +306,13 @@ export default function QRLocation({
 
           {/* Selected Location Display */}
           {selectedLocation && (
-            <div className="mt-4 p-3 bg-gray-50 rounded-md border">
+            <div className="mt-4 p-3 bg-neutral-50 rounded-md border">
               <div className="font-medium">Selected Location:</div>
               <div className="text-sm">{selectedLocation.name}</div>
-              <div className="text-sm text-gray-600">
+              <div className="text-sm text-neutral-600">
                 {selectedLocation.address}
               </div>
-              <div className="text-xs text-gray-500 mt-1">
+              <div className="text-xs text-neutral-500 mt-1">
                 Coordinates: {selectedLocation.lat.toFixed(6)},{" "}
                 {selectedLocation.lng.toFixed(6)}
               </div>
@@ -354,9 +354,9 @@ export default function QRLocation({
           </label>
 
           {manualCoords.lat && manualCoords.lng && (
-            <div className="mt-4 p-3 bg-gray-50 rounded-md border">
+            <div className="mt-4 p-3 bg-neutral-50 rounded-md border">
               <div className="font-medium">Custom Location:</div>
-              <div className="text-sm text-gray-600 mt-1">
+              <div className="text-sm text-neutral-600 mt-1">
                 Coordinates: {manualCoords.lat}, {manualCoords.lng}
               </div>
             </div>
@@ -364,7 +364,7 @@ export default function QRLocation({
         </div>
       )}
 
-      <div className="text-xs text-gray-500 mt-4">
+      <div className="text-xs text-neutral-500 mt-4">
         When scanned, this QR code will open the location in the user's default
         maps app.
         <br />

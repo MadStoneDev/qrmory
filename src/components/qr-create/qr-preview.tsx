@@ -45,12 +45,12 @@ export default function QRPreview({
     <article
       className={`mx-auto p-4 lg:pt-8 lg:pb-10 lg:px-10 self-start lg:self-auto flex flex-col lg:w-qr-preview w-full sm:max-w-xs bg-white ${
         shadow
-          ? "rounded-3xl shadow-xl shadow-stone-300/50"
-          : "lg:rounded-3xl lg:shadow-xl lg:shadow-stone-300/50"
+          ? "rounded-3xl shadow-xl shadow-neutral-300/50"
+          : "lg:rounded-3xl lg:shadow-xl lg:shadow-neutral-300/50"
       } text-center`}
     >
       <div className="w-full">
-        <h4 className="text-xs text-stone-400">Your QR Code Title</h4>
+        <h4 className="text-xs text-neutral-400">Your QR Code Title</h4>
         <h5 className="text-base text-qrmory-purple-800 font-bold">
           {qrTitle || "Untitled QR Code"}
         </h5>
@@ -58,7 +58,7 @@ export default function QRPreview({
 
       <div
         id={`final-qr`}
-        className="my-6 lg:my-16 lg:mx-auto grid place-content-center text-gray-600 dark:text-gray-600 text-sm"
+        className="my-6 lg:my-16 lg:mx-auto grid place-content-center text-neutral-600 dark:text-neutral-600 text-sm"
       >
         <SVG
           text={displayValue}
@@ -73,7 +73,7 @@ export default function QRPreview({
           }}
         />
         {qrChanged && (
-          <div className="text-center mt-2 text-stone-500 text-sm font-medium">
+          <div className="text-center mt-2 text-neutral-500 text-sm font-medium">
             Click "Generate QR" to update
           </div>
         )}
@@ -82,7 +82,7 @@ export default function QRPreview({
       <button
         className={`mx-auto py-2.5 px-4 grow w-full max-h-12 rounded uppercase font-bold text-xs lg:text-base transition-all duration-300 ${
           qrChanged
-            ? "bg-stone-300 text-white"
+            ? "bg-neutral-300 text-white"
             : "cursor-pointer bg-white hover:bg-qrmory-purple-400 border border-qrmory-purple-800 text-qrmory-purple-800 hover:text-white hover:-translate-y-1 hover:translate-x-1"
         }`}
         onClick={() => {
@@ -98,7 +98,7 @@ export default function QRPreview({
         <button
           className={`py-2.5 px-4 grow rounded uppercase font-bold text-xs lg:text-base transition-all duration-300 ${
             qrChanged
-              ? "bg-stone-300 text-white"
+              ? "bg-neutral-300 text-white"
               : "cursor-pointer bg-white hover:bg-qrmory-purple-400 border border-qrmory-purple-500 text-qrmory-purple-800 hover:text-white hover:-translate-y-1 hover:translate-x-1"
           }`}
           onClick={() => handleDownload("png")}
@@ -110,7 +110,7 @@ export default function QRPreview({
         <button
           className={`py-2.5 px-4 grow rounded uppercase font-bold text-xs lg:text-base transition-all duration-300 ${
             qrChanged
-              ? "bg-stone-300 text-white"
+              ? "bg-neutral-300 text-white"
               : "cursor-pointer bg-white hover:bg-qrmory-purple-400 border border-qrmory-purple-500 text-qrmory-purple-800 hover:text-white hover:-translate-y-1 hover:translate-x-1"
           }`}
           onClick={() => handleDownload("jpg")}

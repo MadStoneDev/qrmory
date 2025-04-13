@@ -158,7 +158,7 @@ export default function QRYoutube({
     <>
       <label className="control-label">
         Enter YouTube Link:
-        <p className={`font-sansLight italic text-stone-400`}>
+        <p className={`font-sansLight italic text-neutral-400`}>
           (you can paste the full link{" "}
           <span className={`px-1 font-sans font-black uppercase`}>or</span> your
           username{" "}

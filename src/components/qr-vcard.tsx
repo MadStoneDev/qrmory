@@ -182,7 +182,7 @@ export default function QRVCard({
         />
       </label>
 
-      <div className={`-mt-5 text-xs text-gray-500`}>
+      <div className={`-mt-5 text-xs text-neutral-500`}>
         Rest assured that your information will be encoded in the QR code URL
         for privacy.
       </div>

@@ -412,17 +412,17 @@ export default function QRSettings({
     <article
       className={`p-4 sm:p-6 lg:px-8 flex flex-col grow bg-white max-w-full ${
         shadow
-          ? "sm:rounded-3xl sm:shadow-xl shadow-stone-300/50"
-          : "lg:rounded-3xl lg:shadow-xl lg:shadow-stone-300/50"
+          ? "sm:rounded-3xl sm:shadow-xl shadow-neutral-300/50"
+          : "lg:rounded-3xl lg:shadow-xl lg:shadow-neutral-300/50"
       }`}
     >
-      <div className="mb-4 pb-4 flex flex-row flex-wrap justify-start items-center content-end self-start border-b-2 border-stone-100 transition-all">
+      <div className="mb-4 pb-4 flex flex-row flex-wrap justify-start items-center content-end self-start border-b-2 border-neutral-100 transition-all">
         {Object.keys(qrControls).map((key) => (
           <article
             className={`flex gap-2 items-center ${
               activeSelector === key
                 ? "bg-qrmory-purple-800 text-white"
-                : "bg-white hover:bg-qrmory-purple-500 border-stone-400 hover:border-qrmory-purple-500 text-stone-500 hover:text-white"
+                : "bg-white hover:bg-qrmory-purple-500 border-neutral-400 hover:border-qrmory-purple-500 text-neutral-500 hover:text-white"
             } qr-selector cursor-pointer m-1 py-2 px-5 flex justify-center items-center rounded border text-xs lg:text-sm transition-all duration-300`}
             key={`qr-control-${qrControls[key].title.toLowerCase()}`}
             data-selector={key}
@@ -465,7 +465,7 @@ export default function QRSettings({
                 className={`py-2.5 px-4 hover:enabled:translate-x-1 hover:enabled:-translate-y-1 flex items-center justify-center gap-2 border disabled:border-none border-qrmory-purple-800 ${
                   isDynamic
                     ? "bg-qrmory-purple-800 text-white"
-                    : "bg-white disabled:bg-stone-300 hover:enabled:bg-qrmory-purple-800 text-qrmory-purple-800 disabled:text-stone-600"
+                    : "bg-white disabled:bg-neutral-300 hover:enabled:bg-qrmory-purple-800 text-qrmory-purple-800 disabled:text-neutral-600"
                 } w-48 max-w-full text-xs lg:text-sm hover:enabled:text-white rounded uppercase font-semibold transition-all duration-300`}
                 onClick={handleMakeDynamic}
                 disabled={
@@ -490,7 +490,7 @@ export default function QRSettings({
               </button>
 
               <button
-                className={`py-2.5 px-4 hover:enabled:translate-x-1 hover:enabled:-translate-y-1 flex items-center justify-center gap-2 border disabled:border-none border-qrmory-purple-800 hover:enabled:border-qrmory-purple-800 bg-white disabled:bg-stone-300 hover:enabled:bg-qrmory-purple-800 text-qrmory-purple-800 disabled:text-stone-600 w-48 max-w-full text-xs lg:text-sm hover:enabled:text-white rounded uppercase font-semibold transition-all duration-300`}
+                className={`py-2.5 px-4 hover:enabled:translate-x-1 hover:enabled:-translate-y-1 flex items-center justify-center gap-2 border disabled:border-none border-qrmory-purple-800 hover:enabled:border-qrmory-purple-800 bg-white disabled:bg-neutral-300 hover:enabled:bg-qrmory-purple-800 text-qrmory-purple-800 disabled:text-neutral-600 w-48 max-w-full text-xs lg:text-sm hover:enabled:text-white rounded uppercase font-semibold transition-all duration-300`}
                 onClick={handleSaveQR}
                 disabled={
                   textValue.length === 0 ||
@@ -518,7 +518,7 @@ export default function QRSettings({
               hover:enabled:border-qrmory-purple-800
               ${
                 textValue.length === 0
-                  ? "bg-stone-300 text-stone-600"
+                  ? "bg-neutral-300 text-neutral-600"
                   : qrChanged
                     ? "bg-qrmory-purple-800 text-white"
                     : "bg-white text-qrmory-purple-800 hover:enabled:bg-qrmory-purple-800 hover:enabled:text-white"

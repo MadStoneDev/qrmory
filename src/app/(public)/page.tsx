@@ -132,7 +132,7 @@ export default async function Home() {
           worries! Drop us a line on our{" "}
           <a
             href="/contact"
-            className={`px-1 py-0.5 hover:bg-qrmory-purple-800 text-qrmory-purple-300 hover:text-stone-100 transition-all duration-300`}
+            className={`px-1 py-0.5 hover:bg-qrmory-purple-800 text-qrmory-purple-300 hover:text-neutral-100 transition-all duration-300`}
           >
             contact page
           </a>
@@ -140,14 +140,14 @@ export default async function Home() {
           a quick peek at our{" "}
           <a
             href="/terms-and-conditions"
-            className={`px-1 py-0.5 hover:bg-qrmory-purple-800 text-qrmory-purple-300 hover:text-stone-100 transition-all duration-300`}
+            className={`px-1 py-0.5 hover:bg-qrmory-purple-800 text-qrmory-purple-300 hover:text-neutral-100 transition-all duration-300`}
           >
             Terms of Service
           </a>{" "}
           and{" "}
           <a
             href="/privacy-policy"
-            className={`px-1 py-0.5 hover:bg-qrmory-purple-800 text-qrmory-purple-300 hover:text-stone-100 transition-all duration-300`}
+            className={`px-1 py-0.5 hover:bg-qrmory-purple-800 text-qrmory-purple-300 hover:text-neutral-100 transition-all duration-300`}
           >
             Privacy Policy
           </a>

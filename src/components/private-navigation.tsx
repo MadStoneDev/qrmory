@@ -36,7 +36,7 @@ export default function PrivateNavigation({
           </NavItem>
 
           <div
-            className={`hidden sm:block w-8 h-[1px] border-b border-stone-200/60`}
+            className={`hidden sm:block w-8 h-[1px] border-b border-neutral-200/60`}
           ></div>
 
           <NavItem href={"/dashboard/create"} title={"Create"}>
@@ -44,7 +44,7 @@ export default function PrivateNavigation({
           </NavItem>
 
           <div
-            className={`hidden sm:block w-8 h-[1px] border-b border-stone-200/60`}
+            className={`hidden sm:block w-8 h-[1px] border-b border-neutral-200/60`}
           ></div>
 
           <NavItem href={"/dashboard/my-codes"} title={"My Codes"}>
@@ -52,7 +52,7 @@ export default function PrivateNavigation({
           </NavItem>
 
           {/*<div*/}
-          {/*  className={`hidden sm:block w-8 h-[1px] border-b border-stone-200/60`}*/}
+          {/*  className={`hidden sm:block w-8 h-[1px] border-b border-neutral-200/60`}*/}
           {/*></div>*/}
 
           {/*<NavItem href={"/dashboard/my-teams"} title={"My Teams"}>*/}
@@ -60,7 +60,7 @@ export default function PrivateNavigation({
           {/*</NavItem>*/}
 
           <div
-            className={`hidden sm:block w-8 h-[1px] border-b border-stone-200/60`}
+            className={`hidden sm:block w-8 h-[1px] border-b border-neutral-200/60`}
           ></div>
         </article>
 
@@ -70,7 +70,7 @@ export default function PrivateNavigation({
           </NavItem>
 
           <div
-            className={`hidden sm:block w-8 h-[1px] border-b border-stone-200/60`}
+            className={`hidden sm:block w-8 h-[1px] border-b border-neutral-200/60`}
           ></div>
 
           <NavItem href={"/dashboard/settings"} title={"Settings"}>
@@ -78,7 +78,7 @@ export default function PrivateNavigation({
           </NavItem>
 
           <div
-            className={`hidden sm:block w-8 h-[1px] border-b border-stone-200/60`}
+            className={`hidden sm:block w-8 h-[1px] border-b border-neutral-200/60`}
           ></div>
 
           <NavItem

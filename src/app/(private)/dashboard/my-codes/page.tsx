@@ -1,6 +1,7 @@
-﻿import MyCodeItem from "@/components/my-code-item";
-import { createClient } from "@/utils/supabase/server";
+﻿import { createClient } from "@/utils/supabase/server";
 import { DEFAULT_SETTINGS } from "@/lib/default-settings";
+
+import MyCodesList from "@/components/my-codes-list";
 
 export const metadata = {
   title: "My Codes | QRmory",
@@ -61,7 +62,7 @@ async function fetchCodes() {
   return {
     codes: data || [],
     settings: userSettings,
-  }; // Always return an object with codes and settings
+  };
 }
 
 export default async function MyCodes() {
@@ -71,9 +72,9 @@ export default async function MyCodes() {
     <section className="flex flex-col w-full">
       <h1 className="mb-4 text-xl font-bold">My QR Codes</h1>
       {codes.length === 0 && (
-        <div className="text-center my-10 p-8 bg-gray-50 rounded-xl">
+        <div className="text-center my-10 p-8 bg-neutral-50 rounded-xl">
           <h3 className="text-xl font-semibold mb-2">No QR Codes Yet</h3>
-          <p className="text-gray-600 mb-4">
+          <p className="text-neutral-600 mb-4">
             You haven't created any QR codes yet. Get started by creating your
             first one!
           </p>
@@ -86,22 +87,7 @@ export default async function MyCodes() {
         </div>
       )}
 
-      <div className="space-y-4">
-        {codes.map((code) => (
-          <MyCodeItem
-            key={code.id}
-            id={code.id}
-            title={code.title}
-            type={code.type}
-            content={code.content}
-            qr_value={code.qr_value}
-            shortcode={code.shortcode}
-            created_at={code.created_at}
-            is_active={code.is_active}
-            settings={settings}
-          />
-        ))}
-      </div>
+      {codes.length > 0 && <MyCodesList codes={codes} settings={settings} />}
     </section>
   );
 }

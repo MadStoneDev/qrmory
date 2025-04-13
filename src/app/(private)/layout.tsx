@@ -29,7 +29,7 @@ export default function PrivateLayout({
           className={`mb-16 sm:mb-0 flex-grow flex flex-row justify-center items-stretch`}
         >
           <section
-            className={`py-4 sm:py-6 px-2 pr-4 sm:px-6 flex-grow bg-stone-100 shadow-2xl shadow-stone-400 overflow-y-auto`}
+            className={`py-4 sm:py-6 px-2 pr-4 sm:px-6 flex-grow bg-neutral-100 shadow-2xl shadow-neutral-400 overflow-y-auto`}
           >
             {children}
           </section>
@@ -37,7 +37,7 @@ export default function PrivateLayout({
       </main>
 
       <footer
-        className={`px-4 fixed bottom-0 grid place-content-center w-full h-10 bg-qrmory-purple-900 text-xs text-center text-stone-100/50`}
+        className={`px-4 fixed bottom-0 grid place-content-center w-full h-10 bg-qrmory-purple-900 text-xs text-center text-neutral-100/50`}
       >
         <p className={``}>&copy; 2024 QRmory</p>
       </footer>

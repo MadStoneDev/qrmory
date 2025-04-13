@@ -265,7 +265,7 @@ export const LoginBlock = () => {
               formData.email.length < 6 ||
               isLoading
             }
-            className={`py-2 w-full bg-qrmory-purple-500 disabled:bg-stone-300 rounded-md text-white text-base font-bold`}
+            className={`py-2 w-full bg-qrmory-purple-500 disabled:bg-neutral-300 rounded-md text-white text-base font-bold`}
           >
             {isLoading
               ? "Logging you in..."
