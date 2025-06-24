@@ -6,14 +6,14 @@ export async function POST(request: Request) {
   try {
     // Initialize Stripe
     const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", {
-      apiVersion: "2022-11-15",
+      apiVersion: "2024-06-20",
     });
 
     // Get request data
     const { subscription_id } = await request.json();
 
     // Create Supabase client
-    const supabase = createClient();
+    const supabase = await createClient();
 
     // Get user from Supabase auth
     const {
@@ -64,7 +64,7 @@ export async function POST(request: Request) {
 
     // Return the URL to the client
     return NextResponse.json({ url: portalSession.url });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }

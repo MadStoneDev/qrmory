@@ -11,7 +11,39 @@ export const metadata = {
   description: "Upgrade your QRmory subscription to create more QR codes.",
 };
 
-async function fetchUserData() {
+// Define proper types for the data structures
+interface Profile {
+  id: string;
+  subscription_level?: string | null;
+  extra_quota_from_boosters?: number | null;
+  // Add other profile fields as needed
+}
+
+interface Subscription {
+  id: string;
+  user_id: string;
+  status: string;
+  current_period_end: string;
+  // Add other subscription fields as needed
+}
+
+interface QuotaPackage {
+  id: string;
+  name: string;
+  quantity: number;
+  price_in_cents: number;
+  is_active: boolean;
+  // Add other package fields as needed
+}
+
+interface UserData {
+  profile: Profile | null;
+  subscription: Subscription | null;
+  quota_packages: QuotaPackage[];
+  usedDynamicQRs: number;
+}
+
+async function fetchUserData(): Promise<UserData> {
   const supabase = await createClient();
 
   const {
@@ -23,6 +55,7 @@ async function fetchUserData() {
       profile: null,
       subscription: null,
       quota_packages: [],
+      usedDynamicQRs: 0,
     };
   }
 
@@ -39,6 +72,7 @@ async function fetchUserData() {
       profile: null,
       subscription: null,
       quota_packages: [],
+      usedDynamicQRs: 0,
     };
   }
 
@@ -77,9 +111,9 @@ async function fetchUserData() {
   }
 
   return {
-    profile,
-    subscription,
-    quota_packages: quota_packages || [],
+    profile: profile as Profile,
+    subscription: subscription as Subscription | null,
+    quota_packages: (quota_packages as QuotaPackage[]) || [],
     usedDynamicQRs: usedDynamicQRs || 0,
   };
 }
@@ -108,13 +142,17 @@ export default async function SubscriptionPage() {
 
   // Get the current subscription level (as a number)
   const currentLevel = profile.subscription_level
-    ? parseInt(profile.subscription_level)
+    ? parseInt(profile.subscription_level, 10)
     : 0;
 
   // Get quota information for the current subscription level
   const currentQuota =
     DEFAULT_QUOTAS.find(
-      (q) => q.subscription === SUBSCRIPTION_LEVELS[currentLevel],
+      (q) =>
+        q.subscription ===
+        SUBSCRIPTION_LEVELS[
+          currentLevel.toString() as keyof typeof SUBSCRIPTION_LEVELS
+        ],
     ) || DEFAULT_QUOTAS[0];
 
   return (

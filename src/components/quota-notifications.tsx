@@ -15,18 +15,26 @@ type QuotaNotificationProps = {
   forceShow?: boolean;
 };
 
+// Define types for the data structures
+interface Profile {
+  subscription_level?: string | null;
+  dynamic_qr_quota?: number | null;
+}
+
+interface QuotaData {
+  usedDynamicQRs: number;
+  totalQuota: number;
+  subscriptionLevel: string;
+  isNearLimit: boolean;
+  isAtLimit: boolean;
+}
+
 export default function QuotaNotification({
   qrType,
   forceShow = false,
 }: QuotaNotificationProps) {
   const [loading, setLoading] = useState(true);
-  const [quotaData, setQuotaData] = useState<{
-    usedDynamicQRs: number;
-    totalQuota: number;
-    subscriptionLevel: string;
-    isNearLimit: boolean;
-    isAtLimit: boolean;
-  }>({
+  const [quotaData, setQuotaData] = useState<QuotaData>({
     usedDynamicQRs: 0,
     totalQuota: 3, // Default free quota
     subscriptionLevel: "Free",
@@ -62,6 +70,8 @@ export default function QuotaNotification({
           return;
         }
 
+        const typedProfile = profile as Profile;
+
         // Count used dynamic QR codes
         const { count: usedDynamicQRs } = await supabase
           .from("qr_codes")
@@ -71,12 +81,12 @@ export default function QuotaNotification({
 
         // Calculate quota based on subscription level
         let baseQuota = 3; // Default free quota
-        if (profile.subscription_level === "1") baseQuota = 10;
-        if (profile.subscription_level === "2") baseQuota = 50;
-        if (profile.subscription_level === "3") baseQuota = 250;
+        if (typedProfile.subscription_level === "1") baseQuota = 10;
+        if (typedProfile.subscription_level === "2") baseQuota = 50;
+        if (typedProfile.subscription_level === "3") baseQuota = 250;
 
         // Total quota = base quota + additional quota
-        const totalQuota = baseQuota + (profile.dynamic_qr_quota || 0);
+        const totalQuota = baseQuota + (typedProfile.dynamic_qr_quota || 0);
         const usedCount = usedDynamicQRs || 0;
 
         // Check limits (80% = near limit, 100% = at limit)
@@ -88,7 +98,9 @@ export default function QuotaNotification({
           usedDynamicQRs: usedCount,
           totalQuota,
           subscriptionLevel:
-            SUBSCRIPTION_LEVELS[profile.subscription_level] || "Free",
+            SUBSCRIPTION_LEVELS[
+              typedProfile.subscription_level as keyof typeof SUBSCRIPTION_LEVELS
+            ] || "Free",
           isNearLimit,
           isAtLimit,
         });

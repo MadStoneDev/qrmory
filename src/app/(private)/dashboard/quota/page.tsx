@@ -8,7 +8,35 @@ export const metadata = {
   description: "View your QR code quota and usage statistics.",
 };
 
-async function fetchUserData() {
+// Define proper types for the data structures
+interface Profile {
+  id: string;
+  subscription_level?: string | null;
+  extra_quota_from_boosters?: number | null;
+  // Add other profile fields as needed
+}
+
+interface QuotaPackage {
+  name?: string;
+  quantity?: number;
+}
+
+interface QuotaPurchase {
+  id: string;
+  user_id: string;
+  quantity: number;
+  purchased_at: string;
+  package_id?: QuotaPackage | null;
+  // Add other purchase fields as needed
+}
+
+interface UserData {
+  profile: Profile | null;
+  dynamicQRCount: number;
+  quotaPurchases: QuotaPurchase[];
+}
+
+async function fetchUserData(): Promise<UserData> {
   const supabase = await createClient();
 
   const {
@@ -19,6 +47,7 @@ async function fetchUserData() {
     return {
       profile: null,
       dynamicQRCount: 0,
+      quotaPurchases: [],
     };
   }
 
@@ -34,6 +63,7 @@ async function fetchUserData() {
     return {
       profile: null,
       dynamicQRCount: 0,
+      quotaPurchases: [],
     };
   }
 
@@ -61,9 +91,9 @@ async function fetchUserData() {
   }
 
   return {
-    profile,
+    profile: profile as Profile,
     dynamicQRCount: dynamicQRCount || 0,
-    quotaPurchases: quotaPurchases || [],
+    quotaPurchases: (quotaPurchases as QuotaPurchase[]) || [],
   };
 }
 
@@ -90,17 +120,21 @@ export default async function QuotaPage() {
 
   // Get the current subscription level (as a number)
   const currentLevel = profile.subscription_level
-    ? parseInt(profile.subscription_level)
+    ? parseInt(profile.subscription_level, 10)
     : 0;
 
   // Get quota information for the current subscription level
   const currentQuota =
     DEFAULT_QUOTAS.find(
-      (q) => q.subscription === SUBSCRIPTION_LEVELS[currentLevel],
+      (q) =>
+        q.subscription ===
+        SUBSCRIPTION_LEVELS[
+          currentLevel.toString() as keyof typeof SUBSCRIPTION_LEVELS
+        ],
     ) || DEFAULT_QUOTAS[0];
 
   // Calculate total available quota
-  const planQuota = currentQuota.dynamicCodes;
+  const planQuota = currentQuota?.dynamicCodes || 0;
   const additionalQuota = profile.extra_quota_from_boosters || 0;
   const totalQuota = planQuota + additionalQuota;
 
@@ -129,7 +163,9 @@ export default async function QuotaPage() {
             <p className="text-sm text-neutral-600">
               Current Plan:{" "}
               <span className="font-medium">
-                {SUBSCRIPTION_LEVELS[currentLevel]}
+                {SUBSCRIPTION_LEVELS[
+                  currentLevel.toString() as keyof typeof SUBSCRIPTION_LEVELS
+                ] || "Unknown"}
               </span>
             </p>
           </div>

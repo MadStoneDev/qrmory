@@ -63,8 +63,6 @@ export default function SubscriptionPlans({
         if (!response.ok)
           throw new Error(data.error || "Failed to create checkout session");
 
-        if (error) throw error;
-
         // Redirect to Stripe checkout
         window.location.href = data.url;
       }

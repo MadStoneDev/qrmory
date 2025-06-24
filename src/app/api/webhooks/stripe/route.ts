@@ -2,11 +2,33 @@
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 // Initialize Stripe
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", {
-  apiVersion: "2022-11-15",
+  apiVersion: "2024-06-20",
 });
+
+// Type for error handling
+interface ErrorWithMessage {
+  message: string;
+}
+
+// Type guard to check if error has a message property
+function isErrorWithMessage(error: unknown): error is ErrorWithMessage {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "message" in error &&
+    typeof (error as Record<string, unknown>).message === "string"
+  );
+}
+
+// Helper function to get error message safely
+function getErrorMessage(error: unknown): string {
+  if (isErrorWithMessage(error)) return error.message;
+  return String(error);
+}
 
 // Helper function to verify Stripe webhook signature
 const verifyStripeWebhook = async (request: Request) => {
@@ -30,10 +52,17 @@ export async function POST(request: Request) {
 
   if (error) {
     console.error("Error verifying webhook:", error);
-    return NextResponse.json({ error: error.message }, { status: 400 });
+    return NextResponse.json(
+      { error: getErrorMessage(error) },
+      { status: 400 },
+    );
   }
 
-  const supabase = createClient();
+  if (!event) {
+    return NextResponse.json({ error: "No event received" }, { status: 400 });
+  }
+
+  const supabase = await createClient();
 
   try {
     // Handle specific events
@@ -70,15 +99,18 @@ export async function POST(request: Request) {
     return NextResponse.json({ received: true });
   } catch (error) {
     console.error("Error processing webhook:", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json(
+      { error: getErrorMessage(error) },
+      { status: 500 },
+    );
   }
 }
 
 // Handler for subscription checkout completion
 async function handleSubscriptionCheckout(
-  supabase,
+  supabase: SupabaseClient,
   session: Stripe.Checkout.Session,
-) {
+): Promise<void> {
   // Get subscription details from Stripe
   const subscription = await stripe.subscriptions.retrieve(
     session.subscription as string,
@@ -88,14 +120,24 @@ async function handleSubscriptionCheckout(
   const userId = subscription.metadata.user_id;
   const planName = subscription.metadata.plan_name;
   const subscriptionLevel = subscription.metadata.subscription_level;
-  const quotaAmount = parseInt(subscription.metadata.quota_amount);
+  const quotaAmountStr = subscription.metadata.quota_amount;
 
   if (!userId) {
     throw new Error("User ID not found in subscription metadata");
   }
 
+  if (!quotaAmountStr || isNaN(parseInt(quotaAmountStr, 10))) {
+    throw new Error("Invalid quota amount in subscription metadata");
+  }
+
+  const quotaAmount = parseInt(quotaAmountStr, 10);
+
   // Get the price ID from the subscription
-  const priceId = subscription.items.data[0].price.id;
+  const priceId = subscription.items.data[0]?.price.id;
+
+  if (!priceId) {
+    throw new Error("Price ID not found in subscription");
+  }
 
   // Get the current period end
   const currentPeriodEnd = new Date(
@@ -119,7 +161,10 @@ async function handleSubscriptionCheckout(
 }
 
 // Handler for quota package purchase
-async function handleQuotaPurchase(supabase, session: Stripe.Checkout.Session) {
+async function handleQuotaPurchase(
+  supabase: SupabaseClient,
+  session: Stripe.Checkout.Session,
+): Promise<void> {
   // Get payment intent data
   const paymentIntentId = session.payment_intent as string;
   const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
@@ -127,12 +172,23 @@ async function handleQuotaPurchase(supabase, session: Stripe.Checkout.Session) {
   // Get metadata from the payment intent
   const userId = paymentIntent.metadata.user_id;
   const packageId = paymentIntent.metadata.package_id;
-  const quantity = parseInt(paymentIntent.metadata.quantity);
-  const priceCents = parseInt(paymentIntent.metadata.price_in_cents);
+  const quantityStr = paymentIntent.metadata.quantity;
+  const priceCentsStr = paymentIntent.metadata.price_in_cents;
 
   if (!userId || !packageId) {
     throw new Error("Missing required metadata for quota purchase");
   }
+
+  if (!quantityStr || isNaN(parseInt(quantityStr, 10))) {
+    throw new Error("Invalid quantity in payment intent metadata");
+  }
+
+  if (!priceCentsStr || isNaN(parseInt(priceCentsStr, 10))) {
+    throw new Error("Invalid price in payment intent metadata");
+  }
+
+  const quantity = parseInt(quantityStr, 10);
+  const priceCents = parseInt(priceCentsStr, 10);
 
   // Call database function to handle quota purchase
   const { error } = await supabase.rpc("handle_quota_purchase", {
@@ -150,11 +206,15 @@ async function handleQuotaPurchase(supabase, session: Stripe.Checkout.Session) {
 
 // Handler for subscription updates
 async function handleSubscriptionUpdate(
-  supabase,
+  supabase: SupabaseClient,
   subscription: Stripe.Subscription,
-) {
+): Promise<void> {
   // Get the price ID from the subscription
-  const priceId = subscription.items.data[0].price.id;
+  const priceId = subscription.items.data[0]?.price.id;
+
+  if (!priceId) {
+    throw new Error("Price ID not found in subscription");
+  }
 
   // Get the current period end
   const currentPeriodEnd = new Date(
@@ -180,9 +240,9 @@ async function handleSubscriptionUpdate(
 
 // Handler for subscription cancellations
 async function handleSubscriptionCancellation(
-  supabase,
+  supabase: SupabaseClient,
   subscription: Stripe.Subscription,
-) {
+): Promise<void> {
   // Update subscription status to cancelled
   const { error } = await supabase
     .from("subscriptions")
@@ -207,12 +267,20 @@ async function handleSubscriptionCancellation(
     throw subError;
   }
 
+  if (!subData) {
+    throw new Error("Subscription not found in database");
+  }
+
   // Downgrade user subscription level to free (0)
-  await supabase
+  const { error: updateError } = await supabase
     .from("profiles")
     .update({
       subscription_level: "0",
       updated_at: new Date().toISOString(),
     })
     .eq("id", subData.user_id);
+
+  if (updateError) {
+    throw updateError;
+  }
 }
