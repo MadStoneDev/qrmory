@@ -1,4 +1,5 @@
-﻿import { createClient } from "@/utils/supabase/server";
+﻿// /api/webhooks/stripe/route.ts
+import { createClient } from "@/utils/supabase/server";
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
@@ -118,6 +119,7 @@ async function handleSubscriptionCheckout(
 
   // Get metadata from the subscription
   const userId = subscription.metadata.user_id;
+  const packageId = subscription.metadata.package_id;
   const planName = subscription.metadata.plan_name;
   const subscriptionLevel = subscription.metadata.subscription_level;
   const quotaAmountStr = subscription.metadata.quota_amount;
@@ -126,11 +128,20 @@ async function handleSubscriptionCheckout(
     throw new Error("User ID not found in subscription metadata");
   }
 
-  if (!quotaAmountStr || isNaN(parseInt(quotaAmountStr, 10))) {
-    throw new Error("Invalid quota amount in subscription metadata");
+  if (!packageId) {
+    throw new Error("Package ID not found in subscription metadata");
   }
 
-  const quotaAmount = parseInt(quotaAmountStr, 10);
+  // Fetch the subscription package details from database
+  const { data: subscriptionPackage, error: packageError } = await supabase
+    .from("subscription_packages")
+    .select("*")
+    .eq("id", packageId)
+    .single();
+
+  if (packageError || !subscriptionPackage) {
+    throw new Error(`Subscription package not found: ${packageId}`);
+  }
 
   // Get the price ID from the subscription
   const priceId = subscription.items.data[0]?.price.id;
@@ -150,9 +161,9 @@ async function handleSubscriptionCheckout(
     p_subscription_id: subscription.id,
     p_price_id: priceId,
     p_status: subscription.status,
-    p_plan_name: planName,
+    p_plan_name: subscriptionPackage.name,
     p_current_period_end: currentPeriodEnd,
-    p_quota_amount: quotaAmount,
+    p_quota_amount: subscriptionPackage.quota_amount,
   });
 
   if (error) {
@@ -221,8 +232,21 @@ async function handleSubscriptionUpdate(
     subscription.current_period_end * 1000,
   ).toISOString();
 
-  // Get plan name from metadata
-  const planName = subscription.metadata.plan_name;
+  // Look up the subscription package by Stripe price ID
+  const { data: subscriptionPackage, error: packageError } = await supabase
+    .from("subscription_packages")
+    .select("*")
+    .eq("stripe_price_id", priceId)
+    .eq("is_active", true)
+    .single();
+
+  if (packageError || !subscriptionPackage) {
+    console.warn(`Subscription package not found for price ID: ${priceId}`);
+    // Still update the subscription record even if we can't find the package
+  }
+
+  const planName =
+    subscriptionPackage?.name || subscription.metadata.plan_name || "Unknown";
 
   // Call database function to handle subscription updates
   const { error } = await supabase.rpc("handle_subscription_updated", {
@@ -271,11 +295,25 @@ async function handleSubscriptionCancellation(
     throw new Error("Subscription not found in database");
   }
 
+  // Get the free plan details
+  const { data: freePlan, error: freePlanError } = await supabase
+    .from("subscription_packages")
+    .select("*")
+    .eq("level", 0)
+    .eq("is_active", true)
+    .single();
+
+  if (freePlanError || !freePlan) {
+    console.warn("Free plan not found, using default values");
+  }
+
   // Downgrade user subscription level to free (0)
   const { error: updateError } = await supabase
     .from("profiles")
     .update({
-      subscription_level: "0",
+      subscription_level: 0,
+      dynamic_qr_quota: freePlan?.quota_amount || 3,
+      subscription_status: "inactive",
       updated_at: new Date().toISOString(),
     })
     .eq("id", subData.user_id);

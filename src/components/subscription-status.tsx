@@ -1,29 +1,42 @@
 ﻿"use client";
 
 import { useState } from "react";
-
-import { QuotaInfo } from "@/lib/subscription-config";
 import { createClient } from "@/utils/supabase/client";
-
 import { toast } from "sonner";
 import { IconLoader2, IconExternalLink } from "@tabler/icons-react";
+
+interface SubscriptionPackage {
+  id: string;
+  name: string;
+  description: string;
+  level: number;
+  price_in_cents: number;
+  quota_amount: number;
+  features: string[];
+  stripe_price_id: string | null;
+}
 
 type SubscriptionStatusProps = {
   profile: any;
   subscription: any | null;
-  currentQuota: QuotaInfo;
+  currentPackage: SubscriptionPackage;
   usedDynamicQRs: number;
 };
 
 export default function SubscriptionStatus({
   profile,
   subscription,
-  currentQuota,
+  currentPackage,
   usedDynamicQRs,
 }: SubscriptionStatusProps) {
   const [loading, setLoading] = useState(false);
 
-  const totalQuota = profile.dynamic_qr_quota + currentQuota.dynamicCodes;
+  // Calculate quotas correctly
+  const subscriptionQuota =
+    profile.dynamic_qr_quota || currentPackage.quota_amount;
+  const boosterQuota = profile.extra_quota_from_boosters || 0;
+  const totalQuota = subscriptionQuota + boosterQuota;
+
   const usagePercentage = Math.min(
     100,
     Math.round((usedDynamicQRs / totalQuota) * 100),
@@ -44,7 +57,6 @@ export default function SubscriptionStatus({
 
     try {
       setLoading(true);
-      const supabase = createClient();
 
       // Create a portal session
       const response = await fetch("/api/create-stripe-portal", {
@@ -82,7 +94,7 @@ export default function SubscriptionStatus({
       <div className="flex flex-col md:flex-row md:justify-between md:items-center">
         <div>
           <h2 className="text-lg font-bold text-qrmory-purple-800">
-            Current Plan: <span>{currentQuota.subscription}</span>
+            Current Plan: <span>{currentPackage.name}</span>
           </h2>
 
           {subscription && (
@@ -90,6 +102,13 @@ export default function SubscriptionStatus({
               {subscription.status === "active"
                 ? `Renews on ${formatDate(subscription.current_period_end)}`
                 : `Subscription status: ${subscription.status}`}
+            </p>
+          )}
+
+          {/* Show plan description */}
+          {currentPackage.description && (
+            <p className="text-sm text-neutral-500 mt-1">
+              {currentPackage.description}
             </p>
           )}
         </div>
@@ -135,10 +154,10 @@ export default function SubscriptionStatus({
           <div className="bg-neutral-50 p-4 rounded-md">
             <p className="text-sm font-medium text-neutral-700">Plan Quota</p>
             <p className="text-2xl font-bold text-qrmory-purple-800">
-              {currentQuota.dynamicCodes}
+              {subscriptionQuota}
             </p>
             <p className="text-xs text-neutral-500">
-              Dynamic QR codes from your subscription
+              Dynamic QR codes from your {currentPackage.name} plan
             </p>
           </div>
 
@@ -147,13 +166,33 @@ export default function SubscriptionStatus({
               Additional Quota
             </p>
             <p className="text-2xl font-bold text-qrmory-purple-800">
-              {profile.extra_quota_from_boosters}
+              {boosterQuota}
             </p>
             <p className="text-xs text-neutral-500">
               Extra QR codes from boosters
             </p>
           </div>
         </div>
+
+        {/* Show current plan features */}
+        {currentPackage.features && currentPackage.features.length > 0 && (
+          <div className="mt-6 p-4 bg-neutral-50 rounded-md">
+            <p className="text-sm font-medium text-neutral-700 mb-3">
+              Your {currentPackage.name} Plan Includes:
+            </p>
+            <ul className="grid grid-cols-1 md:grid-cols-2 gap-2">
+              {currentPackage.features.map((feature, index) => (
+                <li
+                  key={index}
+                  className="text-sm text-neutral-600 flex items-center"
+                >
+                  <span className="w-2 h-2 bg-qrmory-purple-800 rounded-full mr-2 flex-shrink-0"></span>
+                  {feature}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
       </div>
     </div>
   );

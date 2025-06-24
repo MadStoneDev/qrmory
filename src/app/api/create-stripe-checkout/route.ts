@@ -1,5 +1,5 @@
-﻿import { NextResponse } from "next/server";
-
+﻿// /api/create-stripe-checkout/route.ts
+import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import { createClient } from "@/utils/supabase/server";
 
@@ -39,32 +39,27 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Profile not found" }, { status: 404 });
     }
 
-    // Fetch subscription pricing based on the level
-    let priceId: string;
-    let planName: string;
-    let quotaAmount: number;
+    // Fetch subscription package from database
+    const { data: subscriptionPackage, error: packageError } = await supabase
+      .from("subscription_packages")
+      .select("*")
+      .eq("level", parseInt(level))
+      .eq("is_active", true)
+      .single();
 
-    switch (level) {
-      case "1":
-        priceId = process.env.STRIPE_EXPLORER_PRICE_ID || "";
-        planName = "Explorer";
-        quotaAmount = 10;
-        break;
-      case "2":
-        priceId = process.env.STRIPE_CREATOR_PRICE_ID || "";
-        planName = "Creator";
-        quotaAmount = 50;
-        break;
-      case "3":
-        priceId = process.env.STRIPE_CHAMPION_PRICE_ID || "";
-        planName = "Champion";
-        quotaAmount = 250;
-        break;
-      default:
-        return NextResponse.json(
-          { error: "Invalid subscription level" },
-          { status: 400 },
-        );
+    if (packageError || !subscriptionPackage) {
+      return NextResponse.json(
+        { error: "Subscription package not found" },
+        { status: 404 },
+      );
+    }
+
+    // Validate that this is a paid plan
+    if (!subscriptionPackage.stripe_price_id) {
+      return NextResponse.json(
+        { error: "This subscription level does not support checkout" },
+        { status: 400 },
+      );
     }
 
     // Create or retrieve customer
@@ -93,7 +88,7 @@ export async function POST(request: Request) {
       customer: customerId,
       line_items: [
         {
-          price: priceId,
+          price: subscriptionPackage.stripe_price_id,
           quantity: 1,
         },
       ],
@@ -103,9 +98,10 @@ export async function POST(request: Request) {
       subscription_data: {
         metadata: {
           user_id: user.id,
-          plan_name: planName,
+          package_id: subscriptionPackage.id,
+          plan_name: subscriptionPackage.name,
           subscription_level: level,
-          quota_amount: quotaAmount.toString(),
+          quota_amount: subscriptionPackage.quota_amount.toString(),
         },
       },
     });

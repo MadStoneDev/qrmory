@@ -1,91 +1,69 @@
-﻿export type SubscriptionLevel = "0" | "1" | "2" | "3" | "4";
+﻿// /lib/subscription-config.ts
+// Simplified config file - most data now comes from database
 
+export type SubscriptionLevel = 0 | 1 | 2 | 3;
+
+// Basic level mapping (for backward compatibility)
 export const SUBSCRIPTION_LEVELS = {
-  "0": "Free",
-  "1": "Explorer",
-  "2": "Creator",
-  "3": "Champion",
-};
+  0: "Free",
+  1: "Explorer",
+  2: "Creator",
+  3: "Champion",
+} as const;
 
-export const SUBSCRIPTION_PRICES = {
-  "1": 499, // $4.99/mo
-  "2": 1299, // $12.99/mo
-  "3": 3999, // $39.99/mo
-};
+// Default quotas (fallback values if database is unavailable)
+export const DEFAULT_QUOTA_FALLBACKS = {
+  0: 3, // Free
+  1: 10, // Explorer
+  2: 50, // Creator
+  3: 250, // Champion
+} as const;
 
-export const BOOSTER_PACKAGES = {
-  Small: {
-    price: 699, // $6.99
-    quantity: 15,
-    name: "Small Booster",
-  },
-  Medium: {
-    price: 1599, // $15.99
-    quantity: 75,
-    name: "Medium Booster",
-  },
-  Large: {
-    price: 1999, // $19.99
-    quantity: 150,
-    name: "Large Booster",
-  },
-};
+// Helper functions for working with subscription packages
+export interface SubscriptionPackage {
+  id: string;
+  name: string;
+  description: string;
+  level: number;
+  price_in_cents: number;
+  quota_amount: number;
+  features: string[];
+  stripe_price_id: string | null;
+  is_active: boolean;
+}
 
-export type QuotaInfo = {
-  subscription: string;
-  dynamicCodes: number;
-  price?: number;
-  features?: string[];
-};
+export interface QuotaPackage {
+  id: string;
+  name: string;
+  quantity: number;
+  price_in_cents: number;
+  is_active: boolean;
+  description?: string;
+  stripe_price_id: string;
+}
 
-export const DEFAULT_QUOTAS: QuotaInfo[] = [
-  {
-    subscription: SUBSCRIPTION_LEVELS["0"],
-    dynamicCodes: 3,
-    features: [
-      "3 Dynamic QR codes",
-      "Unlimited Static QR codes",
-      "Basic analytics",
-      "Standard support",
-    ],
-  },
-  {
-    subscription: SUBSCRIPTION_LEVELS["1"],
-    dynamicCodes: 10,
-    price: SUBSCRIPTION_PRICES["1"],
-    features: [
-      "10 Dynamic QR codes",
-      "Unlimited Static QR codes",
-      "Enhanced analytics",
-      "Priority support",
-      "Custom QR code styles",
-    ],
-  },
-  {
-    subscription: SUBSCRIPTION_LEVELS["2"],
-    dynamicCodes: 50,
-    price: SUBSCRIPTION_PRICES["2"],
-    features: [
-      "50 Dynamic QR codes",
-      "Unlimited Static QR codes",
-      "Advanced analytics",
-      "Priority support",
-      "Custom QR code styles",
-      "Bulk generation",
-    ],
-  },
-  {
-    subscription: SUBSCRIPTION_LEVELS["3"],
-    dynamicCodes: 250,
-    price: SUBSCRIPTION_PRICES["3"],
-    features: [
-      "250 Dynamic QR codes",
-      "Unlimited Static QR codes",
-      "Enterprise analytics",
-      "Dedicated support",
-      "Custom QR code styles",
-      "Bulk generation",
-      "Team sharing",
-    ],
-  },
-];
+// Helper function to format price
+export function formatPrice(priceInCents: number): string {
+  return `$${(priceInCents / 100).toFixed(2)}`;
+}
+
+// Helper function to get subscription level name
+export function getSubscriptionLevelName(level: number): string {
+  return (
+    SUBSCRIPTION_LEVELS[level as keyof typeof SUBSCRIPTION_LEVELS] || "Unknown"
+  );
+}
+
+// Helper function to calculate total quota
+export function calculateTotalQuota(
+  subscriptionQuota: number,
+  boosterQuota: number = 0,
+): number {
+  return (subscriptionQuota || 0) + (boosterQuota || 0);
+}
+
+// Helper function to calculate usage percentage
+export function calculateUsagePercentage(used: number, total: number): number {
+  if (total === 0) return 0;
+  return Math.min(100, Math.round((used / total) * 100));
+}

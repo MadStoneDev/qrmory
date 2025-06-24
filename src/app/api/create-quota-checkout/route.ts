@@ -1,4 +1,5 @@
-﻿import { NextResponse } from "next/server";
+﻿// /api/create-quota-checkout/route.ts
+import { NextResponse } from "next/server";
 import { createClient } from "@/utils/supabase/server";
 import Stripe from "stripe";
 
