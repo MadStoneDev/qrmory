@@ -28,6 +28,7 @@ import QRVCard from "@/components/qr-vcard";
 import QRWebsite from "@/components/qr-website";
 import QRWifi from "@/components/qr-wifi";
 import QRYoutube from "@/components/qr-youtube";
+import Link from "next/link";
 
 interface MyCodeItemProps {
   id: string;
@@ -47,10 +48,10 @@ interface QRSizes {
 
 export default function MyCodeItem({
   id,
-  title = "No Title",
+  title: initialTitle = "No Title",
   type = "static",
-  content,
-  qr_value = "",
+  content: initialContent,
+  qr_value: initialQrValue = "",
   shortcode,
   created_at,
   is_active,
@@ -60,12 +61,17 @@ export default function MyCodeItem({
   const [isEditing, setIsEditing] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
 
-  const [editedTitle, setEditedTitle] = useState(title);
-  const [editedContent, setEditedContent] = useState(content);
-  const [editedQRValue, setEditedQRValue] = useState(qr_value);
+  // Use state variables to track current values
+  const [currentTitle, setCurrentTitle] = useState(initialTitle);
+  const [currentContent, setCurrentContent] = useState(initialContent);
+  const [currentQrValue, setCurrentQrValue] = useState(initialQrValue);
+
+  // For editing
+  const [editedTitle, setEditedTitle] = useState(initialTitle);
+  const [editedContent, setEditedContent] = useState(initialContent);
+  const [editedQRValue, setEditedQRValue] = useState(initialQrValue);
 
   const [qrChanged, setQrChanged] = useState(false);
-
   const [saving, setSaving] = useState(false);
 
   const qrSizeLookup: QRSizes = {
@@ -78,7 +84,7 @@ export default function MyCodeItem({
   const displayValue =
     type === "dynamic" && shortcode
       ? `https://qrmory.com/${shortcode}`
-      : qr_value;
+      : currentQrValue;
 
   // Function to get the actual QR value
   const getQRValue = () => {
@@ -88,12 +94,12 @@ export default function MyCodeItem({
     }
 
     // If content has control type, recreate the value
-    if (content && content.controlType) {
-      return recreateQRValue(content);
+    if (currentContent && currentContent.controlType) {
+      return recreateQRValue(currentContent);
     }
 
     // Fallback to saved value
-    return qr_value;
+    return currentQrValue;
   };
 
   // Handle editing toggle
@@ -112,9 +118,9 @@ export default function MyCodeItem({
 
     // Reset changes when canceling edit
     if (isEditing) {
-      setEditedTitle(title);
-      setEditedContent(content);
-      setEditedQRValue(qr_value);
+      setEditedTitle(currentTitle);
+      setEditedContent(currentContent);
+      setEditedQRValue(currentQrValue);
       setQrChanged(false);
     }
   };
@@ -139,7 +145,12 @@ export default function MyCodeItem({
 
       if (error) throw error;
 
-      // Update local state to reflect changes
+      // Update local state to reflect changes in the UI
+      setCurrentTitle(editedTitle);
+      setCurrentContent(editedContent);
+      setCurrentQrValue(editedQRValue);
+
+      // Exit edit mode and reset change tracking
       setIsEditing(false);
       setQrChanged(false);
 
@@ -178,7 +189,7 @@ export default function MyCodeItem({
 
     if (format === "svg") {
       // For SVG downloads we can directly use the original element
-      downloadToSVG(originalSvg, title || "qrmory-qr-code");
+      downloadToSVG(originalSvg, currentTitle || "qrmory-qr-code");
       toast(`QR code downloaded as SVG (${settings.qrSize} size)`);
     } else {
       // For PNG/JPG, we need to clone and resize before download
@@ -192,6 +203,29 @@ export default function MyCodeItem({
         originalSvg.getAttribute("viewBox") || "0 0 29 29",
       );
 
+      // If format is JPG, ensure white background and black foreground
+      if (format === "jpg") {
+        // Add a white background rectangle
+        const rect = document.createElementNS(
+          "http://www.w3.org/2000/svg",
+          "rect",
+        );
+        rect.setAttribute("width", "100%");
+        rect.setAttribute("height", "100%");
+        rect.setAttribute("fill", "white");
+
+        // Insert the background rect as the first child
+        clonedSvg.insertBefore(rect, clonedSvg.firstChild);
+
+        // Ensure all path elements are black
+        const paths = clonedSvg.querySelectorAll(
+          "path, rect:not(:first-child)",
+        );
+        paths.forEach((path) => {
+          path.setAttribute("fill", "black");
+        });
+      }
+
       // Create a temporary container
       const tempContainer = document.createElement("div");
       tempContainer.style.position = "absolute";
@@ -202,9 +236,13 @@ export default function MyCodeItem({
       document.body.appendChild(tempContainer);
 
       // Use d3ToPng with the temporary container
-      d3ToPng(`#temp-svg-container-${id} svg`, title || "qrmory-qr-code", {
-        format: format,
-      })
+      d3ToPng(
+        `#temp-svg-container-${id} svg`,
+        currentTitle || "qrmory-qr-code",
+        {
+          format: format,
+        },
+      )
         .then(() => {
           toast(
             `QR code downloaded as ${format.toUpperCase()} (${
@@ -223,7 +261,7 @@ export default function MyCodeItem({
 
   // Get the appropriate editor component based on control type
   const renderEditor = () => {
-    if (!content || !content.controlType) return null;
+    if (!currentContent || !currentContent.controlType) return null;
 
     const updateTextValue = (value: string) => {
       setEditedQRValue(value);
@@ -237,20 +275,20 @@ export default function MyCodeItem({
     const updateSaveData = (data: any) => {
       // Preserve the controlType
       setEditedContent({
-        controlType: content.controlType,
+        controlType: currentContent.controlType,
         ...data,
       });
     };
 
     // Map control type to component
-    switch (content.controlType) {
+    switch (currentContent.controlType) {
       case "website":
         return (
           <QRWebsite
             setText={updateTextValue}
             setChanged={updateChanged}
             setSaveData={updateSaveData}
-            initialData={content}
+            initialData={currentContent}
           />
         );
       case "facebook":
@@ -259,7 +297,7 @@ export default function MyCodeItem({
             setText={updateTextValue}
             setChanged={updateChanged}
             setSaveData={updateSaveData}
-            initialData={content}
+            initialData={currentContent}
           />
         );
       case "instagram":
@@ -268,7 +306,7 @@ export default function MyCodeItem({
             setText={updateTextValue}
             setChanged={updateChanged}
             setSaveData={updateSaveData}
-            initialData={content}
+            initialData={currentContent}
           />
         );
       case "twitter":
@@ -277,7 +315,7 @@ export default function MyCodeItem({
             setText={updateTextValue}
             setChanged={updateChanged}
             setSaveData={updateSaveData}
-            initialData={content}
+            initialData={currentContent}
           />
         );
       case "youtube":
@@ -286,7 +324,7 @@ export default function MyCodeItem({
             setText={updateTextValue}
             setChanged={updateChanged}
             setSaveData={updateSaveData}
-            initialData={content}
+            initialData={currentContent}
           />
         );
       case "text":
@@ -295,7 +333,7 @@ export default function MyCodeItem({
             setText={updateTextValue}
             setChanged={updateChanged}
             setSaveData={updateSaveData}
-            initialData={content}
+            initialData={currentContent}
           />
         );
       case "wifi":
@@ -304,7 +342,7 @@ export default function MyCodeItem({
             setText={updateTextValue}
             setChanged={updateChanged}
             setSaveData={updateSaveData}
-            initialData={content}
+            initialData={currentContent}
           />
         );
       case "vcard":
@@ -313,7 +351,7 @@ export default function MyCodeItem({
             setText={updateTextValue}
             setChanged={updateChanged}
             setSaveData={updateSaveData}
-            initialData={content}
+            initialData={currentContent}
           />
         );
       case "coupon":
@@ -322,7 +360,7 @@ export default function MyCodeItem({
             setText={updateTextValue}
             setChanged={updateChanged}
             setSaveData={updateSaveData}
-            initialData={content}
+            initialData={currentContent}
           />
         );
       case "location":
@@ -331,11 +369,11 @@ export default function MyCodeItem({
             setText={updateTextValue}
             setChanged={updateChanged}
             setSaveData={updateSaveData}
-            initialData={content}
+            initialData={currentContent}
           />
         );
       default:
-        return <div>Unsupported QR type: {content.controlType}</div>;
+        return <div>Unsupported QR type: {currentContent.controlType}</div>;
     }
   };
 
@@ -374,7 +412,7 @@ export default function MyCodeItem({
               <h2
                 className={`text-qrmory-purple-800 font-serif text-sm sm:text-base font-bold`}
               >
-                {title}
+                {currentTitle}
               </h2>
               <h3 className="font-sans text-xs md:text-sm text-neutral-500">
                 {type === "dynamic" ? "Dynamic" : "Static"} • Created:{" "}
@@ -382,7 +420,10 @@ export default function MyCodeItem({
               </h3>
               {type === "dynamic" && shortcode && (
                 <div className="text-xs text-neutral-500">
-                  Shortcode: {shortcode}
+                  Shortcode: https://qrmory.com/
+                  <Link href={`https://qrmory.com/`} className={`font-bold`}>
+                    {shortcode}
+                  </Link>
                 </div>
               )}
             </>

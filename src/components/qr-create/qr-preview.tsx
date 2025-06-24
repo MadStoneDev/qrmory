@@ -71,6 +71,29 @@ export default function QRPreview({
         originalSvg.getAttribute("viewBox") || "0 0 29 29",
       );
 
+      // If format is JPG, ensure white background and black foreground
+      if (format === "jpg") {
+        // Add a white background rectangle
+        const rect = document.createElementNS(
+          "http://www.w3.org/2000/svg",
+          "rect",
+        );
+        rect.setAttribute("width", "100%");
+        rect.setAttribute("height", "100%");
+        rect.setAttribute("fill", "white");
+
+        // Insert the background rect as the first child
+        clonedSvg.insertBefore(rect, clonedSvg.firstChild);
+
+        // Ensure all elements that make up the QR code are black
+        const elements = clonedSvg.querySelectorAll(
+          "path, rect:not(:first-child), circle, polygon, polyline",
+        );
+        elements.forEach((el) => {
+          el.setAttribute("fill", "black");
+        });
+      }
+
       // Create a temporary container
       const tempContainer = document.createElement("div");
       tempContainer.style.position = "absolute";

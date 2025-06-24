@@ -6,17 +6,8 @@ import { updateSession } from "@/utils/supabase/middleware";
 export async function middleware(request: NextRequest) {
   const path = request.nextUrl.pathname;
 
-  // Public Routes
-  const publicRoutes = [
-    "/",
-    "/login",
-    "/register",
-    "/help",
-    "/privacy-policy",
-    "/terms-and-conditions",
-    "/cookies-policy",
-    "/error",
-  ];
+  // Only protect dashboard routes
+  const protectedRoutes = ["/dashboard"];
 
   // Skip for static files and API routes
   if (
@@ -27,12 +18,17 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Skip for public routes
-  if (publicRoutes.includes(path)) {
+  // Check if the current path is a protected route or a sub-route of a protected route
+  const isProtectedRoute = protectedRoutes.some(
+    (route) => path === route || path.startsWith(`${route}/`),
+  );
+
+  // If not a protected route, allow access
+  if (!isProtectedRoute) {
     return NextResponse.next();
   }
 
-  // Check if user is authenticated
+  // For protected routes, check authentication
   try {
     const supabase = createClient();
     const { data } = await supabase.auth.getUser();
