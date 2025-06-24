@@ -115,6 +115,7 @@ export default function MyCodeItem({
     }
 
     setIsEditing(!isEditing);
+    if (!isEditing) setIsExpanded(true);
 
     // Reset changes when canceling edit
     if (isEditing) {
@@ -421,7 +422,10 @@ export default function MyCodeItem({
               {type === "dynamic" && shortcode && (
                 <div className="text-xs text-neutral-500">
                   Shortcode: https://qrmory.com/
-                  <Link href={`https://qrmory.com/`} className={`font-bold`}>
+                  <Link
+                    href={`https://qrmory.com/${shortcode}`}
+                    className={`font-bold`}
+                  >
                     {shortcode}
                   </Link>
                 </div>
