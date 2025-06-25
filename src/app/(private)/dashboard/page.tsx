@@ -48,7 +48,7 @@ interface QRCodeScan {
   scanned_at: string;
   qr_code_id: string;
   qr_codes?: {
-    name?: string;
+    title?: string;
   } | null;
 }
 
@@ -388,7 +388,6 @@ export default async function DashboardPage() {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-neutral-800">
                         {scan.qr_codes?.title || "Unnamed QR Code"}{" "}
-                        {/* Changed from 'name' to 'title' */}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
