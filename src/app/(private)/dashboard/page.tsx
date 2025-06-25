@@ -1,7 +1,8 @@
 ﻿// app/dashboard/page.tsx
 import { createClient } from "@/utils/supabase/server";
-import { SUBSCRIPTION_LEVELS, DEFAULT_QUOTAS } from "@/lib/subscription-config";
+
 import Link from "next/link";
+
 import {
   IconQrcode,
   IconUser,
@@ -15,12 +16,23 @@ export const metadata = {
   description: "Your dashboard to manage your QRmory account",
 };
 
-// Define proper types for the data structures
 interface Profile {
   id: string;
-  subscription_level?: string | null;
+  subscription_level?: number | null;
   extra_quota_from_boosters?: number | null;
-  // Add other profile fields as needed
+  dynamic_qr_quota?: number | null;
+}
+
+interface SubscriptionPackage {
+  id: string;
+  name: string;
+  description: string;
+  level: number;
+  price_in_cents: number;
+  quota_amount: number;
+  features: string[];
+  stripe_price_id: string | null;
+  is_active: boolean;
 }
 
 interface Subscription {
@@ -43,6 +55,7 @@ interface QRCodeScan {
 interface UserData {
   profile: Profile | null;
   subscription: Subscription | null;
+  subscriptionPackages: SubscriptionPackage[];
   qrCounts: {
     total: number;
     dynamic: number;
@@ -61,76 +74,81 @@ async function fetchUserData(): Promise<UserData> {
     return {
       profile: null,
       subscription: null,
+      subscriptionPackages: [],
       qrCounts: { total: 0, dynamic: 0 },
       recentScans: [],
     };
   }
 
-  // Fetch profile data
-  const { data: profile, error: profileError } = await supabase
-    .from("profiles")
-    .select("*")
-    .eq("id", user.id)
-    .single();
+  // Fetch all data in parallel
+  const [
+    { data: profile, error: profileError },
+    { data: subscription, error: subscriptionError },
+    { data: subscriptionPackages, error: packagesError },
+    { count: totalCount },
+    { count: dynamicCount },
+    { data: recentScans, error: scansError },
+  ] = await Promise.all([
+    // Fetch profile data
+    supabase.from("profiles").select("*").eq("id", user.id).single(),
 
-  if (profileError) {
-    console.error("Error fetching profile:", profileError);
-    return {
-      profile: null,
-      subscription: null,
-      qrCounts: { total: 0, dynamic: 0 },
-      recentScans: [],
-    };
-  }
+    // Fetch active subscription if any
+    supabase
+      .from("subscriptions")
+      .select("*")
+      .eq("user_id", user.id)
+      .eq("status", "active")
+      .single(),
 
-  // Fetch active subscription if any
-  const { data: subscription, error: subscriptionError } = await supabase
-    .from("subscriptions")
-    .select("*")
-    .eq("user_id", user.id)
-    .eq("status", "active")
-    .single();
+    // Fetch subscription packages
+    supabase
+      .from("subscription_packages")
+      .select("*")
+      .eq("is_active", true)
+      .order("level"),
 
-  if (subscriptionError && subscriptionError.code !== "PGRST116") {
-    console.error("Error fetching subscription:", subscriptionError);
-  }
-
-  // Fetch QR code counts
-  const [{ count: totalCount }, { count: dynamicCount }] = await Promise.all([
+    // Fetch total QR code count
     supabase
       .from("qr_codes")
       .select("id", { count: "exact", head: true })
       .eq("user_id", user.id),
+
+    // Fetch dynamic QR code count
     supabase
       .from("qr_codes")
       .select("id", { count: "exact", head: true })
       .eq("user_id", user.id)
       .eq("type", "dynamic"),
+
+    // Fetch recent QR code scans (analytics)
+    supabase
+      .from("qr_code_analytics")
+      .select(
+        `
+    id,
+    scanned_at,
+    qr_code_id,
+    qr_codes:qr_code_id (
+      title
+    )
+  `,
+      )
+      .order("scanned_at", { ascending: false })
+      .limit(5),
   ]);
 
-  // Fetch recent QR code scans (analytics)
-  const { data: recentScans, error: scansError } = await supabase
-    .from("qr_code_analytics")
-    .select(
-      `
-      id,
-      scanned_at,
-      qr_code_id,
-      qr_codes:qr_code_id (
-        name
-      )
-    `,
-    )
-    .order("scanned_at", { ascending: false })
-    .limit(5);
-
-  if (scansError) {
-    console.error("Error fetching QR code scans:", scansError);
+  // Log errors (but don't fail completely)
+  if (profileError) console.error("Error fetching profile:", profileError);
+  if (subscriptionError && subscriptionError.code !== "PGRST116") {
+    console.error("Error fetching subscription:", subscriptionError);
   }
+  if (packagesError) console.error("Error fetching packages:", packagesError);
+  if (scansError) console.error("Error fetching QR code scans:", scansError);
 
   return {
-    profile: profile as Profile,
+    profile: profile as Profile | null,
     subscription: subscription as Subscription | null,
+    subscriptionPackages: (subscriptionPackages as SubscriptionPackage[]) || [],
     qrCounts: {
       total: totalCount || 0,
       dynamic: dynamicCount || 0,
@@ -140,7 +158,7 @@ async function fetchUserData(): Promise<UserData> {
 }
 
 export default async function DashboardPage() {
-  const { profile, subscription, qrCounts, recentScans } =
+  const { profile, subscription, subscriptionPackages, qrCounts, recentScans } =
     await fetchUserData();
 
   // If user is not logged in, redirect to login page
@@ -161,23 +179,23 @@ export default async function DashboardPage() {
     );
   }
 
-  // Get the current subscription level (as a number)
-  const currentLevel = profile.subscription_level
-    ? parseInt(profile.subscription_level, 10)
-    : 0;
+  // Get the current subscription level FIRST
+  const currentLevel = profile.subscription_level || 0;
 
-  // Get quota information for the current subscription level
-  const currentQuota =
-    DEFAULT_QUOTAS.find(
-      (q) =>
-        q.subscription ===
-        SUBSCRIPTION_LEVELS[
-          currentLevel.toString() as keyof typeof SUBSCRIPTION_LEVELS
-        ],
-    ) || DEFAULT_QUOTAS[0];
+  // THEN find the current package
+  const currentPackage = subscriptionPackages?.find(
+    (pkg) => pkg.level === currentLevel,
+  ) ||
+    subscriptionPackages?.find((pkg) => pkg.level === 0) || {
+      // Fallback if no packages found
+      name: "Free",
+      level: 0,
+      quota_amount: 3,
+    };
 
   // Calculate total available quota
-  const planQuota = currentQuota?.dynamicCodes || 0;
+  const planQuota =
+    profile.dynamic_qr_quota || currentPackage.quota_amount || 3;
   const additionalQuota = profile.extra_quota_from_boosters || 0;
   const totalQuota = planQuota + additionalQuota;
 
@@ -223,9 +241,30 @@ export default async function DashboardPage() {
             </div>
             <div>
               <p className="text-xl font-semibold text-neutral-800">
-                {totalQuota - qrCounts.dynamic}
+                {Math.max(0, totalQuota - qrCounts.dynamic)}
               </p>
               <p className="text-xs text-neutral-500">Available</p>
+            </div>
+          </div>
+
+          {/* Usage bar */}
+          <div className="mb-4">
+            <div className="flex justify-between text-xs mb-1">
+              <span>Dynamic QR Usage</span>
+              <span>
+                {qrCounts.dynamic} / {totalQuota}
+              </span>
+            </div>
+            <div className="w-full bg-neutral-200 rounded-full h-2">
+              <div
+                className="bg-qrmory-purple-800 h-2 rounded-full"
+                style={{
+                  width: `${Math.min(
+                    100,
+                    (qrCounts.dynamic / totalQuota) * 100,
+                  )}%`,
+                }}
+              ></div>
             </div>
           </div>
 
@@ -248,9 +287,7 @@ export default async function DashboardPage() {
 
           <div className="mb-4">
             <p className="text-3xl font-bold text-qrmory-purple-800">
-              {SUBSCRIPTION_LEVELS[
-                currentLevel.toString() as keyof typeof SUBSCRIPTION_LEVELS
-              ] || "Unknown"}
+              {currentPackage.name}
             </p>
             <p className="text-sm text-neutral-600">
               {subscription
@@ -265,7 +302,7 @@ export default async function DashboardPage() {
             <div className="flex justify-between">
               <p className="text-sm">Plan Quota</p>
               <p className="text-sm font-medium">
-                <span className={`font-bold`}>{planQuota}</span> Dynamic codes
+                <span className="font-bold">{planQuota}</span> Dynamic codes
               </p>
             </div>
             {additionalQuota > 0 && (
@@ -307,14 +344,14 @@ export default async function DashboardPage() {
             </Link>
 
             <Link
-              href="/dashboard/quota"
+              href="/subscription"
               className="block p-3 border rounded-md hover:bg-neutral-50 flex items-center"
             >
               <IconTrendingUp
                 size={20}
                 className="mr-2 text-qrmory-purple-700"
               />
-              View quota usage
+              View subscription & quota
             </Link>
 
             <Link
@@ -350,7 +387,8 @@ export default async function DashboardPage() {
                   <tr key={scan.id}>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-neutral-800">
-                        {scan.qr_codes?.name || "Unnamed QR Code"}
+                        {scan.qr_codes?.title || "Unnamed QR Code"}{" "}
+                        {/* Changed from 'name' to 'title' */}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">

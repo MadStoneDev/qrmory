@@ -43,7 +43,22 @@ export type Database = {
           subscription_status?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_profiles_subscription_level"
+            columns: ["subscription_level"]
+            isOneToOne: false
+            referencedRelation: "active_subscription_packages"
+            referencedColumns: ["level"]
+          },
+          {
+            foreignKeyName: "fk_profiles_subscription_level"
+            columns: ["subscription_level"]
+            isOneToOne: false
+            referencedRelation: "subscription_packages"
+            referencedColumns: ["level"]
+          },
+        ]
       }
       qr_code_analytics: {
         Row: {
@@ -211,6 +226,54 @@ export type Database = {
           },
         ]
       }
+      subscription_packages: {
+        Row: {
+          billing_interval: string
+          created_at: string | null
+          description: string | null
+          features: Json
+          id: string
+          is_active: boolean
+          level: number
+          name: string
+          price_in_cents: number
+          quota_amount: number
+          sort_order: number
+          stripe_price_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          billing_interval?: string
+          created_at?: string | null
+          description?: string | null
+          features?: Json
+          id?: string
+          is_active?: boolean
+          level: number
+          name: string
+          price_in_cents?: number
+          quota_amount?: number
+          sort_order?: number
+          stripe_price_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          billing_interval?: string
+          created_at?: string | null
+          description?: string | null
+          features?: Json
+          id?: string
+          is_active?: boolean
+          level?: number
+          name?: string
+          price_in_cents?: number
+          quota_amount?: number
+          sort_order?: number
+          stripe_price_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       subscriptions: {
         Row: {
           created_at: string
@@ -281,44 +344,135 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      active_subscription_packages: {
+        Row: {
+          billing_interval: string | null
+          created_at: string | null
+          description: string | null
+          features: Json | null
+          id: string | null
+          is_active: boolean | null
+          level: number | null
+          name: string | null
+          price_in_cents: number | null
+          quota_amount: number | null
+          sort_order: number | null
+          stripe_price_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          billing_interval?: string | null
+          created_at?: string | null
+          description?: string | null
+          features?: Json | null
+          id?: string | null
+          is_active?: boolean | null
+          level?: number | null
+          name?: string | null
+          price_in_cents?: number | null
+          quota_amount?: number | null
+          sort_order?: number | null
+          stripe_price_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          billing_interval?: string | null
+          created_at?: string | null
+          description?: string | null
+          features?: Json | null
+          id?: string | null
+          is_active?: boolean | null
+          level?: number | null
+          name?: string | null
+          price_in_cents?: number | null
+          quota_amount?: number | null
+          sort_order?: number | null
+          stripe_price_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       check_dynamic_qr_quota: {
         Args: { p_user_id: string }
         Returns: boolean
       }
+      get_user_subscription_details: {
+        Args: { p_user_id: string }
+        Returns: {
+          subscription_level: number
+          subscription_name: string
+          subscription_quota: number
+          booster_quota: number
+          total_quota: number
+          used_quota: number
+          remaining_quota: number
+          can_create_more: boolean
+        }[]
+      }
+      get_user_total_quota: {
+        Args: { p_user_id: string }
+        Returns: number
+      }
       handle_new_subscription: {
-        Args: {
-          p_user_id: string
-          p_subscription_id: string
-          p_price_id: string
-          p_status: string
-          p_plan_name: string
-          p_current_period_end: string
-          p_quota_amount: number
-        }
+        Args:
+          | {
+              p_user_id: string
+              p_subscription_id: string
+              p_price_id: string
+              p_status: string
+              p_plan_name: string
+              p_current_period_end: string
+              p_quota_amount: number
+            }
+          | {
+              p_user_id: string
+              p_subscription_id: string
+              p_price_id: string
+              p_status: string
+              p_plan_name: string
+              p_current_period_end: string
+              p_quota_amount: number
+            }
         Returns: undefined
       }
       handle_quota_purchase: {
-        Args: {
-          p_user_id: string
-          p_package_id: string
-          p_quantity: number
-          p_amount_paid: number
-          p_stripe_checkout_id: string
-          p_expires_at?: string
-        }
+        Args:
+          | {
+              p_user_id: string
+              p_package_id: string
+              p_quantity: number
+              p_amount_paid: number
+              p_stripe_checkout_id: string
+              p_expires_at?: string
+            }
+          | {
+              p_user_id: string
+              p_package_id: string
+              p_quantity: number
+              p_amount_paid: number
+              p_stripe_checkout_id: string
+              p_expires_at?: string
+            }
         Returns: undefined
       }
       handle_subscription_updated: {
-        Args: {
-          p_subscription_id: string
-          p_price_id: string
-          p_status: string
-          p_plan_name: string
-          p_current_period_end: string
-        }
+        Args:
+          | {
+              p_subscription_id: string
+              p_price_id: string
+              p_status: string
+              p_plan_name: string
+              p_current_period_end: string
+            }
+          | {
+              p_subscription_id: string
+              p_price_id: string
+              p_status: string
+              p_plan_name: string
+              p_current_period_end: string
+            }
         Returns: undefined
       }
     }

@@ -2,9 +2,12 @@ import { createClient } from "@/utils/supabase/server";
 import { Suspense } from "react";
 
 import BoosterPackages from "@/components/booster-packages";
-import SubscriptionPlans from "@/components/subscription-plans";
 import SubscriptionStatus from "@/components/subscription-status";
 import SuccessNotification from "@/components/success-notification";
+import SubscriptionPlans, {
+  type SubscriptionPackage,
+  type Subscription,
+} from "@/components/subscription-plans";
 
 export const metadata = {
   title: "Subscription | QRmory",
@@ -19,26 +22,6 @@ interface Profile {
   dynamic_qr_quota?: number | null;
 }
 
-interface Subscription {
-  id: string;
-  user_id: string;
-  status: string;
-  current_period_end: string;
-  stripe_subscription_id: string;
-}
-
-interface SubscriptionPackage {
-  id: string;
-  name: string;
-  description: string;
-  level: number;
-  price_in_cents: number;
-  quota_amount: number;
-  features: string[];
-  stripe_price_id: string | null;
-  is_active: boolean;
-}
-
 interface QuotaPackage {
   id: string;
   name: string;
@@ -46,6 +29,7 @@ interface QuotaPackage {
   price_in_cents: number;
   is_active: boolean;
   description?: string;
+  stripe_price_id: string;
 }
 
 interface UserData {
@@ -69,7 +53,7 @@ async function fetchUserData(): Promise<UserData> {
       .from("subscription_packages")
       .select("*")
       .eq("is_active", true)
-      .order("sort_order");
+      .order("level"); // Changed from sort_order to level for consistency
 
     return {
       profile: null,
@@ -104,7 +88,7 @@ async function fetchUserData(): Promise<UserData> {
       .from("subscription_packages")
       .select("*")
       .eq("is_active", true)
-      .order("sort_order"),
+      .order("level"), // Changed from sort_order to level
 
     // Fetch available quota packages
     supabase
@@ -167,7 +151,7 @@ export default async function SubscriptionPage({
         </p>
         <a
           href="/login"
-          className="inline-block bg-qrmory-purple-800 text-white px-4 py-2 rounded-lg"
+          className="inline-block bg-qrmory-purple-800 text-white px-4 py-2 rounded-lg hover:bg-qrmory-purple-700 transition-colors"
         >
           Log In
         </a>
@@ -177,30 +161,29 @@ export default async function SubscriptionPage({
 
   // Get the current subscription package
   const currentLevel = profile.subscription_level || 0;
-  const currentPackage =
-    subscriptionPackages.find((pkg) => pkg.level === currentLevel) ||
-    subscriptionPackages.find((pkg) => pkg.level === 0); // Fallback to free plan
-
-  if (!currentPackage) {
-    return (
-      <div className="text-center my-10 p-8 bg-red-50 rounded-xl">
-        <h3 className="text-xl font-semibold mb-2 text-red-800">
-          Configuration Error
-        </h3>
-        <p className="text-red-600">
-          Subscription packages are not properly configured. Please contact
-          support.
-        </p>
-      </div>
-    );
-  }
+  const currentPackage = subscriptionPackages.find(
+    (pkg) => pkg.level === currentLevel,
+  ) ||
+    subscriptionPackages.find((pkg) => pkg.level === 0) || {
+      // Fallback to free plan
+      // Final fallback if no packages exist in database
+      id: "fallback-free",
+      name: "Free",
+      description: "Basic plan with limited features",
+      level: 0,
+      price_in_cents: 0,
+      quota_amount: 3,
+      features: ["3 Dynamic QR codes", "Unlimited Static QR codes"],
+      stripe_price_id: null,
+      is_active: true,
+    };
 
   return (
     <section className="flex flex-col w-full">
       <h1 className="mb-4 text-xl font-bold">Your Subscription</h1>
 
       {/* Success/Error notifications */}
-      <Suspense>
+      <Suspense fallback={null}>
         <SuccessNotification searchParams={searchParams} />
       </Suspense>
 
@@ -215,11 +198,20 @@ export default async function SubscriptionPage({
       {/* Subscription plans */}
       <div className="mt-8">
         <h2 className="text-lg font-semibold mb-4">Upgrade Your Plan</h2>
-        <SubscriptionPlans
-          currentLevel={currentLevel}
-          packages={subscriptionPackages}
-          subscription={subscription}
-        />
+        {subscriptionPackages.length > 0 ? (
+          <SubscriptionPlans
+            currentLevel={currentLevel}
+            packages={subscriptionPackages}
+            subscription={subscription}
+          />
+        ) : (
+          <div className="text-center p-6 bg-neutral-50 rounded-lg">
+            <p className="text-neutral-600">
+              Subscription plans are being loaded. Please refresh the page if
+              this persists.
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Booster packages */}
@@ -228,7 +220,15 @@ export default async function SubscriptionPage({
         <p className="text-neutral-600 mb-4">
           Boost your quota with these one-time purchases:
         </p>
-        <BoosterPackages packages={quotaPackages} />
+        {quotaPackages.length > 0 ? (
+          <BoosterPackages packages={quotaPackages} />
+        ) : (
+          <div className="text-center p-6 bg-neutral-50 rounded-lg">
+            <p className="text-neutral-600">
+              No booster packages are currently available.
+            </p>
+          </div>
+        )}
       </div>
     </section>
   );
