@@ -18,7 +18,6 @@ export function LogRocketProvider({ children, user }: LogRocketProviderProps) {
     // Initialize LogRocket only in production and in the browser
     if (
       typeof window !== "undefined" &&
-      process.env.NODE_ENV === "production" &&
       process.env.NEXT_PUBLIC_LOGROCKET_APP_ID
     ) {
       LogRocket.init(process.env.NEXT_PUBLIC_LOGROCKET_APP_ID);
@@ -33,11 +32,7 @@ export function LogRocketProvider({ children, user }: LogRocketProviderProps) {
 
   // Identify user when they log in
   useEffect(() => {
-    if (
-      user &&
-      typeof window !== "undefined" &&
-      process.env.NODE_ENV === "production"
-    ) {
+    if (user && typeof window !== "undefined") {
       LogRocket.identify(user.id, {
         name: user.email?.split("@")[0] || "Unknown",
         email: user.email as string,
