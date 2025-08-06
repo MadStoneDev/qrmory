@@ -336,16 +336,16 @@ export default async function DashboardPage() {
 
           <div className="space-y-3">
             <Link
-              href="/create"
-              className="block p-3 border rounded-md hover:bg-neutral-50 flex items-center"
+              href={`/dashboard/create`}
+              className={`p-3 border rounded-md hover:bg-neutral-50 flex items-center`}
             >
               <IconQrcode size={20} className="mr-2 text-qrmory-purple-700" />
               Create new QR code
             </Link>
 
             <Link
-              href="/subscription"
-              className="block p-3 border rounded-md hover:bg-neutral-50 flex items-center"
+              href={`/dashboard/subscription`}
+              className={`p-3 border rounded-md hover:bg-neutral-50 flex items-center`}
             >
               <IconTrendingUp
                 size={20}
@@ -411,7 +411,7 @@ export default async function DashboardPage() {
 
         <div className="mt-4 text-right">
           <Link
-            href="/analytics"
+            href={`/dashboard/analytics`}
             className="text-sm font-medium text-qrmory-purple-800 hover:text-qrmory-purple-600"
           >
             View all analytics{" "}

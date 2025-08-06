@@ -1,4 +1,5 @@
-﻿"use server";
+﻿// /app/api/reserve-shortcode/route.ts
+"use server";
 
 import { NextRequest, NextResponse } from "next/server";
 import { Redis } from "@upstash/redis";

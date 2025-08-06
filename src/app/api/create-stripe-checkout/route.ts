@@ -1,5 +1,6 @@
 ﻿// /api/create-stripe-checkout/route.ts
 import { NextResponse } from "next/server";
+
 import Stripe from "stripe";
 import { createClient } from "@/utils/supabase/server";
 
@@ -11,8 +12,15 @@ export async function POST(request: Request) {
       apiVersion: "2024-06-20",
     });
 
-    const { level, success_url, cancel_url } = await request.json();
-    console.log("📋 Request data:", { level, success_url, cancel_url });
+    const { level, package_id, type, success_url, cancel_url } =
+      await request.json();
+    console.log("📋 Request data:", {
+      level,
+      package_id,
+      type,
+      success_url,
+      cancel_url,
+    });
 
     const supabase = await createClient();
     const {
@@ -28,20 +36,50 @@ export async function POST(request: Request) {
 
     console.log("👤 User:", user.id, user.email);
 
-    // Get subscription package
-    const { data: subscriptionPackage, error: packageError } = await supabase
-      .from("subscription_packages")
-      .select("*")
-      .eq("level", parseInt(level))
-      .eq("is_active", true)
-      .single();
+    let subscriptionPackage;
+    let isBooster = type === "booster";
 
-    if (packageError || !subscriptionPackage) {
-      console.log("❌ Package not found:", packageError);
-      return NextResponse.json(
-        { error: "Subscription package not found" },
-        { status: 404 },
-      );
+    if (isBooster) {
+      // For booster subscriptions, look up by package_id in quota_packages
+      const { data: boosterPackage, error: packageError } = await supabase
+        .from("quota_packages")
+        .select("*")
+        .eq("id", package_id)
+        .eq("is_active", true)
+        .single();
+
+      if (packageError || !boosterPackage) {
+        console.log("❌ Booster package not found:", packageError);
+        return NextResponse.json(
+          { error: "Booster package not found" },
+          { status: 404 },
+        );
+      }
+
+      subscriptionPackage = {
+        ...boosterPackage,
+        level: -1, // Special level for boosters
+        name: boosterPackage.name,
+        quota_amount: boosterPackage.quantity,
+      };
+    } else {
+      // For main subscriptions, look up by level in subscription_packages
+      const { data: mainPackage, error: packageError } = await supabase
+        .from("subscription_packages")
+        .select("*")
+        .eq("level", parseInt(level))
+        .eq("is_active", true)
+        .single();
+
+      if (packageError || !mainPackage) {
+        console.log("❌ Subscription package not found:", packageError);
+        return NextResponse.json(
+          { error: "Subscription package not found" },
+          { status: 404 },
+        );
+      }
+
+      subscriptionPackage = mainPackage;
     }
 
     console.log("📦 Package found:", subscriptionPackage);
@@ -90,8 +128,9 @@ export async function POST(request: Request) {
       user_id: user.id,
       package_id: subscriptionPackage.id,
       plan_name: subscriptionPackage.name,
-      subscription_level: level,
+      subscription_level: subscriptionPackage.level.toString(),
       quota_amount: subscriptionPackage.quota_amount.toString(),
+      type: isBooster ? "booster" : "main",
     };
 
     console.log("🏷️ Metadata to include:", metadata);

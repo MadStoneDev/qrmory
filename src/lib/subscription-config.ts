@@ -1,6 +1,4 @@
 ﻿// /lib/subscription-config.ts
-export type SubscriptionLevel = 0 | 1 | 2 | 3;
-
 // Basic level mapping (for backward compatibility)
 export const SUBSCRIPTION_LEVELS = {
   "0": "Free",

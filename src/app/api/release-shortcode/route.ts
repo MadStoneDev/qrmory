@@ -1,17 +1,15 @@
-﻿"use server";
-
+﻿// app/api/release-shortcode/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { Redis } from "@upstash/redis";
 
-// Initialize Redis client
 const redis = new Redis({
   url: process.env.UPSTASH_REDIS_REST_URL!,
   token: process.env.UPSTASH_REDIS_REST_TOKEN!,
 });
 
-export async function POST(req: NextRequest) {
+export async function POST(request: NextRequest) {
   try {
-    const { shortcode, saved } = await req.json();
+    const { shortcode, saved = false } = await request.json();
 
     if (!shortcode) {
       return NextResponse.json(
@@ -20,14 +18,16 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // If the code wasn't saved, delete the reservation
-    if (!saved) {
-      await redis.del(`reserved:${shortcode}`);
-    } else {
-      // If saved, we could optionally mark it as permanent
-      // This isn't strictly necessary but helps with debugging
-      await redis.set(`reserved:${shortcode}`, "permanent");
+    // If the shortcode was saved, don't release it
+    if (saved) {
+      return NextResponse.json({
+        success: true,
+        message: "Shortcode preserved",
+      });
     }
+
+    // Remove the reservation
+    await redis.del(`reserved:${shortcode}`);
 
     return NextResponse.json({ success: true });
   } catch (error) {

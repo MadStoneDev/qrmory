@@ -1,52 +1,41 @@
-﻿"use client";
+﻿// components/qr-settings.tsx
+"use client";
 
-import React, { useState, useEffect } from "react";
-
-import { qrControls } from "@/lib/qr-control-object";
-import {
-  IconBolt,
-  IconDeviceFloppy,
-  IconRocket,
-  IconInfoCircle,
-} from "@tabler/icons-react";
-
-import { generateShortCode } from "@/utils/general";
-import { createClient } from "@/utils/supabase/client";
-import { UserSettings } from "@/lib/default-settings";
-
+import React, { useState, useCallback, useMemo, useEffect } from "react";
 import { toast } from "sonner";
 
-interface QuotaInfo {
-  currentCount: number;
-  maxQuota: number;
-  subscriptionLevel: string;
-  subscriptionStatus: string;
-}
+import { createClient } from "@/utils/supabase/client";
+import { UserSettings } from "@/lib/default-settings";
+import { qrControls } from "@/lib/qr-control-object";
+
+import { useShortcodeManager } from "@/hooks/useShortcodeManager";
+
+import {
+  validateQuotaForDynamicQR,
+  validateQuotaForSave,
+  QuotaInfo,
+} from "@/utils/quota-validation";
+import { QRState, LoadingStates, QuotaStatus } from "@/types/qr-types";
+import { QRTypeSelector } from "@/components/ui/QRTypeSelector";
+import { QRActionButtons } from "@/components/ui/QRActionButtons";
+import { QRStatusIndicators } from "@/components/ui/QRStatusIndicators";
+import { UserRateLimiter } from "@/lib/rate-limiter";
 
 interface Props {
-  initialQRTitle: string;
-  initialTextValue: string;
-  initialQRChanged: boolean;
-  initialActiveSelector: string;
+  qrState: QRState;
+  loadingStates: LoadingStates;
   shadow?: boolean;
   user: any;
   userSettings: UserSettings;
   quotaInfo?: QuotaInfo;
-  onUpdate: (updates: {
-    qrTitle?: string;
-    textValue?: string;
-    qrChanged?: boolean;
-    activeSelector?: string;
-    qrShortCode?: string;
-    qrValue?: string;
-  }) => void;
+  onUpdateQRState: (updates: Partial<QRState>) => void;
+  onUpdateLoadingState: (key: keyof LoadingStates, value: boolean) => void;
+  onGenerateQR: () => void;
 }
 
-export default function QRSettings({
-  initialQRTitle,
-  initialTextValue,
-  initialQRChanged,
-  initialActiveSelector,
+export default function QRSettingsRefactored({
+  qrState,
+  loadingStates,
   shadow = false,
   user,
   userSettings,
@@ -56,206 +45,95 @@ export default function QRSettings({
     subscriptionLevel: "free",
     subscriptionStatus: "inactive",
   },
-  onUpdate,
+  onUpdateQRState,
+  onUpdateLoadingState,
+  onGenerateQR,
 }: Props) {
-  // States
-  const [qrTitle, setQRTitle] = useState(initialQRTitle);
-  const [textValue, setTextValue] = useState(initialTextValue);
-  const [qrChanged, setQRChanged] = useState(initialQRChanged);
-  const [activeSelector, setActiveSelector] = useState(initialActiveSelector);
+  const { createDynamicQR, releaseShortcode } = useShortcodeManager(user);
 
-  const [isDynamic, setIsDynamic] = useState(false);
-  const [isShortcodeSaved, setIsShortcodeSaved] = useState(false);
-  const [loadingDynamic, setLoadingDynamic] = useState(false);
-  const [qrShortCode, setQRShortCode] = useState("");
+  // Local input state for controlled inputs
+  const [titleInput, setTitleInput] = useState(qrState.title);
+  const [textInput, setTextInput] = useState(qrState.textValue);
 
-  const [saveData, setSaveData] = useState<any>(null);
-  const [saving, setSaving] = useState(false);
-
-  // Functions
-  const updateTextValue = (value: string) => {
-    setTextValue(value);
-  };
-
-  const updateQRChanged = (changed: boolean) => {
-    setQRChanged(changed);
-  };
-
-  const updateSaveData = (data: any) => {
-    setSaveData(data);
-  };
-
-  const generateUniqueShortcode = async () => {
-    let isUnique = false;
-    let shortCode;
-    const maxAttempts = 10;
-    let attemptsNeeded = 0;
-
-    for (let attempts = 0; attempts < maxAttempts; attempts++) {
-      attemptsNeeded++;
-      shortCode = generateShortCode(8);
-
-      // Check if shortcode is available
-      const checkResponse = await fetch(
-        `/api/check-shortcode?code=${shortCode}`,
-      );
-      const checkResult = await checkResponse.json();
-
-      if (checkResult.available) {
-        isUnique = true;
-        break;
-      }
-
-      // If we're getting close to max attempts, try a longer code
-      if (attempts > 7) {
-        shortCode = generateShortCode(9);
-      }
-    }
-
-    if (!isUnique) {
-      // Log failed attempts
-      await fetch("/api/log-shortcode-collision", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ attemptsNeeded: maxAttempts, success: false }),
-      });
-
-      throw new Error(
-        `Could not generate a unique shortcode after ${maxAttempts} attempts`,
-      );
-    }
-
-    // Log successful generation with attempt count
-    if (attemptsNeeded > 1) {
-      await fetch("/api/log-shortcode-collision", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ attemptsNeeded, success: true }),
-      });
-    }
-
-    return shortCode;
-  };
-
-  // Initialize the QR control component with correct callbacks
+  // QR control component state
   const [qrControl, setQRControl] = useState(() =>
-    qrControls[activeSelector].component(
-      updateTextValue,
-      updateQRChanged,
-      updateSaveData,
+    qrControls[qrState.activeSelector].component(
+      (value: string) => {
+        setTextInput(value);
+        onUpdateQRState({ textValue: value, changed: true });
+      },
+      (changed: boolean) => onUpdateQRState({ changed }),
+      (data: any) => onUpdateQRState({ saveData: data }),
     ),
   );
 
-  // Function to handle selector change
-  const handleActiveSelector = (key: string) => {
-    setTextValue("");
-    setSaveData(null);
-    setActiveSelector(key);
-    setQRControl(
-      qrControls[key].component(
-        updateTextValue,
-        updateQRChanged,
-        updateSaveData,
-      ),
-    );
-    setQRChanged(true);
-  };
+  // Memoized quota status
+  const quotaStatus: QuotaStatus = useMemo(() => {
+    const hasReachedQuota = quotaInfo.currentCount >= quotaInfo.maxQuota;
+    const isNearQuota = quotaInfo.currentCount >= quotaInfo.maxQuota - 1;
+    return { hasReachedQuota, isNearQuota };
+  }, [quotaInfo.currentCount, quotaInfo.maxQuota]);
 
-  // Function to generate the QR code
-  const handleGenerateQR = () => {
-    if (textValue.length > 0) {
-      onUpdate({
-        qrValue: textValue,
-        qrChanged: false,
-        qrShortCode,
+  // Handle selector changes
+  const handleSelectorChange = useCallback(
+    (key: string) => {
+      setTextInput("");
+      onUpdateQRState({
+        textValue: "",
+        saveData: null,
+        activeSelector: key,
+        changed: true,
       });
 
-      setQRChanged(false);
-    }
-  };
+      setQRControl(
+        qrControls[key].component(
+          (value: string) => {
+            setTextInput(value);
+            onUpdateQRState({ textValue: value, changed: true });
+          },
+          (changed: boolean) => onUpdateQRState({ changed }),
+          (data: any) => onUpdateQRState({ saveData: data }),
+        ),
+      );
+    },
+    [onUpdateQRState],
+  );
 
-  const handleSaveQR = async () => {
-    if (textValue.length === 0) return;
+  // Handle dynamic QR toggle with rate limiting
+  const handleMakeDynamic = useCallback(async () => {
+    // Validate rate limit first
+    const subscriptionLevel = user?.subscription_level || 0;
+    const rateLimitResult = await UserRateLimiter.checkUserLimit(
+      "qr_generation",
+      user?.id,
+      subscriptionLevel,
+    );
 
-    if (
-      isDynamic &&
-      quotaInfo.currentCount >= quotaInfo.maxQuota &&
-      !isShortcodeSaved
-    ) {
-      toast("Dynamic QR quota reached", {
-        description: `You've reached your limit of ${quotaInfo.maxQuota} dynamic QR codes. Upgrade your plan to create more.`,
+    if (!rateLimitResult.success) {
+      toast("Rate limit exceeded", {
+        description: `Please wait ${rateLimitResult.retryAfter} seconds before creating more QR codes.`,
         style: {
           backgroundColor: "rgb(254, 226, 226)",
           color: "rgb(153, 27, 27)",
-        },
-        action: {
-          label: "Upgrade",
-          onClick: () => {
-            window.location.href = "/account/billing"; // Redirect to billing page
-          },
         },
       });
       return;
     }
 
-    setSaving(true);
-
-    try {
-      const supabase = createClient();
-
-      const enhancedSaveData = saveData
-        ? {
-            ...(saveData.controlType ? {} : { controlType: activeSelector }),
-            ...saveData,
-          }
-        : null;
-
-      const { data, error } = await supabase.from("qr_codes").insert({
-        user_id: user.id,
-        type: isDynamic ? "dynamic" : "static",
-        content: enhancedSaveData,
-        shortcode: isDynamic ? qrShortCode : null,
-        is_active: true,
-        title: qrTitle || `${qrControls[activeSelector].title} QR`,
-        qr_value: textValue,
-      });
-
-      if (error) throw error;
-
-      // Mark the shortcode as saved if it's dynamic
-      if (isDynamic) {
-        setIsShortcodeSaved(true);
-      }
-
-      toast("QR code saved successfully!", {
-        description: `Your ${
-          isDynamic ? "dynamic" : "static"
-        } QR code has been saved.`,
-      });
-    } catch (error) {
-      console.error("Error saving QR code:", error);
-      toast("Error saving QR code", {
-        description: "Something went wrong. Please try again later.",
-        style: {
-          backgroundColor: "rgb(254, 226, 226)",
-          color: "rgb(153, 27, 27)",
-        },
-      });
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const handleMakeDynamic = async () => {
     // If turning off dynamic mode and not saved, allow it
-    if (isDynamic && !isShortcodeSaved) {
-      setQRShortCode("");
-      setIsDynamic(false);
+    if (qrState.isDynamic && !qrState.isShortcodeSaved) {
+      if (qrState.shortCode) {
+        await releaseShortcode(qrState.shortCode);
+      }
+      onUpdateQRState({
+        shortCode: "",
+        isDynamic: false,
+      });
       return;
     }
 
     // If turning off dynamic but already saved, prevent it
-    if (isDynamic && isShortcodeSaved) {
+    if (qrState.isDynamic && qrState.isShortcodeSaved) {
       toast("Dynamic QR Code already saved", {
         description:
           "Dynamic QR codes cannot be converted back to static after saving.",
@@ -263,58 +141,38 @@ export default function QRSettings({
       return;
     }
 
-    // Check if the user has reached their quota for dynamic QR codes
-    if (quotaInfo.currentCount >= quotaInfo.maxQuota) {
+    // Validate quota
+    const validation = validateQuotaForDynamicQR(quotaInfo);
+    if (!validation.canProceed) {
       toast("Dynamic QR quota reached", {
-        description: `You've reached your limit of ${quotaInfo.maxQuota} dynamic QR codes. Upgrade your plan to create more.`,
+        description: validation.reason,
         style: {
           backgroundColor: "rgb(254, 226, 226)",
           color: "rgb(153, 27, 27)",
         },
-        action: {
-          label: "Upgrade",
-          onClick: () => {
-            window.location.href = "/account/billing"; // Redirect to billing page
-          },
-        },
+        action: validation.shouldUpgrade
+          ? {
+              label: "Upgrade",
+              onClick: () => {
+                window.location.href = "/subscription";
+              },
+            }
+          : undefined,
       });
       return;
     }
 
-    setLoadingDynamic(true);
+    onUpdateLoadingState("makingDynamic", true);
 
     try {
-      // Only generate a new shortcode if we don't already have one
-      if (!qrShortCode) {
-        try {
-          const uniqueCode = await generateUniqueShortcode();
-          setQRShortCode(uniqueCode || "");
+      const uniqueCode = await createDynamicQR();
 
-          await fetch("/api/reserve-shortcode", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              shortcode: uniqueCode,
-              userId: user?.id,
-            }),
-          });
-        } catch (error) {
-          console.error("Failed to generate unique shortcode:", error);
-          toast("Failed to create dynamic QR code", {
-            description: "Please try again",
-            style: {
-              backgroundColor: "rgb(254, 226, 226)",
-              color: "rgb(153, 27, 27)",
-            },
-          });
-          setLoadingDynamic(false);
-          return;
-        }
-      }
+      onUpdateQRState({
+        shortCode: uniqueCode,
+        isDynamic: true,
+      });
 
-      setIsDynamic(true);
-
-      const dynamicUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/${qrShortCode}`;
+      const dynamicUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/${uniqueCode}`;
       toast("Dynamic QR Code Created", {
         description: "Your unique URL is ready to be saved.",
         action: {
@@ -343,70 +201,157 @@ export default function QRSettings({
     } catch (error) {
       console.error("Error creating dynamic QR code:", error);
       toast("Error creating dynamic QR code", {
-        description: "Please try again later.",
+        description:
+          error instanceof Error ? error.message : "Please try again later.",
         style: {
           backgroundColor: "rgb(254, 226, 226)",
           color: "rgb(153, 27, 27)",
         },
       });
     } finally {
-      setTimeout(() => {
-        setLoadingDynamic(false);
-      }, 1000);
+      onUpdateLoadingState("makingDynamic", false);
     }
-  };
+  }, [
+    qrState.isDynamic,
+    qrState.isShortcodeSaved,
+    qrState.shortCode,
+    quotaInfo,
+    createDynamicQR,
+    releaseShortcode,
+    onUpdateQRState,
+    onUpdateLoadingState,
+    user,
+  ]);
 
-  // Update component when props change
-  useEffect(() => {
-    setQRTitle(initialQRTitle);
-  }, [initialQRTitle]);
-
-  useEffect(() => {
-    setTextValue(initialTextValue);
-  }, [initialTextValue]);
-
-  useEffect(() => {
-    setQRChanged(initialQRChanged);
-  }, [initialQRChanged]);
-
-  // Cleanup effect for released shortcodes
-  useEffect(() => {
-    return () => {
-      if (qrShortCode && isDynamic && !isShortcodeSaved) {
-        fetch("/api/release-shortcode", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ shortcode: qrShortCode, saved: false }),
-        }).catch((err) => console.error("Failed to release shortcode:", err));
-      }
-    };
-  }, [qrShortCode, isDynamic, isShortcodeSaved]);
-
-  // Notify parent of state changes when local state changes
-  useEffect(() => {
-    // Prevent calling onUpdate during initialization
-    if (
-      qrTitle === initialQRTitle &&
-      textValue === initialTextValue &&
-      qrChanged === initialQRChanged &&
-      activeSelector === initialActiveSelector &&
-      qrShortCode === ""
-    ) {
+  // Handle save QR with rate limiting
+  const handleSaveQR = useCallback(async () => {
+    if (qrState.textValue.length === 0) {
+      toast("Please enter content first", {
+        description: "QR code needs content to be saved.",
+      });
       return;
     }
 
-    onUpdate({
-      qrTitle,
-      textValue,
-      qrChanged,
-      activeSelector,
-      qrShortCode,
-    });
-  }, [qrTitle, textValue, qrChanged, activeSelector, qrShortCode]);
+    // Validate quota
+    const validation = validateQuotaForSave(
+      quotaInfo,
+      qrState.isDynamic,
+      qrState.isShortcodeSaved,
+    );
 
-  // Check if quota is exceeded or nearly exceeded
-  const hasReachedQuota = quotaInfo.currentCount >= quotaInfo.maxQuota;
-  const isNearQuota = quotaInfo.currentCount >= quotaInfo.maxQuota - 1;
+    if (!validation.canProceed) {
+      toast("Cannot save QR code", {
+        description: validation.reason,
+        style: {
+          backgroundColor: "rgb(254, 226, 226)",
+          color: "rgb(153, 27, 27)",
+        },
+        action: validation.shouldUpgrade
+          ? {
+              label: "Upgrade",
+              onClick: () => {
+                window.location.href = "/subscription";
+              },
+            }
+          : undefined,
+      });
+      return;
+    }
+
+    // Rate limiting for save operations
+    const subscriptionLevel = user?.subscription_level || 0;
+    const rateLimitResult = await UserRateLimiter.checkUserLimit(
+      "qr_save",
+      user?.id,
+      subscriptionLevel,
+    );
+
+    if (!rateLimitResult.success) {
+      toast("Rate limit exceeded", {
+        description: `Please wait ${rateLimitResult.retryAfter} seconds before saving more QR codes.`,
+        style: {
+          backgroundColor: "rgb(254, 226, 226)",
+          color: "rgb(153, 27, 27)",
+        },
+      });
+      return;
+    }
+
+    onUpdateLoadingState("saving", true);
+
+    try {
+      const supabase = createClient();
+
+      const enhancedSaveData = qrState.saveData
+        ? {
+            ...(qrState.saveData.controlType
+              ? {}
+              : { controlType: qrState.activeSelector }),
+            ...qrState.saveData,
+          }
+        : null;
+
+      const { data, error } = await supabase.from("qr_codes").insert({
+        user_id: user.id,
+        type: qrState.isDynamic ? "dynamic" : "static",
+        content: enhancedSaveData,
+        shortcode: qrState.isDynamic ? qrState.shortCode : null,
+        is_active: true,
+        title:
+          qrState.title || `${qrControls[qrState.activeSelector].title} QR`,
+        qr_value: qrState.textValue,
+      });
+
+      if (error) throw error;
+
+      // Mark the shortcode as saved if it's dynamic
+      if (qrState.isDynamic) {
+        onUpdateQRState({ isShortcodeSaved: true });
+      }
+
+      toast("QR code saved successfully!", {
+        description: `Your ${
+          qrState.isDynamic ? "dynamic" : "static"
+        } QR code has been saved.`,
+      });
+    } catch (error) {
+      console.error("Error saving QR code:", error);
+      toast("Error saving QR code", {
+        description:
+          error instanceof Error
+            ? error.message
+            : "Something went wrong. Please try again later.",
+        style: {
+          backgroundColor: "rgb(254, 226, 226)",
+          color: "rgb(153, 27, 27)",
+        },
+      });
+    } finally {
+      onUpdateLoadingState("saving", false);
+    }
+  }, [qrState, quotaInfo, user, onUpdateQRState, onUpdateLoadingState]);
+
+  // Handle title input changes with debouncing
+  const handleTitleChange = useCallback(
+    (value: string) => {
+      setTitleInput(value);
+      onUpdateQRState({ title: value });
+    },
+    [onUpdateQRState],
+  );
+
+  // Sync local state with props when they change externally
+  useEffect(() => {
+    if (titleInput !== qrState.title) {
+      setTitleInput(qrState.title);
+    }
+  }, [qrState.title, titleInput]);
+
+  useEffect(() => {
+    if (textInput !== qrState.textValue) {
+      setTextInput(qrState.textValue);
+    }
+  }, [qrState.textValue, textInput]);
 
   return (
     <article
@@ -416,170 +361,51 @@ export default function QRSettings({
           : "lg:rounded-3xl lg:shadow-xl lg:shadow-neutral-300/50"
       }`}
     >
-      <div className="mb-4 pb-4 flex flex-row flex-wrap justify-start items-center content-end self-start border-b-2 border-neutral-100 transition-all">
-        {Object.keys(qrControls).map((key) => (
-          <article
-            className={`flex gap-2 items-center ${
-              activeSelector === key
-                ? "bg-qrmory-purple-800 text-white"
-                : "bg-white hover:bg-qrmory-purple-500 border-neutral-400 hover:border-qrmory-purple-500 text-neutral-500 hover:text-white"
-            } qr-selector cursor-pointer m-1 py-2 px-5 flex justify-center items-center rounded border text-xs lg:text-sm transition-all duration-300`}
-            key={`qr-control-${qrControls[key].title.toLowerCase()}`}
-            data-selector={key}
-            onClick={() => handleActiveSelector(key)}
-          >
-            {qrControls[key].icon}
-            {qrControls[key].title}
-          </article>
-        ))}
+      {/* QR Type Selector */}
+      <QRTypeSelector
+        activeSelector={qrState.activeSelector}
+        onSelectorChange={handleSelectorChange}
+      />
 
-        <p className="m-2 inline text-black text-sm italic">more coming soon</p>
-      </div>
-
+      {/* Main Form */}
       <div className="mx-auto flex flex-col grow justify-center w-full text-left">
+        {/* Title Input */}
         <label className="control-label">
           Enter QR Title (optional):
           <input
             type="text"
             className="block py-2 control-input w-full"
-            onChange={(el) => {
-              setQRTitle(el.target.value);
-            }}
-            value={qrTitle}
+            onChange={(e) => handleTitleChange(e.target.value)}
+            value={titleInput}
+            placeholder="Enter a descriptive title..."
+            maxLength={100}
           />
         </label>
 
+        {/* Dynamic QR Control Component */}
         <div className="w-full flex justify-center">
           <div className="relative w-full">{qrControl}</div>
         </div>
 
-        <section
-          className={`mt-8 flex flex-col md:flex-row items-center justify-between gap-2`}
-        >
-          {/* Dynamic QR button section */}
-          {user && (
-            <article
-              className={`flex flex-col md:flex-row items-center justify-between gap-2`}
-            >
-              <button
-                className={`py-2.5 px-4 hover:enabled:translate-x-1 hover:enabled:-translate-y-1 flex items-center justify-center gap-2 border disabled:border-none border-qrmory-purple-800 ${
-                  isDynamic
-                    ? "bg-qrmory-purple-800 text-white"
-                    : "bg-white disabled:bg-neutral-300 hover:enabled:bg-qrmory-purple-800 text-qrmory-purple-800 disabled:text-neutral-600"
-                } w-48 max-w-full text-xs lg:text-sm hover:enabled:text-white rounded uppercase font-semibold transition-all duration-300`}
-                onClick={handleMakeDynamic}
-                disabled={
-                  loadingDynamic ||
-                  (isDynamic && isShortcodeSaved) ||
-                  hasReachedQuota
-                }
-                title={
-                  isDynamic && isShortcodeSaved
-                    ? "Dynamic QR codes cannot be converted back to static after saving"
-                    : hasReachedQuota
-                      ? `You've reached your limit of ${quotaInfo.maxQuota} dynamic QR codes`
-                      : "Make this QR code dynamic"
-                }
-              >
-                <IconBolt
-                  className={`${
-                    loadingDynamic ? "animate-pulse duration-1000" : ""
-                  }`}
-                />
-                <span>Make Dynamic</span>
-              </button>
+        {/* Action Buttons */}
+        <QRActionButtons
+          user={user}
+          qrState={qrState}
+          loadingStates={loadingStates}
+          quotaStatus={quotaStatus}
+          quotaInfo={quotaInfo}
+          onMakeDynamic={handleMakeDynamic}
+          onSaveQR={handleSaveQR}
+          onGenerateQR={onGenerateQR}
+        />
 
-              <button
-                className={`py-2.5 px-4 hover:enabled:translate-x-1 hover:enabled:-translate-y-1 flex items-center justify-center gap-2 border disabled:border-none border-qrmory-purple-800 hover:enabled:border-qrmory-purple-800 bg-white disabled:bg-neutral-300 hover:enabled:bg-qrmory-purple-800 text-qrmory-purple-800 disabled:text-neutral-600 w-48 max-w-full text-xs lg:text-sm hover:enabled:text-white rounded uppercase font-semibold transition-all duration-300`}
-                onClick={handleSaveQR}
-                disabled={
-                  textValue.length === 0 ||
-                  saving ||
-                  (isDynamic && !isShortcodeSaved && hasReachedQuota)
-                }
-              >
-                <IconDeviceFloppy />
-                <span>{saving ? "Saving..." : "Save QR Code"}</span>
-              </button>
-            </article>
-          )}
-
-          <button
-            className={`
-              py-2.5 
-              hover:enabled:translate-x-1 
-              hover:enabled:-translate-y-1 
-              flex items-center 
-              justify-center 
-              gap-2 
-              border 
-              disabled:border-none 
-              border-qrmory-purple-800
-              hover:enabled:border-qrmory-purple-800
-              ${
-                textValue.length === 0
-                  ? "bg-neutral-300 text-neutral-600"
-                  : qrChanged
-                    ? "bg-qrmory-purple-800 text-white"
-                    : "bg-white text-qrmory-purple-800 hover:enabled:bg-qrmory-purple-800 hover:enabled:text-white"
-              }
-              w-48 
-              max-w-full 
-              text-xs 
-              lg:text-sm
-              rounded 
-              uppercase 
-              font-semibold 
-              transition-all 
-              duration-300
-            `}
-            onClick={handleGenerateQR}
-            disabled={textValue.length === 0 || !qrChanged}
-            title={
-              textValue.length === 0
-                ? "Please enter content first"
-                : !qrChanged
-                  ? "QR code is already up to date"
-                  : "Generate QR code with current content"
-            }
-          >
-            <span>Generate QR</span>
-            <IconRocket />
-          </button>
-        </section>
-        {isDynamic && (
-          <section className={`mt-4`}>
-            <p className={`text-sm`}>
-              Your Dynamic Code will be:{" "}
-              <span className={`font-bold`}>
-                {process.env.NEXT_PUBLIC_SITE_URL}/{qrShortCode}
-              </span>
-            </p>
-            <p
-              className={`text-sm ${
-                isShortcodeSaved ? "text-green-600" : "text-amber-600"
-              }`}
-            >
-              {isShortcodeSaved
-                ? "Your dynamic QR code has been saved."
-                : "Save your QR code to secure this URL."}
-            </p>
-          </section>
-        )}
-
-        {/* TODO: Add Articles and Blog */}
-        {/*<section className={`mt-4`}>*/}
-        {/*  <p className={`text-neutral-400`}>*/}
-        {/*    Want to learn more about{" "}*/}
-        {/*    <a*/}
-        {/*      href="/learn/dynamic-qr-codes"*/}
-        {/*      className="text-qrmory-purple-600 underline hover:text-qrmory-purple-800"*/}
-        {/*    >*/}
-        {/*      dynamic QR codes*/}
-        {/*    </a>*/}
-        {/*    ?*/}
-        {/*  </p>*/}
-        {/*</section>*/}
+        {/* Status Indicators */}
+        <QRStatusIndicators
+          qrState={qrState}
+          user={user}
+          quotaStatus={quotaStatus}
+          quotaInfo={quotaInfo}
+        />
       </div>
     </article>
   );

@@ -1,4 +1,5 @@
-﻿import { NextRequest, NextResponse } from "next/server";
+﻿// /app/api/check-shortcode/route.ts
+import { NextRequest, NextResponse } from "next/server";
 import { Redis } from "@upstash/redis";
 import { createClient } from "@/utils/supabase/server";
 

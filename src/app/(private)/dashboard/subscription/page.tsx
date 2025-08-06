@@ -14,12 +14,13 @@ export const metadata = {
   description: "Upgrade your QRmory subscription to create more QR codes.",
 };
 
-// Define proper types for the data structures
+// Define proper types for the data structures - matching your database
 interface Profile {
   id: string;
   subscription_level?: number | null;
   extra_quota_from_boosters?: number | null;
   dynamic_qr_quota?: number | null;
+  subscription_status?: string | null;
 }
 
 interface QuotaPackage {
@@ -34,7 +35,8 @@ interface QuotaPackage {
 
 interface UserData {
   profile: Profile | null;
-  subscription: Subscription | null;
+  mainSubscription: Subscription | null;
+  boosterSubscriptions: Subscription[];
   subscriptionPackages: SubscriptionPackage[];
   quotaPackages: QuotaPackage[];
   usedDynamicQRs: number;
@@ -53,11 +55,12 @@ async function fetchUserData(): Promise<UserData> {
       .from("subscription_packages")
       .select("*")
       .eq("is_active", true)
-      .order("level"); // Changed from sort_order to level for consistency
+      .order("level");
 
     return {
       profile: null,
-      subscription: null,
+      mainSubscription: null,
+      boosterSubscriptions: [],
       subscriptionPackages: subscriptionPackages || [],
       quotaPackages: [],
       usedDynamicQRs: 0,
@@ -67,7 +70,8 @@ async function fetchUserData(): Promise<UserData> {
   // Fetch all data in parallel
   const [
     { data: profile, error: profileError },
-    { data: subscription, error: subscriptionError },
+    { data: mainSubscription, error: mainSubscriptionError },
+    { data: boosterSubscriptions, error: boosterSubscriptionsError },
     { data: subscriptionPackages, error: packagesError },
     { data: quotaPackages, error: quotaPackagesError },
     { count: usedDynamicQRs, error: countError },
@@ -75,20 +79,29 @@ async function fetchUserData(): Promise<UserData> {
     // Fetch profile data
     supabase.from("profiles").select("*").eq("id", user.id).single(),
 
-    // Fetch active subscription if any
+    // Fetch active main subscription if any
     supabase
       .from("subscriptions")
       .select("*")
       .eq("user_id", user.id)
       .eq("status", "active")
+      .eq("subscription_type", "main")
       .single(),
+
+    // Fetch active booster subscriptions
+    supabase
+      .from("subscriptions")
+      .select("*")
+      .eq("user_id", user.id)
+      .eq("status", "active")
+      .eq("subscription_type", "booster"),
 
     // Fetch subscription packages
     supabase
       .from("subscription_packages")
       .select("*")
       .eq("is_active", true)
-      .order("level"), // Changed from sort_order to level
+      .order("level"),
 
     // Fetch available quota packages
     supabase
@@ -107,8 +120,14 @@ async function fetchUserData(): Promise<UserData> {
 
   // Log errors (but don't fail completely)
   if (profileError) console.error("Error fetching profile:", profileError);
-  if (subscriptionError && subscriptionError.code !== "PGRST116") {
-    console.error("Error fetching subscription:", subscriptionError);
+  if (mainSubscriptionError && mainSubscriptionError.code !== "PGRST116") {
+    console.error("Error fetching main subscription:", mainSubscriptionError);
+  }
+  if (boosterSubscriptionsError) {
+    console.error(
+      "Error fetching booster subscriptions:",
+      boosterSubscriptionsError,
+    );
   }
   if (packagesError) console.error("Error fetching packages:", packagesError);
   if (quotaPackagesError)
@@ -117,7 +136,8 @@ async function fetchUserData(): Promise<UserData> {
 
   return {
     profile: profile as Profile | null,
-    subscription: subscription as Subscription | null,
+    mainSubscription: mainSubscription as Subscription | null,
+    boosterSubscriptions: (boosterSubscriptions as Subscription[]) || [],
     subscriptionPackages: (subscriptionPackages as SubscriptionPackage[]) || [],
     quotaPackages: (quotaPackages as QuotaPackage[]) || [],
     usedDynamicQRs: usedDynamicQRs || 0,
@@ -135,7 +155,8 @@ export default async function SubscriptionPage({
 }) {
   const {
     profile,
-    subscription,
+    mainSubscription,
+    boosterSubscriptions,
     subscriptionPackages,
     quotaPackages,
     usedDynamicQRs,
@@ -166,7 +187,6 @@ export default async function SubscriptionPage({
   ) ||
     subscriptionPackages.find((pkg) => pkg.level === 0) || {
       // Fallback to free plan
-      // Final fallback if no packages exist in database
       id: "fallback-free",
       name: "Free",
       description: "Basic plan with limited features",
@@ -177,6 +197,12 @@ export default async function SubscriptionPage({
       stripe_price_id: null,
       is_active: true,
     };
+
+  // Calculate total quota for usage display
+  const subscriptionQuota =
+    profile.dynamic_qr_quota || currentPackage.quota_amount || 0;
+  const boosterQuota = profile.extra_quota_from_boosters || 0;
+  const totalQuota = subscriptionQuota + boosterQuota;
 
   return (
     <section className="flex flex-col w-full">
@@ -190,10 +216,34 @@ export default async function SubscriptionPage({
       {/* Display current subscription status */}
       <SubscriptionStatus
         profile={profile}
-        subscription={subscription}
+        subscription={mainSubscription}
         currentPackage={currentPackage}
         usedDynamicQRs={usedDynamicQRs}
       />
+
+      {/* Show active booster subscriptions if any */}
+      {boosterSubscriptions.length > 0 && (
+        <div className="mt-6 p-4 bg-orange-50 border border-orange-200 rounded-lg">
+          <h3 className="font-semibold text-orange-800 mb-2">
+            Active Booster Subscriptions
+          </h3>
+          <div className="space-y-2">
+            {boosterSubscriptions.map((sub) => (
+              <div
+                key={sub.id}
+                className="flex justify-between items-center text-sm"
+              >
+                <span className="text-orange-700">
+                  {sub.plan_name || "Booster"}
+                </span>
+                <span className="text-orange-600 font-medium">
+                  Status: {sub.status}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Subscription plans */}
       <div className="mt-8">
@@ -202,7 +252,9 @@ export default async function SubscriptionPage({
           <SubscriptionPlans
             currentLevel={currentLevel}
             packages={subscriptionPackages}
-            subscription={subscription}
+            subscription={mainSubscription}
+            usedQuota={usedDynamicQRs}
+            totalQuota={totalQuota}
           />
         ) : (
           <div className="text-center p-6 bg-neutral-50 rounded-lg">
@@ -218,14 +270,14 @@ export default async function SubscriptionPage({
       <div className="mt-12">
         <h2 className="text-lg font-semibold mb-4">Need More QR Codes?</h2>
         <p className="text-neutral-600 mb-4">
-          Boost your quota with these one-time purchases:
+          Add monthly booster subscriptions to increase your quota:
         </p>
         {quotaPackages.length > 0 ? (
           <BoosterPackages packages={quotaPackages} />
         ) : (
           <div className="text-center p-6 bg-neutral-50 rounded-lg">
             <p className="text-neutral-600">
-              No booster packages are currently available.
+              No booster subscriptions are currently available.
             </p>
           </div>
         )}
