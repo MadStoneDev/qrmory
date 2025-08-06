@@ -1,324 +1,208 @@
-﻿// /api/webhooks/stripe/route.ts
-import { createClient } from "@/utils/supabase/server";
+﻿// /api/webhooks/stripe/route.ts - Fixed metadata handling
+import Stripe from "stripe";
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
-import Stripe from "stripe";
-import type { SupabaseClient } from "@supabase/supabase-js";
+import { createClient } from "@/utils/supabase/server";
 
-// Initialize Stripe
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", {
   apiVersion: "2024-06-20",
 });
 
-// Type for error handling
-interface ErrorWithMessage {
-  message: string;
-}
+export async function POST(request: Request) {
+  console.log("🔔 Webhook received!");
 
-// Type guard to check if error has a message property
-function isErrorWithMessage(error: unknown): error is ErrorWithMessage {
-  return (
-    typeof error === "object" &&
-    error !== null &&
-    "message" in error &&
-    typeof (error as Record<string, unknown>).message === "string"
-  );
-}
-
-// Helper function to get error message safely
-function getErrorMessage(error: unknown): string {
-  if (isErrorWithMessage(error)) return error.message;
-  return String(error);
-}
-
-// Helper function to verify Stripe webhook signature
-const verifyStripeWebhook = async (request: Request) => {
   const body = await request.text();
   const signature = headers().get("stripe-signature") || "";
 
+  let event: Stripe.Event;
+
   try {
-    const event = stripe.webhooks.constructEvent(
+    event = stripe.webhooks.constructEvent(
       body,
       signature,
       process.env.STRIPE_WEBHOOK_SECRET || "",
     );
-    return { event, error: null };
+    console.log("✅ Webhook signature verified");
+    console.log("📧 Event type:", event.type);
   } catch (error) {
-    return { event: null, error };
-  }
-};
-
-export async function POST(request: Request) {
-  const { event, error } = await verifyStripeWebhook(request);
-
-  if (error) {
-    console.error("Error verifying webhook:", error);
+    console.error("❌ Webhook signature verification failed:", error);
     return NextResponse.json(
-      { error: getErrorMessage(error) },
+      { error: "Webhook signature verification failed" },
       { status: 400 },
     );
-  }
-
-  if (!event) {
-    return NextResponse.json({ error: "No event received" }, { status: 400 });
   }
 
   const supabase = await createClient();
 
   try {
-    // Handle specific events
     switch (event.type) {
-      // Handle checkout session completion
       case "checkout.session.completed": {
         const session = event.data.object as Stripe.Checkout.Session;
 
+        console.log("🛒 Checkout session completed:");
+        console.log("  - Session ID:", session.id);
+        console.log("  - Mode:", session.mode);
+        console.log("  - Customer:", session.customer);
+        console.log("  - Subscription:", session.subscription);
+        console.log("  - Session Metadata:", session.metadata);
+
         if (session.mode === "subscription") {
-          // Handle subscription checkout
-          await handleSubscriptionCheckout(supabase, session);
-        } else if (session.mode === "payment") {
-          // Handle one-time payment (quota package)
-          await handleQuotaPurchase(supabase, session);
+          console.log("📦 Processing subscription checkout...");
+
+          // Get the subscription from Stripe
+          const subscription = await stripe.subscriptions.retrieve(
+            session.subscription as string,
+          );
+          console.log("📋 Subscription metadata:", subscription.metadata);
+
+          // Try to get metadata from multiple sources
+          let metadata = session.metadata || {};
+
+          // If session metadata is empty, try subscription metadata
+          if (Object.keys(metadata).length === 0) {
+            console.log(
+              "📝 Session metadata empty, using subscription metadata",
+            );
+            metadata = subscription.metadata || {};
+          }
+
+          // If still no metadata, try to get it from customer
+          if (Object.keys(metadata).length === 0 && session.customer) {
+            console.log("📝 No metadata found, trying customer metadata");
+            try {
+              const customer = await stripe.customers.retrieve(
+                session.customer as string,
+              );
+              if (typeof customer !== "string" && customer.metadata) {
+                metadata = customer.metadata;
+              }
+            } catch (error) {
+              console.log("⚠️ Could not retrieve customer:", error);
+            }
+          }
+
+          console.log("🏷️ Final metadata:", metadata);
+
+          let userId = metadata.user_id;
+          let packageId = metadata.package_id;
+          let subscriptionLevel = metadata.subscription_level;
+          let quotaAmount = metadata.quota_amount;
+
+          // If we still don't have user_id, try to find it by customer ID
+          if (!userId && session.customer) {
+            console.log("🔍 Looking up user by customer ID:", session.customer);
+            const { data: profile } = await supabase
+              .from("profiles")
+              .select("id")
+              .eq("stripe_customer_id", session.customer)
+              .single();
+
+            if (profile) {
+              userId = profile.id;
+              console.log("✅ Found user ID:", userId);
+            }
+          }
+
+          // If we don't have package info, try to find it by price ID
+          if (!packageId && subscription.items.data.length > 0) {
+            const priceId = subscription.items.data[0].price.id;
+            console.log("🔍 Looking up package by price ID:", priceId);
+
+            const { data: package } = await supabase
+              .from("subscription_packages")
+              .select("*")
+              .eq("stripe_price_id", priceId)
+              .single();
+
+            if (package) {
+              packageId = package.id;
+              subscriptionLevel = package.level.toString();
+              quotaAmount = package.quota_amount.toString();
+              console.log("✅ Found package:", package);
+            }
+          }
+
+          if (!userId) {
+            console.error("❌ Could not determine user ID");
+            return NextResponse.json(
+              { error: "Could not determine user ID" },
+              { status: 400 },
+            );
+          }
+
+          console.log("🎯 Processing with:");
+          console.log("  - User ID:", userId);
+          console.log("  - Package ID:", packageId);
+          console.log("  - Subscription Level:", subscriptionLevel);
+          console.log("  - Quota Amount:", quotaAmount);
+
+          // Update user profile
+          console.log("🔄 Updating user profile...");
+
+          const { error: profileUpdateError } = await supabase
+            .from("profiles")
+            .update({
+              subscription_level: parseInt(subscriptionLevel || "1"),
+              dynamic_qr_quota: parseInt(quotaAmount || "10"),
+              subscription_status: "active",
+              updated_at: new Date().toISOString(),
+            })
+            .eq("id", userId);
+
+          if (profileUpdateError) {
+            console.error("❌ Profile update failed:", profileUpdateError);
+          } else {
+            console.log("✅ Profile updated successfully");
+          }
+
+          // Create subscription record
+          console.log("📝 Creating subscription record...");
+
+          const { error: subscriptionInsertError } = await supabase
+            .from("subscriptions")
+            .insert({
+              user_id: userId,
+              stripe_subscription_id: subscription.id,
+              stripe_price_id: subscription.items.data[0]?.price.id,
+              status: subscription.status,
+              plan_name: metadata.plan_name || "Explorer",
+              current_period_end: new Date(
+                subscription.current_period_end * 1000,
+              ).toISOString(),
+            });
+
+          if (subscriptionInsertError) {
+            console.error(
+              "❌ Subscription record creation failed:",
+              subscriptionInsertError,
+            );
+          } else {
+            console.log("✅ Subscription record created successfully");
+          }
+
+          // Verify the updates
+          const { data: updatedProfile } = await supabase
+            .from("profiles")
+            .select("subscription_level, dynamic_qr_quota, subscription_status")
+            .eq("id", userId)
+            .single();
+
+          console.log("🔍 Updated profile:", updatedProfile);
         }
+
         break;
       }
 
-      // Handle subscription updates
-      case "customer.subscription.updated": {
-        const subscription = event.data.object as Stripe.Subscription;
-        await handleSubscriptionUpdate(supabase, subscription);
-        break;
-      }
-
-      // Handle subscription deletions/cancellations
-      case "customer.subscription.deleted": {
-        const subscription = event.data.object as Stripe.Subscription;
-        await handleSubscriptionCancellation(supabase, subscription);
-        break;
-      }
+      default:
+        console.log(`🤷 Unhandled event type: ${event.type}`);
     }
 
     return NextResponse.json({ received: true });
   } catch (error) {
-    console.error("Error processing webhook:", error);
+    console.error("💥 Error processing webhook:", error);
     return NextResponse.json(
-      { error: getErrorMessage(error) },
+      { error: "Webhook processing failed" },
       { status: 500 },
     );
-  }
-}
-
-// Handler for subscription checkout completion
-async function handleSubscriptionCheckout(
-  supabase: SupabaseClient,
-  session: Stripe.Checkout.Session,
-): Promise<void> {
-  // Get subscription details from Stripe
-  const subscription = await stripe.subscriptions.retrieve(
-    session.subscription as string,
-  );
-
-  // Get metadata from the subscription
-  const userId = subscription.metadata.user_id;
-  const packageId = subscription.metadata.package_id;
-  const planName = subscription.metadata.plan_name;
-  const subscriptionLevel = subscription.metadata.subscription_level;
-  const quotaAmountStr = subscription.metadata.quota_amount;
-
-  if (!userId) {
-    throw new Error("User ID not found in subscription metadata");
-  }
-
-  if (!packageId) {
-    throw new Error("Package ID not found in subscription metadata");
-  }
-
-  // Fetch the subscription package details from database
-  const { data: subscriptionPackage, error: packageError } = await supabase
-    .from("subscription_packages")
-    .select("*")
-    .eq("id", packageId)
-    .single();
-
-  if (packageError || !subscriptionPackage) {
-    throw new Error(`Subscription package not found: ${packageId}`);
-  }
-
-  // Get the price ID from the subscription
-  const priceId = subscription.items.data[0]?.price.id;
-
-  if (!priceId) {
-    throw new Error("Price ID not found in subscription");
-  }
-
-  // Get the current period end
-  const currentPeriodEnd = new Date(
-    subscription.current_period_end * 1000,
-  ).toISOString();
-
-  // Call database function to handle new subscription
-  const { error } = await supabase.rpc("handle_new_subscription", {
-    p_user_id: userId,
-    p_subscription_id: subscription.id,
-    p_price_id: priceId,
-    p_status: subscription.status,
-    p_plan_name: subscriptionPackage.name,
-    p_current_period_end: currentPeriodEnd,
-    p_quota_amount: subscriptionPackage.quota_amount,
-  });
-
-  if (error) {
-    throw error;
-  }
-}
-
-// Handler for quota package purchase
-async function handleQuotaPurchase(
-  supabase: SupabaseClient,
-  session: Stripe.Checkout.Session,
-): Promise<void> {
-  // Get payment intent data
-  const paymentIntentId = session.payment_intent as string;
-  const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
-
-  // Get metadata from the payment intent
-  const userId = paymentIntent.metadata.user_id;
-  const packageId = paymentIntent.metadata.package_id;
-  const quantityStr = paymentIntent.metadata.quantity;
-  const priceCentsStr = paymentIntent.metadata.price_in_cents;
-
-  if (!userId || !packageId) {
-    throw new Error("Missing required metadata for quota purchase");
-  }
-
-  if (!quantityStr || isNaN(parseInt(quantityStr, 10))) {
-    throw new Error("Invalid quantity in payment intent metadata");
-  }
-
-  if (!priceCentsStr || isNaN(parseInt(priceCentsStr, 10))) {
-    throw new Error("Invalid price in payment intent metadata");
-  }
-
-  const quantity = parseInt(quantityStr, 10);
-  const priceCents = parseInt(priceCentsStr, 10);
-
-  // Call database function to handle quota purchase
-  const { error } = await supabase.rpc("handle_quota_purchase", {
-    p_user_id: userId,
-    p_package_id: packageId,
-    p_quantity: quantity,
-    p_amount_paid: priceCents,
-    p_stripe_checkout_id: session.id,
-  });
-
-  if (error) {
-    throw error;
-  }
-}
-
-// Handler for subscription updates
-async function handleSubscriptionUpdate(
-  supabase: SupabaseClient,
-  subscription: Stripe.Subscription,
-): Promise<void> {
-  // Get the price ID from the subscription
-  const priceId = subscription.items.data[0]?.price.id;
-
-  if (!priceId) {
-    throw new Error("Price ID not found in subscription");
-  }
-
-  // Get the current period end
-  const currentPeriodEnd = new Date(
-    subscription.current_period_end * 1000,
-  ).toISOString();
-
-  // Look up the subscription package by Stripe price ID
-  const { data: subscriptionPackage, error: packageError } = await supabase
-    .from("subscription_packages")
-    .select("*")
-    .eq("stripe_price_id", priceId)
-    .eq("is_active", true)
-    .single();
-
-  if (packageError || !subscriptionPackage) {
-    console.warn(`Subscription package not found for price ID: ${priceId}`);
-    // Still update the subscription record even if we can't find the package
-  }
-
-  const planName =
-    subscriptionPackage?.name || subscription.metadata.plan_name || "Unknown";
-
-  // Call database function to handle subscription updates
-  const { error } = await supabase.rpc("handle_subscription_updated", {
-    p_subscription_id: subscription.id,
-    p_price_id: priceId,
-    p_status: subscription.status,
-    p_plan_name: planName,
-    p_current_period_end: currentPeriodEnd,
-  });
-
-  if (error) {
-    throw error;
-  }
-}
-
-// Handler for subscription cancellations
-async function handleSubscriptionCancellation(
-  supabase: SupabaseClient,
-  subscription: Stripe.Subscription,
-): Promise<void> {
-  // Update subscription status to cancelled
-  const { error } = await supabase
-    .from("subscriptions")
-    .update({
-      status: subscription.status,
-      updated_at: new Date().toISOString(),
-    })
-    .eq("stripe_subscription_id", subscription.id);
-
-  if (error) {
-    throw error;
-  }
-
-  // Get user ID from subscription in database
-  const { data: subData, error: subError } = await supabase
-    .from("subscriptions")
-    .select("user_id")
-    .eq("stripe_subscription_id", subscription.id)
-    .single();
-
-  if (subError) {
-    throw subError;
-  }
-
-  if (!subData) {
-    throw new Error("Subscription not found in database");
-  }
-
-  // Get the free plan details
-  const { data: freePlan, error: freePlanError } = await supabase
-    .from("subscription_packages")
-    .select("*")
-    .eq("level", 0)
-    .eq("is_active", true)
-    .single();
-
-  if (freePlanError || !freePlan) {
-    console.warn("Free plan not found, using default values");
-  }
-
-  // Downgrade user subscription level to free (0)
-  const { error: updateError } = await supabase
-    .from("profiles")
-    .update({
-      subscription_level: 0,
-      dynamic_qr_quota: freePlan?.quota_amount || 3,
-      subscription_status: "inactive",
-      updated_at: new Date().toISOString(),
-    })
-    .eq("id", subData.user_id);
-
-  if (updateError) {
-    throw updateError;
   }
 }

@@ -40,7 +40,12 @@ export default function QRPreview({
 
   // Determine which value to use for the QR code
   const displayValue = useMemo(() => {
-    return qrShortCode || qrValue;
+    // If we have a shortcode, use the full dynamic URL
+    if (qrShortCode) {
+      return `${process.env.NEXT_PUBLIC_SITE_URL}/${qrShortCode}`;
+    }
+    // Otherwise use the regular QR value
+    return qrValue;
   }, [qrShortCode, qrValue]);
 
   const handleDownload = (format: "svg" | "png" | "jpg") => {

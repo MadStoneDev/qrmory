@@ -269,7 +269,7 @@ export default async function DashboardPage() {
           </div>
 
           <Link
-            href="/my-codes"
+            href={`/dashboard/my-codes`}
             className="flex items-center justify-center text-sm font-medium text-qrmory-purple-800 hover:text-qrmory-purple-600"
           >
             View all QR codes <IconArrowRight size={16} className="ml-1" />
@@ -323,7 +323,7 @@ export default async function DashboardPage() {
           )}
 
           <Link
-            href="/subscription"
+            href={`/dashboard/subscription`}
             className="flex items-center justify-center text-sm font-medium text-qrmory-purple-800 hover:text-qrmory-purple-600"
           >
             Manage subscription <IconArrowRight size={16} className="ml-1" />
@@ -355,8 +355,8 @@ export default async function DashboardPage() {
             </Link>
 
             <Link
-              href="/account/settings"
-              className="block p-3 border rounded-md hover:bg-neutral-50 flex items-center"
+              href={`/dashboard/account/settings`}
+              className={`p-3 border rounded-md hover:bg-neutral-50 flex items-center`}
             >
               <IconSettings size={20} className="mr-2 text-qrmory-purple-700" />
               Account settings
