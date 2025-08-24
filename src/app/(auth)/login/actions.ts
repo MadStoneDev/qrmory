@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 
 import { createClient } from "@/utils/supabase/server";
-import { authRateLimiter } from "@/utils/rate-limit";
+// import { authRateLimiter } from "@/utils/rate-limit";
 
 type AuthResponse = {
   error: string | null;
@@ -22,17 +22,18 @@ export async function handleAuth(formData: FormData): Promise<AuthResponse> {
   }
 
   try {
-    const { success: rateLimiter } = await authRateLimiter.limit(
-      email.toLowerCase(),
-    );
-
-    if (!rateLimiter) {
-      return {
-        error:
-          "Woah! You're faster than post-credit scenes in Marvel movies. Try again in a bit, please?",
-        success: false,
-      };
-    }
+    // Remove RateLimiter for now
+    // const { success: rateLimiter } = await authRateLimiter.limit(
+    //   email.toLowerCase(),
+    // );
+    //
+    // if (!rateLimiter) {
+    //   return {
+    //     error:
+    //       "Woah! You're faster than post-credit scenes in Marvel movies. Try again in a bit, please?",
+    //     success: false,
+    //   };
+    // }
 
     const supabase = await createClient();
 
