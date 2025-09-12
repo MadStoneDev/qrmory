@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 
 import {
+  IconChartBar,
   IconCirclePlus,
   IconDashboard,
   IconInfoHexagon,
@@ -49,6 +50,10 @@ export default function PrivateNavigation({
 
           <NavItem href={"/dashboard/my-codes"} title={"My Codes"}>
             <IconQrcode size={30} strokeWidth={1.75} />
+          </NavItem>
+
+          <NavItem href={"/dashboard/analytics"} title={"Analytics"}>
+            <IconChartBar size={30} strokeWidth={1.75} />
           </NavItem>
 
           {/*<div*/}

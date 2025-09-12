@@ -69,7 +69,7 @@ export function QRStatusIndicators({
                     quotaInfo.maxQuota - quotaInfo.currentCount
                   } dynamic QR codes remaining.`}{" "}
               <Link
-                href="/subscription"
+                href={`/dashboard/subscription`}
                 className="text-amber-900 underline hover:text-amber-700"
               >
                 Upgrade your plan

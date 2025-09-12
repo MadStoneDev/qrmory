@@ -296,7 +296,7 @@ export default function QRAudio({
           Upgrade to Explorer or higher to share audio files with your QR codes.
         </p>
         <a
-          href="/subscription"
+          href={`/dashboard/subscription`}
           className="inline-block bg-qrmory-purple-600 text-white px-6 py-2 rounded-lg hover:bg-qrmory-purple-700 transition-colors"
         >
           Upgrade Now

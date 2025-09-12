@@ -213,7 +213,7 @@ export default async function AccountInfo() {
         <h3 className="text-lg font-semibold mb-4">Quick Actions</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <Link
-            href="/subscription"
+            href={`/dashboard/subscription`}
             className="flex items-center justify-center gap-2 p-3 bg-qrmory-purple-50 border border-qrmory-purple-200 rounded-lg hover:bg-qrmory-purple-100 transition-colors"
           >
             <IconCreditCard size={18} />
@@ -221,7 +221,7 @@ export default async function AccountInfo() {
           </Link>
 
           <Link
-            href="/account/quota"
+            href={`/dashboard/quota`}
             className="flex items-center justify-center gap-2 p-3 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors"
           >
             <IconQrcode size={18} />
@@ -229,7 +229,7 @@ export default async function AccountInfo() {
           </Link>
 
           <Link
-            href="/analytics"
+            href={`/dashboard/analytics`}
             className="flex items-center justify-center gap-2 p-3 bg-green-50 border border-green-200 rounded-lg hover:bg-green-100 transition-colors"
           >
             <IconEye size={18} />
@@ -237,7 +237,7 @@ export default async function AccountInfo() {
           </Link>
 
           <Link
-            href="/qr-codes"
+            href={`/qr-codes`}
             className="flex items-center justify-center gap-2 p-3 bg-orange-50 border border-orange-200 rounded-lg hover:bg-orange-100 transition-colors"
           >
             <IconQrcode size={18} />

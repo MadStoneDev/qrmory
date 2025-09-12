@@ -107,7 +107,7 @@ export default function QRSettingsRefactored({
             subscription.
           </p>
           <a
-            href="/subscription"
+            href="/dashboard/subscription"
             className="inline-block bg-qrmory-purple-600 text-white px-6 py-2 rounded-lg hover:bg-qrmory-purple-700 transition-colors"
           >
             Upgrade Now
@@ -164,7 +164,7 @@ export default function QRSettingsRefactored({
           action: {
             label: "Upgrade",
             onClick: () => {
-              window.location.href = "/subscription";
+              window.location.href = "/dashboard/subscription";
             },
           },
         });
@@ -203,7 +203,7 @@ export default function QRSettingsRefactored({
               {qrControls[key]?.title} QR codes require a paid subscription.
             </p>
             <a
-              href="/subscription"
+              href="/dashboard/subscription"
               className="inline-block bg-qrmory-purple-600 text-white px-6 py-2 rounded-lg hover:bg-qrmory-purple-700 transition-colors"
             >
               Upgrade Now
@@ -282,7 +282,7 @@ export default function QRSettingsRefactored({
         action: {
           label: "Upgrade",
           onClick: () => {
-            window.location.href = "/subscription";
+            window.location.href = "/dashboard/subscription";
           },
         },
       });
@@ -342,7 +342,7 @@ export default function QRSettingsRefactored({
           ? {
               label: "Upgrade",
               onClick: () => {
-                window.location.href = "/subscription";
+                window.location.href = "/dashboard/subscription";
               },
             }
           : undefined,
@@ -433,7 +433,7 @@ export default function QRSettingsRefactored({
         action: {
           label: "Upgrade",
           onClick: () => {
-            window.location.href = "/subscription";
+            window.location.href = "/dashboard/subscription";
           },
         },
       });
@@ -477,7 +477,7 @@ export default function QRSettingsRefactored({
           ? {
               label: "Upgrade",
               onClick: () => {
-                window.location.href = "/subscription";
+                window.location.href = "/dashboard/subscription";
               },
             }
           : undefined,

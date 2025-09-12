@@ -40,17 +40,25 @@ async function fetchUserData(): Promise<UserData> {
 
   if (!user) {
     // Still fetch subscription packages for display even if user not logged in
-    const { data: subscriptionPackages } = await supabase
+    const { data: subscriptionPackages, error: packagesError } = await supabase
       .from("subscription_packages")
       .select("*")
       .eq("is_active", true)
       .order("level");
 
+    if (packagesError) {
+      console.error(
+        "Error fetching subscription packages for anonymous user:",
+        packagesError,
+      );
+    }
+
     return {
       profile: null,
       mainSubscription: null,
       boosterSubscriptions: [],
-      subscriptionPackages: subscriptionPackages || [],
+      subscriptionPackages:
+        (subscriptionPackages as SubscriptionPackage[]) || [],
       quotaPackages: [],
       usedDynamicQRs: 0,
     };
@@ -107,8 +115,10 @@ async function fetchUserData(): Promise<UserData> {
       .eq("type", "dynamic"),
   ]);
 
-  // Log errors (but don't fail completely)
-  if (profileError) console.error("Error fetching profile:", profileError);
+  // Log detailed errors for debugging
+  if (profileError) {
+    console.error("Error fetching profile:", profileError);
+  }
   if (mainSubscriptionError && mainSubscriptionError.code !== "PGRST116") {
     console.error("Error fetching main subscription:", mainSubscriptionError);
   }
@@ -118,10 +128,20 @@ async function fetchUserData(): Promise<UserData> {
       boosterSubscriptionsError,
     );
   }
-  if (packagesError) console.error("Error fetching packages:", packagesError);
-  if (quotaPackagesError)
+  if (packagesError) {
+    console.error("Error fetching packages:", packagesError);
+    console.error("Packages error details:", packagesError);
+  }
+  if (quotaPackagesError) {
     console.error("Error fetching quota packages:", quotaPackagesError);
-  if (countError) console.error("Error counting QR codes:", countError);
+  }
+  if (countError) {
+    console.error("Error counting QR codes:", countError);
+  }
+
+  // Log what we actually got for debugging
+  console.log("Fetched packages count:", subscriptionPackages?.length || 0);
+  console.log("Fetched quotas count:", quotaPackages?.length || 0);
 
   return {
     profile: profile as Profile | null,

@@ -142,7 +142,7 @@ export default function QuotaNotification({
             )}
           </p>
           <Link
-            href="/subscription"
+            href={`/dashboard/subscription`}
             className="inline-flex items-center text-amber-800 font-medium mt-2 hover:underline"
           >
             View options <IconArrowRight size={16} className="ml-1" />
@@ -173,7 +173,7 @@ export default function QuotaNotification({
             )}
           </p>
           <Link
-            href="/subscription"
+            href={`/dashboard/subscription`}
             className="inline-flex items-center text-red-800 font-medium mt-2 hover:underline"
           >
             Upgrade now <IconArrowRight size={16} className="ml-1" />
@@ -201,7 +201,7 @@ export default function QuotaNotification({
             {quotaData.subscriptionLevel} plan.
           </p>
           <Link
-            href="/subscription"
+            href={`/dashboard/subscription`}
             className="inline-flex items-center text-qrmory-purple-800 font-medium mt-2 hover:underline"
           >
             View subscription options{" "}

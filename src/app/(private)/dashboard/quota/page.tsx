@@ -169,7 +169,7 @@ export default async function QuotaPage() {
           </div>
 
           <Link
-            href="/subscription"
+            href={`/dashboard/subscription`}
             className="mt-4 md:mt-0 inline-flex items-center justify-center rounded-md px-3 py-1.5 text-sm font-medium text-white bg-qrmory-purple-800 hover:bg-qrmory-purple-700"
           >
             {currentLevel === 0 ? "Upgrade Plan" : "Manage Subscription"}
@@ -291,7 +291,7 @@ export default async function QuotaPage() {
 
           <div className="mt-4 text-right">
             <Link
-              href="/subscription"
+              href={`/dashboard/subscription`}
               className="text-sm font-medium text-qrmory-purple-800 hover:text-qrmory-purple-600"
             >
               Manage booster subscriptions →
@@ -311,7 +311,7 @@ export default async function QuotaPage() {
             to increase your quota.
           </p>
           <Link
-            href="/subscription"
+            href={`/dashboard/subscription`}
             className="inline-flex items-center justify-center rounded-md px-4 py-2 text-sm font-medium text-white bg-qrmory-purple-800 hover:bg-qrmory-purple-700"
           >
             View Booster Subscriptions

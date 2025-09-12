@@ -355,7 +355,7 @@ export default async function DashboardPage() {
             </Link>
 
             <Link
-              href={`/dashboard/account/settings`}
+              href={`/dashboard/settings`}
               className={`p-3 border rounded-md hover:bg-neutral-50 flex items-center`}
             >
               <IconSettings size={20} className="mr-2 text-qrmory-purple-700" />

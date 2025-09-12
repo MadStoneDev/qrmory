@@ -4,18 +4,28 @@ import { createClient } from "@/utils/supabase/server";
 import crypto from "crypto";
 
 function verifyPaddleWebhook(body: string, signature: string): boolean {
-  const publicKey = process.env.PADDLE_PUBLIC_KEY!;
+  const webhookSecret = process.env.PADDLE_WEBHOOK_SECRET!;
 
-  // Paddle uses PHP-style serialization, convert to query string for verification
-  const verify = crypto.createVerify("sha1");
-  verify.update(body);
-  return verify.verify(publicKey, signature, "base64");
+  // Paddle v2 uses HMAC-SHA256
+  const hmac = crypto.createHmac("sha256", webhookSecret);
+  hmac.update(body);
+  const expectedSignature = hmac.digest("hex");
+
+  return crypto.timingSafeEqual(
+    Buffer.from(signature, "hex"),
+    Buffer.from(expectedSignature, "hex"),
+  );
 }
 
 export async function POST(request: Request) {
   try {
     const body = await request.text();
-    const signature = request.headers.get("paddle-signature") || "";
+    const signature =
+      request.headers
+        .get("paddle-signature")
+        ?.replace("ts=", "")
+        .split(",")[1]
+        ?.replace("h1=", "") || "";
 
     if (!verifyPaddleWebhook(body, signature)) {
       console.error("Invalid Paddle signature");
@@ -25,20 +35,20 @@ export async function POST(request: Request) {
     const data = JSON.parse(body);
     const supabase = await createClient();
 
-    console.log("Paddle webhook received:", data.alert_name);
+    console.log("Paddle v2 webhook received:", data.event_type);
 
-    switch (data.alert_name) {
-      case "subscription_created":
+    switch (data.event_type) {
+      case "subscription.created":
         await handleSubscriptionCreated(supabase, data);
         break;
-      case "subscription_updated":
+      case "subscription.updated":
         await handleSubscriptionUpdated(supabase, data);
         break;
-      case "subscription_cancelled":
+      case "subscription.canceled":
         await handleSubscriptionCancelled(supabase, data);
         break;
-      case "payment_succeeded":
-        await handlePaymentSucceeded(supabase, data);
+      case "transaction.completed":
+        await handleTransactionCompleted(supabase, data);
         break;
     }
 
@@ -50,28 +60,29 @@ export async function POST(request: Request) {
 }
 
 async function handleSubscriptionCreated(supabase: any, data: any) {
-  const passthrough = JSON.parse(data.passthrough);
-  const userId = passthrough.user_id;
-  const planType = passthrough.type || "main";
+  const subscription = data.data;
+  const customData = subscription.custom_data;
+  const userId = customData.user_id;
+  const planType = customData.type || "main";
 
   // Insert subscription record
   await supabase.from("subscriptions").insert({
     user_id: userId,
-    paddle_subscription_id: data.subscription_id,
-    plan_name: data.subscription_plan_id,
-    status: data.status,
+    paddle_checkout_id: subscription.id,
+    plan_name: subscription.items[0]?.price.name || "Unknown",
+    status: subscription.status,
     subscription_type: planType,
-    current_period_end: new Date(data.next_bill_date).toISOString(),
-    paddle_price_id: data.subscription_plan_id,
+    current_period_end: subscription.current_billing_period?.ends_at,
+    paddle_price_id: subscription.items[0]?.price.id,
   });
 
-  // Update user profile based on plan type
+  // Update user profile
   if (planType === "main") {
-    // Get quota from your plan
+    const priceId = subscription.items[0]?.price.id;
     const { data: packageData } = await supabase
       .from("subscription_packages")
       .select("level, quota_amount")
-      .eq("paddle_price_id", data.subscription_plan_id)
+      .eq("paddle_price_id", priceId)
       .single();
 
     if (packageData) {
@@ -85,11 +96,12 @@ async function handleSubscriptionCreated(supabase: any, data: any) {
         .eq("id", userId);
     }
   } else {
-    // Handle booster - add to extra quota
+    // Handle booster
+    const priceId = subscription.items[0]?.price.id;
     const { data: quotaData } = await supabase
       .from("quota_packages")
       .select("quantity")
-      .eq("paddle_price_id", data.subscription_plan_id)
+      .eq("paddle_price_id", priceId)
       .single();
 
     if (quotaData) {
@@ -100,7 +112,6 @@ async function handleSubscriptionCreated(supabase: any, data: any) {
         .single();
 
       const currentExtra = profile?.extra_quota_from_boosters || 0;
-
       await supabase
         .from("profiles")
         .update({
@@ -112,29 +123,45 @@ async function handleSubscriptionCreated(supabase: any, data: any) {
 }
 
 async function handleSubscriptionUpdated(supabase: any, data: any) {
+  const subscription = data.data;
+
   await supabase
     .from("subscriptions")
     .update({
-      status: data.status,
-      current_period_end: new Date(data.next_bill_date).toISOString(),
+      status: subscription.status,
+      current_period_end: subscription.current_billing_period?.ends_at,
     })
-    .eq("paddle_subscription_id", data.subscription_id);
+    .eq("paddle_checkout_id", subscription.id);
 }
 
 async function handleSubscriptionCancelled(supabase: any, data: any) {
-  // Update subscription status
+  const subscription = data.data;
+
   await supabase
     .from("subscriptions")
     .update({
-      status: "cancelled",
+      status: "canceled",
     })
-    .eq("paddle_subscription_id", data.subscription_id);
+    .eq("paddle_checkout_id", subscription.id);
+
+  // Handle downgrade logic similar to v1 implementation
+  const customData = subscription.custom_data;
+  if (customData.type === "main") {
+    await supabase
+      .from("profiles")
+      .update({
+        subscription_level: 0,
+        dynamic_qr_quota: 3,
+        subscription_status: "canceled",
+      })
+      .eq("id", customData.user_id);
+  }
 
   // Get subscription details to determine what to downgrade
   const { data: sub } = await supabase
     .from("subscriptions")
     .select("user_id, subscription_type")
-    .eq("paddle_subscription_id", data.subscription_id)
+    .eq("paddle_checkout_id", data.checkout?.id || data.subscription_id) // Use checkout ID
     .single();
 
   if (sub) {
@@ -177,13 +204,14 @@ async function handleSubscriptionCancelled(supabase: any, data: any) {
   }
 }
 
-async function handlePaymentSucceeded(supabase: any, data: any) {
-  // Log successful payment for billing history
+async function handleTransactionCompleted(supabase: any, data: any) {
+  const transaction = data.data;
+
   await supabase.from("payment_events").insert({
-    paddle_payment_id: data.payment_id,
-    event_type: "payment_succeeded",
-    amount_paid: Math.round(parseFloat(data.sale_gross) * 100), // Convert to cents
-    currency: data.currency,
+    paddle_payment_id: transaction.id,
+    event_type: "transaction_completed",
+    amount_paid: transaction.details.totals.total,
+    currency: transaction.currency_code,
     processed_at: new Date().toISOString(),
   });
 }
