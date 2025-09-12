@@ -10,46 +10,32 @@ import {
   IconTrendingUp,
   IconSettings,
 } from "@tabler/icons-react";
+import { Database } from "../../../../database.types";
 
 export const metadata = {
   title: "Dashboard | QRmory",
   description: "Your dashboard to manage your QRmory account",
 };
 
-interface Profile {
-  id: string;
-  subscription_level?: number | null;
-  extra_quota_from_boosters?: number | null;
-  dynamic_qr_quota?: number | null;
+type Profile = Database["public"]["Tables"]["profiles"]["Row"];
+type QRCodeScan = Database["public"]["Tables"]["qr_code_analytics"]["Row"];
+type SubscriptionPackage =
+  Database["public"]["Tables"]["subscription_packages"]["Row"];
+type Subscription = Database["public"]["Tables"]["subscriptions"]["Row"];
+
+interface SupabaseQRCodeScan extends Omit<QRCodeScan, "qr_codes"> {
+  qr_codes:
+    | {
+        title: string;
+      }[]
+    | null; // Supabase returns an array
 }
 
-interface SubscriptionPackage {
-  id: string;
-  name: string;
-  description: string;
-  level: number;
-  price_in_cents: number;
-  quota_amount: number;
-  features: string[];
-  stripe_price_id: string | null;
-  is_active: boolean;
-}
-
-interface Subscription {
-  id: string;
-  user_id: string;
-  status: string;
-  current_period_end: string;
-  // Add other subscription fields as needed
-}
-
-interface QRCodeScan {
-  id: string;
-  scanned_at: string;
-  qr_code_id: string;
-  qr_codes?: {
-    title?: string;
-  } | null;
+// Keep your original interface for the final transformed data
+interface QRCodeScanWithTitle extends Omit<QRCodeScan, "qr_codes"> {
+  qr_codes: {
+    title: string;
+  } | null; // We want a single object or null
 }
 
 interface UserData {
@@ -60,7 +46,7 @@ interface UserData {
     total: number;
     dynamic: number;
   };
-  recentScans: QRCodeScan[];
+  recentScans: QRCodeScanWithTitle[];
 }
 
 async function fetchUserData(): Promise<UserData> {
@@ -87,7 +73,7 @@ async function fetchUserData(): Promise<UserData> {
     { data: subscriptionPackages, error: packagesError },
     { count: totalCount },
     { count: dynamicCount },
-    { data: recentScans, error: scansError },
+    { data: recentScansRaw, error: scansError },
   ] = await Promise.all([
     // Fetch profile data
     supabase.from("profiles").select("*").eq("id", user.id).single(),
@@ -120,19 +106,25 @@ async function fetchUserData(): Promise<UserData> {
       .eq("user_id", user.id)
       .eq("type", "dynamic"),
 
-    // Fetch recent QR code scans (analytics)
+    // Fetch recent QR code scans (analytics) with QR code titles
     supabase
       .from("qr_code_analytics")
       .select(
         `
-    id,
-    scanned_at,
-    qr_code_id,
-    qr_codes:qr_code_id (
-      title
-    )
-  `,
+        id,
+        scanned_at,
+        qr_code_id,
+        browser,
+        country,
+        device_type,
+        referrer,
+        user_agent,
+        qr_codes:qr_code_id (
+          title
+        )
+        `,
       )
+      .eq("qr_codes.user_id", user.id) // Only get scans for user's QR codes
       .order("scanned_at", { ascending: false })
       .limit(5),
   ]);
@@ -145,6 +137,14 @@ async function fetchUserData(): Promise<UserData> {
   if (packagesError) console.error("Error fetching packages:", packagesError);
   if (scansError) console.error("Error fetching QR code scans:", scansError);
 
+  const recentScans: QRCodeScanWithTitle[] = (
+    (recentScansRaw as SupabaseQRCodeScan[]) || []
+  ).map((scan) => ({
+    ...scan,
+    qr_codes:
+      scan.qr_codes && scan.qr_codes.length > 0 ? scan.qr_codes[0] : null,
+  }));
+
   return {
     profile: profile as Profile | null,
     subscription: subscription as Subscription | null,
@@ -153,7 +153,7 @@ async function fetchUserData(): Promise<UserData> {
       total: totalCount || 0,
       dynamic: dynamicCount || 0,
     },
-    recentScans: (recentScans as QRCodeScan[]) || [],
+    recentScans,
   };
 }
 
@@ -387,7 +387,7 @@ export default async function DashboardPage() {
                   <tr key={scan.id}>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-neutral-800">
-                        {scan.qr_codes?.title || "Unnamed QR Code"}{" "}
+                        {scan.qr_codes?.title || "Unnamed QR Code"}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">

@@ -75,7 +75,6 @@ export type Database = {
           id: string
           paddle_payment_id: string | null
           processed_at: string
-          stripe_invoice_id: string | null
         }
         Insert: {
           amount_due?: number | null
@@ -87,7 +86,6 @@ export type Database = {
           id?: string
           paddle_payment_id?: string | null
           processed_at?: string
-          stripe_invoice_id?: string | null
         }
         Update: {
           amount_due?: number | null
@@ -99,7 +97,6 @@ export type Database = {
           id?: string
           paddle_payment_id?: string | null
           processed_at?: string
-          stripe_invoice_id?: string | null
         }
         Relationships: []
       }
@@ -109,8 +106,8 @@ export type Database = {
           dynamic_qr_quota: number
           extra_quota_from_boosters: number | null
           id: string
+          paddle_customer_id: string | null
           queued_for_delete: string | null
-          stripe_customer_id: string | null
           subscription_level: number | null
           subscription_status: string | null
           updated_at: string
@@ -120,8 +117,8 @@ export type Database = {
           dynamic_qr_quota?: number
           extra_quota_from_boosters?: number | null
           id: string
+          paddle_customer_id?: string | null
           queued_for_delete?: string | null
-          stripe_customer_id?: string | null
           subscription_level?: number | null
           subscription_status?: string | null
           updated_at?: string
@@ -131,20 +128,13 @@ export type Database = {
           dynamic_qr_quota?: number
           extra_quota_from_boosters?: number | null
           id?: string
+          paddle_customer_id?: string | null
           queued_for_delete?: string | null
-          stripe_customer_id?: string | null
           subscription_level?: number | null
           subscription_status?: string | null
           updated_at?: string
         }
         Relationships: [
-          {
-            foreignKeyName: "fk_profiles_subscription_level"
-            columns: ["subscription_level"]
-            isOneToOne: false
-            referencedRelation: "active_subscription_packages"
-            referencedColumns: ["level"]
-          },
           {
             foreignKeyName: "fk_profiles_subscription_level"
             columns: ["subscription_level"]
@@ -249,10 +239,9 @@ export type Database = {
           id: string
           is_active: boolean | null
           name: string
-          paddle_product_id: string | null
+          paddle_price_id: string | null
           price_in_cents: number
           quantity: number
-          stripe_price_id: string
         }
         Insert: {
           created_at?: string
@@ -260,10 +249,9 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           name: string
-          paddle_product_id?: string | null
+          paddle_price_id?: string | null
           price_in_cents: number
           quantity: number
-          stripe_price_id: string
         }
         Update: {
           created_at?: string
@@ -271,60 +259,11 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           name?: string
-          paddle_product_id?: string | null
+          paddle_price_id?: string | null
           price_in_cents?: number
           quantity?: number
-          stripe_price_id?: string
         }
         Relationships: []
-      }
-      quota_purchases: {
-        Row: {
-          amount_paid_cents: number | null
-          expires_at: string | null
-          id: string
-          package_id: string
-          purchased_at: string
-          quantity: number
-          stripe_checkout_id: string
-          user_id: string
-        }
-        Insert: {
-          amount_paid_cents?: number | null
-          expires_at?: string | null
-          id?: string
-          package_id: string
-          purchased_at?: string
-          quantity: number
-          stripe_checkout_id: string
-          user_id: string
-        }
-        Update: {
-          amount_paid_cents?: number | null
-          expires_at?: string | null
-          id?: string
-          package_id?: string
-          purchased_at?: string
-          quantity?: number
-          stripe_checkout_id?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "quota_purchases_package_id_fkey"
-            columns: ["package_id"]
-            isOneToOne: false
-            referencedRelation: "quota_packages"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "quota_purchases_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
       }
       subscription_packages: {
         Row: {
@@ -336,11 +275,10 @@ export type Database = {
           is_active: boolean
           level: number
           name: string
-          paddle_product_id: string | null
+          paddle_price_id: string | null
           price_in_cents: number
           quota_amount: number
           sort_order: number
-          stripe_price_id: string | null
           updated_at: string | null
         }
         Insert: {
@@ -352,11 +290,10 @@ export type Database = {
           is_active?: boolean
           level: number
           name: string
-          paddle_product_id?: string | null
+          paddle_price_id?: string | null
           price_in_cents?: number
           quota_amount?: number
           sort_order?: number
-          stripe_price_id?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -368,11 +305,10 @@ export type Database = {
           is_active?: boolean
           level?: number
           name?: string
-          paddle_product_id?: string | null
+          paddle_price_id?: string | null
           price_in_cents?: number
           quota_amount?: number
           sort_order?: number
-          stripe_price_id?: string | null
           updated_at?: string | null
         }
         Relationships: []
@@ -382,12 +318,10 @@ export type Database = {
           created_at: string
           current_period_end: string
           id: string
+          paddle_checkout_id: string | null
           paddle_price_id: string | null
-          paddle_subscription_id: string | null
           plan_name: string | null
           status: string
-          stripe_price_id: string | null
-          stripe_subscription_id: string | null
           subscription_type: string | null
           updated_at: string | null
           user_id: string
@@ -396,12 +330,10 @@ export type Database = {
           created_at?: string
           current_period_end: string
           id?: string
+          paddle_checkout_id?: string | null
           paddle_price_id?: string | null
-          paddle_subscription_id?: string | null
           plan_name?: string | null
           status: string
-          stripe_price_id?: string | null
-          stripe_subscription_id?: string | null
           subscription_type?: string | null
           updated_at?: string | null
           user_id: string
@@ -410,12 +342,10 @@ export type Database = {
           created_at?: string
           current_period_end?: string
           id?: string
+          paddle_checkout_id?: string | null
           paddle_price_id?: string | null
-          paddle_subscription_id?: string | null
           plan_name?: string | null
           status?: string
-          stripe_price_id?: string | null
-          stripe_subscription_id?: string | null
           subscription_type?: string | null
           updated_at?: string | null
           user_id?: string
@@ -460,13 +390,13 @@ export type Database = {
           error_message: string | null
           event_type: string
           id: string
+          paddle_event_id: string | null
           processed_at: string | null
           processing_time_ms: number | null
           raw_data: Json | null
           received_at: string
           retry_count: number | null
           status: string
-          stripe_event_id: string
           updated_at: string | null
         }
         Insert: {
@@ -474,13 +404,13 @@ export type Database = {
           error_message?: string | null
           event_type: string
           id?: string
+          paddle_event_id?: string | null
           processed_at?: string | null
           processing_time_ms?: number | null
           raw_data?: Json | null
           received_at?: string
           retry_count?: number | null
           status: string
-          stripe_event_id: string
           updated_at?: string | null
         }
         Update: {
@@ -488,13 +418,13 @@ export type Database = {
           error_message?: string | null
           event_type?: string
           id?: string
+          paddle_event_id?: string | null
           processed_at?: string | null
           processing_time_ms?: number | null
           raw_data?: Json | null
           received_at?: string
           retry_count?: number | null
           status?: string
-          stripe_event_id?: string
           updated_at?: string | null
         }
         Relationships: []
@@ -509,12 +439,8 @@ export type Database = {
           features: Json | null
           id: string | null
           is_active: boolean | null
-          level: number | null
           name: string | null
-          price_in_cents: number | null
-          quota_amount: number | null
-          sort_order: number | null
-          stripe_price_id: string | null
+          paddle_price_id: string | null
           updated_at: string | null
         }
         Insert: {
@@ -524,12 +450,8 @@ export type Database = {
           features?: Json | null
           id?: string | null
           is_active?: boolean | null
-          level?: number | null
           name?: string | null
-          price_in_cents?: number | null
-          quota_amount?: number | null
-          sort_order?: number | null
-          stripe_price_id?: string | null
+          paddle_price_id?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -539,12 +461,8 @@ export type Database = {
           features?: Json | null
           id?: string | null
           is_active?: boolean | null
-          level?: number | null
           name?: string | null
-          price_in_cents?: number | null
-          quota_amount?: number | null
-          sort_order?: number | null
-          stripe_price_id?: string | null
+          paddle_price_id?: string | null
           updated_at?: string | null
         }
         Relationships: []

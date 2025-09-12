@@ -4,34 +4,23 @@ import { Suspense } from "react";
 import BoosterPackages from "@/components/booster-packages";
 import SubscriptionStatus from "@/components/subscription-status";
 import SuccessNotification from "@/components/success-notification";
-import SubscriptionPlans, {
-  type SubscriptionPackage,
-  type Subscription,
-} from "@/components/subscription-plans";
+import SubscriptionPlans from "@/components/subscription-plans";
+import { Database } from "../../../../../database.types";
+
+type Profile = Database["public"]["Tables"]["profiles"]["Row"];
+type SubscriptionPackageRaw =
+  Database["public"]["Tables"]["subscription_packages"]["Row"];
+type Subscription = Database["public"]["Tables"]["subscriptions"]["Row"];
+type QuotaPackage = Database["public"]["Tables"]["quota_packages"]["Row"];
+
+interface SubscriptionPackage extends Omit<SubscriptionPackageRaw, "features"> {
+  features: string[];
+}
 
 export const metadata = {
   title: "Subscription | QRmory",
   description: "Upgrade your QRmory subscription to create more QR codes.",
 };
-
-// Define proper types for the data structures - matching your database
-interface Profile {
-  id: string;
-  subscription_level?: number | null;
-  extra_quota_from_boosters?: number | null;
-  dynamic_qr_quota?: number | null;
-  subscription_status?: string | null;
-}
-
-interface QuotaPackage {
-  id: string;
-  name: string;
-  quantity: number;
-  price_in_cents: number;
-  is_active: boolean;
-  description?: string;
-  stripe_price_id: string;
-}
 
 interface UserData {
   profile: Profile | null;
@@ -182,8 +171,8 @@ export default async function SubscriptionPage({
 
   // Get the current subscription package
   const currentLevel = profile.subscription_level || 0;
-  const currentPackage = subscriptionPackages.find(
-    (pkg) => pkg.level === currentLevel,
+  const currentPackage: SubscriptionPackage = subscriptionPackages.find(
+    (pkg: SubscriptionPackage) => pkg.level === currentLevel,
   ) ||
     subscriptionPackages.find((pkg) => pkg.level === 0) || {
       // Fallback to free plan
@@ -192,10 +181,14 @@ export default async function SubscriptionPage({
       description: "Basic plan with limited features",
       level: 0,
       price_in_cents: 0,
+      billing_interval: "",
       quota_amount: 3,
       features: ["3 Dynamic QR codes", "Unlimited Static QR codes"],
-      stripe_price_id: null,
+      paddle_price_id: null,
       is_active: true,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      sort_order: 0,
     };
 
   // Calculate total quota for usage display

@@ -17,34 +17,15 @@ import {
   calculateUsagePercentage,
   getSubscriptionLevelName,
 } from "@/lib/subscription-config";
+import { Database } from "../../database.types";
 
-// Type definitions - updated to match your database structure
-interface SubscriptionPackage {
-  id: string;
-  name: string;
-  description: string;
-  level: number;
-  price_in_cents: number;
-  quota_amount: number;
+type Profile = Database["public"]["Tables"]["profiles"]["Row"];
+type SubscriptionPackageRaw =
+  Database["public"]["Tables"]["subscription_packages"]["Row"];
+type Subscription = Database["public"]["Tables"]["subscriptions"]["Row"];
+
+interface SubscriptionPackage extends Omit<SubscriptionPackageRaw, "features"> {
   features: string[];
-  stripe_price_id: string | null;
-}
-
-interface Profile {
-  id: string;
-  subscription_level?: number | null;
-  dynamic_qr_quota?: number | null;
-  extra_quota_from_boosters?: number | null;
-  subscription_status?: string | null; // Made optional to match your database
-}
-
-interface Subscription {
-  id: string;
-  user_id: string;
-  status: string;
-  current_period_end: string;
-  stripe_subscription_id: string;
-  plan_name?: string | null; // Made optional
 }
 
 interface SubscriptionStatusProps {
@@ -149,7 +130,7 @@ export default function SubscriptionStatus({
 
   // Handle manage subscription with enhanced error handling
   const handleManageSubscription = useCallback(async () => {
-    if (!subscription?.stripe_subscription_id) {
+    if (!subscription?.paddle_checkout_id) {
       toast("No active subscription", {
         description: "You need an active subscription to manage billing.",
       });
@@ -159,13 +140,13 @@ export default function SubscriptionStatus({
     try {
       setLoading(true);
 
-      const response = await fetch("/api/create-stripe-portal", {
+      const response = await fetch("/api/paddle/create-portal", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          subscription_id: subscription.stripe_subscription_id,
+          subscription_id: subscription.paddle_checkout_id,
         }),
       });
 
@@ -182,7 +163,6 @@ export default function SubscriptionStatus({
         throw new Error("No portal URL returned from server");
       }
 
-      // Redirect to Stripe portal
       window.location.href = data.url;
     } catch (error) {
       console.error("Error creating portal session:", error);
@@ -199,7 +179,7 @@ export default function SubscriptionStatus({
     } finally {
       setLoading(false);
     }
-  }, [subscription?.stripe_subscription_id]);
+  }, [subscription?.paddle_checkout_id]);
 
   // Get usage bar color based on percentage
   const getUsageBarColour = useCallback((percentage: number) => {
@@ -276,7 +256,7 @@ export default function SubscriptionStatus({
               onClick={handleManageSubscription}
               disabled={loading}
               className="mt-4 md:mt-0 py-2 px-4 rounded-md transition-colors bg-white/10 hover:bg-white/20 border border-white/20 text-white flex items-center backdrop-blur-sm"
-              aria-label="Manage subscription in Stripe portal"
+              aria-label="Manage subscription in Paddle portal"
             >
               {loading ? (
                 <>

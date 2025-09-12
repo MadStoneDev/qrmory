@@ -2,36 +2,23 @@
 import { createClient } from "@/utils/supabase/server";
 import { getSubscriptionLevelName } from "@/lib/subscription-config";
 import Link from "next/link";
+import { Database } from "../../../../../database.types";
 
 export const metadata = {
   title: "QR Code Quota | QRmory",
   description: "View your QR code quota and usage statistics.",
 };
 
-interface Profile {
-  id: string;
-  subscription_level?: number | null;
-  extra_quota_from_boosters?: number | null;
-  dynamic_qr_quota?: number | null;
-}
-
-interface QuotaPackage {
-  name?: string;
-  quantity?: number;
-}
-
-interface QuotaPurchase {
-  id: string;
-  user_id: string;
-  quantity: number;
-  purchased_at: string;
-  package_id?: QuotaPackage | null;
-}
+type Profile = Database["public"]["Tables"]["profiles"]["Row"];
+type Subscription = Database["public"]["Tables"]["subscriptions"]["Row"];
+type SubscriptionPackage =
+  Database["public"]["Tables"]["subscription_packages"]["Row"];
 
 interface UserData {
   profile: Profile | null;
   dynamicQRCount: number;
-  quotaPurchases: QuotaPurchase[];
+  currentPackage: SubscriptionPackage | null;
+  boosterSubscriptions: Subscription[];
 }
 
 async function fetchUserData(): Promise<UserData> {
@@ -45,7 +32,8 @@ async function fetchUserData(): Promise<UserData> {
     return {
       profile: null,
       dynamicQRCount: 0,
-      quotaPurchases: [],
+      currentPackage: null,
+      boosterSubscriptions: [],
     };
   }
 
@@ -61,7 +49,8 @@ async function fetchUserData(): Promise<UserData> {
     return {
       profile: null,
       dynamicQRCount: 0,
-      quotaPurchases: [],
+      currentPackage: null,
+      boosterSubscriptions: [],
     };
   }
 
@@ -76,28 +65,39 @@ async function fetchUserData(): Promise<UserData> {
     console.error("Error counting QR codes:", countError);
   }
 
-  // Fetch recent quota purchases
-  const { data: quotaPurchases, error: purchasesError } = await supabase
-    .from("quota_purchases")
-    .select("*, package_id(name, quantity)")
-    .eq("user_id", user.id)
-    .order("purchased_at", { ascending: false })
-    .limit(5);
+  // Get current subscription package
+  const currentLevel = profile.subscription_level || 0;
+  const { data: currentPackage } = await supabase
+    .from("subscription_packages")
+    .select("*")
+    .eq("level", currentLevel)
+    .eq("is_active", true)
+    .single();
 
-  if (purchasesError) {
-    console.error("Error fetching quota purchases:", purchasesError);
+  // Fetch active booster subscriptions
+  const { data: boosterSubscriptions, error: boosterError } = await supabase
+    .from("subscriptions")
+    .select("*")
+    .eq("user_id", user.id)
+    .eq("subscription_type", "booster")
+    .eq("status", "active")
+    .order("created_at", { ascending: false });
+
+  if (boosterError) {
+    console.error("Error fetching booster subscriptions:", boosterError);
   }
 
   return {
     profile: profile as Profile,
     dynamicQRCount: dynamicQRCount || 0,
-    quotaPurchases: (quotaPurchases as QuotaPurchase[]) || [],
+    currentPackage: currentPackage as SubscriptionPackage | null,
+    boosterSubscriptions: (boosterSubscriptions as Subscription[]) || [],
   };
 }
 
 export default async function QuotaPage() {
-  const supabase = await createClient();
-  const { profile, dynamicQRCount, quotaPurchases } = await fetchUserData();
+  const { profile, dynamicQRCount, currentPackage, boosterSubscriptions } =
+    await fetchUserData();
 
   if (!profile) {
     return (
@@ -119,16 +119,22 @@ export default async function QuotaPage() {
   // Get the current subscription level (as a number)
   const currentLevel = profile.subscription_level || 0;
 
-  const { data: currentPackage } = await supabase
-    .from("subscription_packages")
-    .select("*")
-    .eq("level", currentLevel)
-    .eq("is_active", true)
-    .single();
+  // Use currentPackage or fallback
+  const packageToDisplay = currentPackage || {
+    id: "fallback-free",
+    name: "Free",
+    description: "Basic plan with limited features",
+    level: 0,
+    price_in_cents: 0,
+    quota_amount: 3,
+    features: ["3 Dynamic QR codes", "Unlimited Static QR codes"],
+    paddle_price_id: null,
+    is_active: true,
+  };
 
   // Calculate total available quota
   const planQuota =
-    profile.dynamic_qr_quota || currentPackage?.quota_amount || 3;
+    profile.dynamic_qr_quota || packageToDisplay.quota_amount || 3;
   const additionalQuota = profile.extra_quota_from_boosters || 0;
   const totalQuota = planQuota + additionalQuota;
 
@@ -220,13 +226,13 @@ export default async function QuotaPage() {
 
           <div className="bg-neutral-50 p-4 rounded-md">
             <p className="text-sm font-medium text-neutral-700">
-              Additional Quota
+              Booster Quota
             </p>
             <p className="text-2xl font-bold text-qrmory-purple-800">
               {additionalQuota}
             </p>
             <p className="text-xs text-neutral-500">
-              Extra QR codes from boosters
+              Extra QR codes from booster subscriptions
             </p>
           </div>
 
@@ -250,44 +256,37 @@ export default async function QuotaPage() {
         </div>
       </div>
 
-      {/* Quota purchase history */}
-      {quotaPurchases.length > 0 && (
-        <div className="bg-white rounded-lg shadow-sm border p-6">
+      {/* Active booster subscriptions */}
+      {boosterSubscriptions.length > 0 && (
+        <div className="bg-white rounded-lg shadow-sm border p-6 mb-6">
           <h2 className="text-lg font-bold text-qrmory-purple-800 mb-4">
-            Recent Quota Purchases
+            Active Booster Subscriptions
           </h2>
 
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-neutral-200">
-              <thead>
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
-                    Package
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
-                    Quantity
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
-                    Date
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-neutral-200">
-                {quotaPurchases.map((purchase) => (
-                  <tr key={purchase.id}>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-neutral-800">
-                      {purchase.package_id?.name || "Quota Package"}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-neutral-600">
-                      {purchase.package_id?.quantity || purchase.quantity}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-neutral-600">
-                      {new Date(purchase.purchased_at).toLocaleDateString()}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="space-y-3">
+            {boosterSubscriptions.map((subscription) => (
+              <div
+                key={subscription.id}
+                className="flex justify-between items-center p-3 bg-orange-50 border border-orange-200 rounded-lg"
+              >
+                <div>
+                  <p className="font-medium text-orange-800">
+                    {subscription.plan_name || "Booster Subscription"}
+                  </p>
+                  <p className="text-sm text-orange-600">
+                    Status: {subscription.status}
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm text-orange-600">
+                    Renews:{" "}
+                    {new Date(
+                      subscription.current_period_end,
+                    ).toLocaleDateString()}
+                  </p>
+                </div>
+              </div>
+            ))}
           </div>
 
           <div className="mt-4 text-right">
@@ -295,22 +294,27 @@ export default async function QuotaPage() {
               href="/subscription"
               className="text-sm font-medium text-qrmory-purple-800 hover:text-qrmory-purple-600"
             >
-              Purchase more quota →
+              Manage booster subscriptions →
             </Link>
           </div>
         </div>
       )}
 
-      {quotaPurchases.length === 0 && (
+      {/* No booster subscriptions */}
+      {boosterSubscriptions.length === 0 && (
         <div className="bg-white rounded-lg shadow-sm border p-6 text-center">
+          <h2 className="text-lg font-bold text-qrmory-purple-800 mb-2">
+            Need More QR Codes?
+          </h2>
           <p className="text-neutral-600 mb-3">
-            You haven't purchased any additional quota yet.
+            You don't have any booster subscriptions yet. Add monthly boosters
+            to increase your quota.
           </p>
           <Link
             href="/subscription"
             className="inline-flex items-center justify-center rounded-md px-4 py-2 text-sm font-medium text-white bg-qrmory-purple-800 hover:bg-qrmory-purple-700"
           >
-            View Quota Boosters
+            View Booster Subscriptions
           </Link>
         </div>
       )}

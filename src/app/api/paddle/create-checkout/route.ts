@@ -47,10 +47,7 @@ export async function POST(request: Request) {
     const paddleCheckoutUrl = new URL("https://checkout.paddle.com/checkout");
 
     paddleCheckoutUrl.searchParams.set("vendor", process.env.PADDLE_VENDOR_ID!);
-    paddleCheckoutUrl.searchParams.set(
-      "product",
-      planDetails.paddle_product_id,
-    ); // You'll need to add this field
+    paddleCheckoutUrl.searchParams.set("product", planDetails.paddle_price_id); // You'll need to add this field
     paddleCheckoutUrl.searchParams.set(
       "passthrough",
       JSON.stringify({

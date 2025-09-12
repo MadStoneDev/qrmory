@@ -71,7 +71,7 @@ async function handleSubscriptionCreated(supabase: any, data: any) {
     const { data: packageData } = await supabase
       .from("subscription_packages")
       .select("level, quota_amount")
-      .eq("paddle_product_id", data.subscription_plan_id)
+      .eq("paddle_price_id", data.subscription_plan_id)
       .single();
 
     if (packageData) {
@@ -89,7 +89,7 @@ async function handleSubscriptionCreated(supabase: any, data: any) {
     const { data: quotaData } = await supabase
       .from("quota_packages")
       .select("quantity")
-      .eq("paddle_product_id", data.subscription_plan_id)
+      .eq("paddle_price_id", data.subscription_plan_id)
       .single();
 
     if (quotaData) {
@@ -153,7 +153,7 @@ async function handleSubscriptionCancelled(supabase: any, data: any) {
       const { data: quotaData } = await supabase
         .from("quota_packages")
         .select("quantity")
-        .eq("paddle_product_id", data.subscription_plan_id)
+        .eq("paddle_price_id", data.subscription_plan_id)
         .single();
 
       if (quotaData) {

@@ -9,42 +9,21 @@ import {
   IconStar,
   IconBolt,
 } from "@tabler/icons-react";
+import { Database } from "../../database.types";
 
-export interface SubscriptionPackage {
-  id: string;
-  name: string;
-  description: string;
-  level: number;
-  price_in_cents: number;
-  quota_amount: number;
+type SubscriptionPackageRaw =
+  Database["public"]["Tables"]["subscription_packages"]["Row"];
+type Subscription = Database["public"]["Tables"]["subscriptions"]["Row"];
+type QuotaPackage = Database["public"]["Tables"]["quota_packages"]["Row"];
+
+interface SubscriptionPackage extends Omit<SubscriptionPackageRaw, "features"> {
   features: string[];
-  stripe_price_id: string | null;
-  is_active: boolean;
-}
-
-export interface BoosterPackage {
-  id: string;
-  name: string;
-  description?: string;
-  price_in_cents: number;
-  quantity: number;
-  stripe_price_id: string;
-  is_active: boolean;
-}
-
-export interface Subscription {
-  id: string;
-  user_id: string;
-  status: string;
-  current_period_end: string;
-  stripe_subscription_id: string;
-  plan_name?: string | null; // Made optional to match database
 }
 
 interface SubscriptionPlansProps {
   currentLevel: number;
   packages: SubscriptionPackage[];
-  boosters?: BoosterPackage[]; // Make optional to match your usage
+  boosters?: QuotaPackage[];
   subscription: Subscription | null;
   usedQuota?: number;
   totalQuota?: number;
@@ -89,7 +68,7 @@ export default function SubscriptionPlans({
       try {
         setLoading({ type: "subscription", id: level });
 
-        const response = await fetch("/api/create-stripe-checkout", {
+        const response = await fetch("/api/paddle/create-checkout", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -111,7 +90,6 @@ export default function SubscriptionPlans({
 
         const data = await response.json();
 
-        // Redirect to Stripe checkout
         window.location.href = data.url;
       } catch (error) {
         console.error("Error creating checkout:", error);
@@ -139,7 +117,7 @@ export default function SubscriptionPlans({
         setLoading({ type: "booster", id: boosterId });
 
         // Use subscription checkout since boosters are monthly subscriptions
-        const response = await fetch("/api/create-stripe-checkout", {
+        const response = await fetch("/api/paddle/create-checkout", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -162,7 +140,6 @@ export default function SubscriptionPlans({
 
         const data = await response.json();
 
-        // Redirect to Stripe checkout
         window.location.href = data.url;
       } catch (error) {
         console.error("Error creating booster checkout:", error);

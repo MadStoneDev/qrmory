@@ -4,17 +4,9 @@ import { useState, useCallback, useMemo } from "react";
 import { toast } from "sonner";
 import { formatPrice } from "@/lib/subscription-config";
 import { IconLoader2, IconBolt, IconPlus } from "@tabler/icons-react";
+import { Database } from "../../database.types";
 
-// Interface matching your database structure
-interface QuotaPackage {
-  id: string;
-  name: string;
-  quantity: number;
-  price_in_cents: number;
-  is_active: boolean;
-  description?: string;
-  stripe_price_id: string;
-}
+type QuotaPackage = Database["public"]["Tables"]["quota_packages"]["Row"];
 
 interface BoosterPackagesProps {
   packages: QuotaPackage[];
@@ -41,7 +33,7 @@ export default function BoosterPackages({ packages }: BoosterPackagesProps) {
         setLoading(packageId);
 
         // Use the subscription checkout endpoint since boosters are monthly subscriptions
-        const response = await fetch("/api/create-stripe-checkout", {
+        const response = await fetch("/api/paddle/create-checkout", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -68,7 +60,6 @@ export default function BoosterPackages({ packages }: BoosterPackagesProps) {
           throw new Error("No checkout URL returned from server");
         }
 
-        // Redirect to Stripe checkout
         window.location.href = data.url;
       } catch (error) {
         console.error("Error creating booster checkout:", error);
