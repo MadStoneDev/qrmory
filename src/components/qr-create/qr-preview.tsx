@@ -48,7 +48,8 @@ function QRPreviewContent({
 }: Props) {
   const { SVG } = useQRCode();
   const qrContainerRef = useRef<HTMLDivElement>(null);
-  const stickyRef = useRef<HTMLElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
+  const articleRef = useRef<HTMLElement>(null);
   const { reportError } = useErrorReporting();
 
   // Logo state
@@ -74,26 +75,57 @@ function QRPreviewContent({
 
   // Sticky behavior
   useEffect(() => {
-    const element = stickyRef.current;
-    if (!element) return;
+    const content = contentRef.current;
+    const container = articleRef.current;
+    if (!content || !container) return;
 
     const handleScroll = () => {
-      const rect = element.getBoundingClientRect();
-      const parent = element.parentElement;
-      if (!parent) return;
+      const containerRect = container.getBoundingClientRect();
+      const contentHeight = content.offsetHeight;
+      const containerHeight = container.offsetHeight;
 
-      const parentRect = parent.getBoundingClientRect();
-      const shouldStick = parentRect.top < 0 && parentRect.bottom > rect.height;
+      // Only apply sticky behavior if content is shorter than container
+      if (contentHeight >= containerHeight) {
+        content.style.position = "static";
+        content.style.top = "auto";
+        content.style.transform = "translateY(0)";
+        return;
+      }
 
-      if (shouldStick) {
-        element.style.position = "sticky";
-        element.style.top = "1rem";
+      const containerTop = containerRect.top;
+      const containerBottom = containerRect.bottom;
+      const stickyOffset = 20; // 1rem
+
+      // Calculate available space for movement
+      const moveableSpace = containerHeight - contentHeight;
+
+      if (containerTop > stickyOffset) {
+        // Article hasn't reached sticky position yet - content at top
+        content.style.position = "static";
+        content.style.top = "auto";
+        content.style.transform = "translateY(0)";
       } else {
-        element.style.position = "static";
+        // Article top has passed sticky position
+        // Check if making content sticky would cause it to overflow bottom
+        const stickyBottomPosition = stickyOffset + contentHeight;
+
+        if (stickyBottomPosition <= containerBottom) {
+          // Content can stick without overflowing - make it sticky
+          content.style.position = "sticky";
+          content.style.top = `${stickyOffset}px`;
+          content.style.transform = "translateY(0)";
+          container.style.justifyContent = "flex-start";
+        } else {
+          // Content would overflow if sticky - position it at bottom of container
+          content.style.position = "static";
+          content.style.top = "auto";
+
+          container.style.justifyContent = "flex-end";
+        }
       }
     };
 
-    window.addEventListener("scroll", handleScroll);
+    window.addEventListener("scroll", handleScroll, { passive: true });
     handleScroll(); // Initial check
 
     return () => window.removeEventListener("scroll", handleScroll);
@@ -435,149 +467,156 @@ function QRPreviewContent({
 
   return (
     <article
-      ref={stickyRef}
-      className={`mx-auto p-4 lg:pt-8 lg:pb-10 lg:px-10 self-start lg:self-auto flex flex-col lg:w-qr-preview w-full sm:max-w-xs bg-white ${
+      ref={articleRef}
+      className={`mx-auto p-4 lg:pt-8 lg:pb-10 lg:px-10 flex flex-col lg:w-qr-preview w-full sm:max-w-xs bg-white ${
         shadow
           ? "rounded-3xl shadow-xl shadow-neutral-300/50"
           : "lg:rounded-3xl lg:shadow-xl lg:shadow-neutral-300/50"
-      } text-center`}
+      } text-center relative`}
     >
-      <header className="w-full">
-        <h4 className="text-xs text-neutral-400">Your QR Code Title</h4>
-        <h5 className="text-base text-qrmory-purple-800 font-bold">
-          {qrState.title || "Untitled QR Code"}
-        </h5>
-      </header>
-
       <div
-        ref={qrContainerRef}
-        className="my-6 lg:my-16 lg:mx-auto grid place-content-center text-neutral-600 dark:text-neutral-600 text-sm relative"
-        role="img"
-        aria-label={`QR code for ${qrState.title || "content"}`}
+        ref={contentRef}
+        className="transition-all duration-150 ease-out"
+        style={{ willChange: "transform" }}
       >
-        <SVG
-          text={displayValue}
-          options={{
-            errorCorrectionLevel: userSettings.qrErrorCorrectionLevel,
-            color: {
-              dark: qrState.changed ? "#78716c" : "#000000",
-              light: "#0000",
-            },
-            width: 180,
-            margin: 1,
-          }}
-        />
+        <header className="w-full">
+          <h4 className="text-xs text-neutral-400">Your QR Code Title</h4>
+          <h5 className="text-base text-qrmory-purple-800 font-bold">
+            {qrState.title || "Untitled QR Code"}
+          </h5>
+        </header>
 
-        {/* Logo overlay for preview */}
-        {showLogo && hasLogo && !qrState.changed && (
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <div
-              className="bg-white rounded-full shadow-sm border border-neutral-200 flex items-center justify-center"
-              style={{
-                width: `${previewLogoSize}px`,
-                height: `${previewLogoSize}px`,
-                padding: "2px",
-              }}
-            >
-              <img
-                src={userSettings.logoUrl || ""}
-                alt="QR Logo"
-                className="rounded-full object-contain"
+        <div
+          ref={qrContainerRef}
+          className="my-6 lg:my-16 lg:mx-auto grid place-content-center text-neutral-600 dark:text-neutral-600 text-sm relative"
+          role="img"
+          aria-label={`QR code for ${qrState.title || "content"}`}
+        >
+          <SVG
+            text={displayValue}
+            options={{
+              errorCorrectionLevel: userSettings.qrErrorCorrectionLevel,
+              color: {
+                dark: qrState.changed ? "#78716c" : "#000000",
+                light: "#0000",
+              },
+              width: 180,
+              margin: 1,
+            }}
+          />
+
+          {/* Logo overlay for preview */}
+          {showLogo && hasLogo && !qrState.changed && (
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+              <div
+                className="bg-white rounded-full shadow-sm border border-neutral-200 flex items-center justify-center"
                 style={{
-                  width: `${previewLogoSize - 4}px`,
-                  height: `${previewLogoSize - 4}px`,
+                  width: `${previewLogoSize}px`,
+                  height: `${previewLogoSize}px`,
+                  padding: "2px",
                 }}
-                onError={(e) => {
-                  e.currentTarget.style.display = "none";
-                }}
-              />
-            </div>
-          </div>
-        )}
-
-        {qrState.changed && (
-          <div className="text-center mt-2 text-neutral-500 text-sm font-medium">
-            Click "Generate QR" to update
-          </div>
-        )}
-      </div>
-
-      {/* Logo Controls */}
-      {user && (
-        <div className="mb-4 p-3 bg-neutral-50 rounded-lg border">
-          <h6 className="text-xs font-medium text-neutral-700 mb-2">
-            Logo Settings
-          </h6>
-
-          {!hasLogo ? (
-            <div className="text-center">
-              <p className="text-xs text-neutral-600 mb-2">
-                No logo found in your settings
-              </p>
-              <a
-                href="/settings"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-block text-xs px-3 py-1.5 bg-qrmory-purple-600 text-white rounded hover:bg-qrmory-purple-700 transition-colors"
               >
-                Upload Logo in Settings
-              </a>
-              <button
-                onClick={handleLogoRefresh}
-                className="block mx-auto mt-2 text-xs text-qrmory-purple-600 hover:text-qrmory-purple-800 underline"
-              >
-                I've added my logo - check again
-              </button>
-            </div>
-          ) : (
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-neutral-600">
-                  Show logo on QR
-                </span>
-                <button
-                  onClick={() => setShowLogo(!showLogo)}
-                  className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
-                    showLogo ? "bg-qrmory-purple-600" : "bg-neutral-300"
-                  }`}
-                >
-                  <span
-                    className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${
-                      showLogo ? "translate-x-5" : "translate-x-1"
-                    }`}
-                  />
-                </button>
+                <img
+                  src={userSettings.logoUrl || ""}
+                  alt="QR Logo"
+                  className="rounded-full object-contain"
+                  style={{
+                    width: `${previewLogoSize - 4}px`,
+                    height: `${previewLogoSize - 4}px`,
+                  }}
+                  onError={(e) => {
+                    e.currentTarget.style.display = "none";
+                  }}
+                />
               </div>
+            </div>
+          )}
 
-              {logoRecommendation === "warning" && (
-                <div className="p-2 bg-yellow-50 border border-yellow-200 rounded text-xs">
-                  <p className="text-yellow-800">
-                    ⚠️ Your error correction level (L) may not be sufficient for
-                    a logo. Consider using M, Q, or H for better reliability.
-                  </p>
-                </div>
-              )}
-
-              <button
-                onClick={handleLogoRefresh}
-                className="w-full text-xs text-neutral-600 hover:text-neutral-800 underline"
-              >
-                Refresh logo
-              </button>
+          {qrState.changed && (
+            <div className="text-center mt-2 text-neutral-500 text-sm font-medium">
+              Click "Generate QR" to update
             </div>
           )}
         </div>
-      )}
 
-      {/* Settings indicator */}
-      <div className="mb-4 text-xs text-neutral-400 space-y-1">
-        <div>
-          Size: {userSettings.qrSize} • Error Level:{" "}
-          {userSettings.qrErrorCorrectionLevel || "M"}
+        {/* Logo Controls */}
+        {user && (
+          <div className="mb-4 p-3 bg-neutral-50 rounded-lg border">
+            <h6 className="text-xs font-medium text-neutral-700 mb-2">
+              Logo Settings
+            </h6>
+
+            {!hasLogo ? (
+              <div className="text-center">
+                <p className="text-xs text-neutral-600 mb-2">
+                  No logo found in your settings
+                </p>
+                <a
+                  href="/settings"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-block text-xs px-3 py-1.5 bg-qrmory-purple-600 text-white rounded hover:bg-qrmory-purple-700 transition-colors"
+                >
+                  Upload Logo in Settings
+                </a>
+                <button
+                  onClick={handleLogoRefresh}
+                  className="block mx-auto mt-2 text-xs text-qrmory-purple-600 hover:text-qrmory-purple-800 underline"
+                >
+                  I've added my logo - check again
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-neutral-600">
+                    Show logo on QR
+                  </span>
+                  <button
+                    onClick={() => setShowLogo(!showLogo)}
+                    className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
+                      showLogo ? "bg-qrmory-purple-600" : "bg-neutral-300"
+                    }`}
+                  >
+                    <span
+                      className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${
+                        showLogo ? "translate-x-5" : "translate-x-1"
+                      }`}
+                    />
+                  </button>
+                </div>
+
+                {logoRecommendation === "warning" && (
+                  <div className="p-2 bg-yellow-50 border border-yellow-200 rounded text-xs">
+                    <p className="text-yellow-800">
+                      ⚠️ Your error correction level (L) may not be sufficient
+                      for a logo. Consider using M, Q, or H for better
+                      reliability.
+                    </p>
+                  </div>
+                )}
+
+                <button
+                  onClick={handleLogoRefresh}
+                  className="w-full text-xs text-neutral-600 hover:text-neutral-800 underline"
+                >
+                  Refresh logo
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Settings indicator */}
+        <div className="mb-4 text-xs text-neutral-400 space-y-1">
+          <div>
+            Size: {userSettings.qrSize} • Error Level:{" "}
+            {userSettings.qrErrorCorrectionLevel || "M"}
+          </div>
         </div>
-      </div>
 
-      {downloadButtons}
+        {downloadButtons}
+      </div>
     </article>
   );
 }

@@ -18,6 +18,7 @@ import {
   useSortable,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { IconDotsVertical, IconTrash } from "@tabler/icons-react";
 
 interface LinkItem {
   id: string;
@@ -73,34 +74,21 @@ function SortableLink({
         isDragging ? "shadow-lg z-10" : "hover:border-neutral-300"
       }`}
     >
-      <div className="flex justify-between items-center mb-2">
-        <div className="flex items-center space-x-2">
+      <div className="flex justify-between items-center gap-2 mb-2">
+        <div className="flex items-center space-x-1">
           <div
             {...attributes}
             {...listeners}
             className="flex flex-col space-y-1 cursor-grab active:cursor-grabbing p-1 hover:bg-neutral-200 rounded"
             aria-label="Drag to reorder"
           >
-            <div className="w-1 h-1 bg-neutral-400 rounded-full"></div>
-            <div className="w-1 h-1 bg-neutral-400 rounded-full"></div>
-            <div className="w-1 h-1 bg-neutral-400 rounded-full"></div>
+            <IconDotsVertical size={20} />
           </div>
-          <span className="text-xs font-medium text-neutral-500">
-            Link {index + 1}
+          <span className="flex items-center justify-center bg-qrmory-purple-800 h-8 aspect-square rounded-full text-xs font-medium text-neutral-200">
+            {index + 1}
           </span>
         </div>
 
-        <button
-          type="button"
-          onClick={() => onRemove(link.id)}
-          className="text-xs px-2 py-1 bg-red-100 text-red-600 rounded hover:bg-red-200"
-          title="Remove link"
-        >
-          ✕
-        </button>
-      </div>
-
-      <div className="space-y-2">
         <input
           type="text"
           className="control-input w-full text-sm"
@@ -109,17 +97,27 @@ function SortableLink({
           onChange={(e) => onUpdate(link.id, "title", e.target.value)}
           maxLength={40}
         />
-        <input
-          type="url"
-          className="control-input w-full text-sm"
-          placeholder="URL (e.g., https://example.com)"
-          value={link.url}
-          onChange={(e) => onUpdate(link.id, "url", e.target.value)}
-        />
-        {link.url && !isValidUrl(link.url) && (
-          <p className="text-red-500 text-xs">Please enter a valid URL</p>
-        )}
+
+        <button
+          type="button"
+          onClick={() => onRemove(link.id)}
+          className="text-xs px-2 py-1 bg-red-50 text-red-500 rounded hover:bg-red-100 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+          title="Remove link"
+        >
+          <IconTrash size={16} />
+        </button>
       </div>
+
+      <input
+        type="url"
+        className="control-input w-full text-sm"
+        placeholder="URL (e.g., https://example.com)"
+        value={link.url}
+        onChange={(e) => onUpdate(link.id, "url", e.target.value)}
+      />
+      {link.url && !isValidUrl(link.url) && (
+        <p className="text-red-500 text-xs">Please enter a valid URL</p>
+      )}
     </div>
   );
 }
