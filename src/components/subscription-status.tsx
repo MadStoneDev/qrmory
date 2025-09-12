@@ -60,31 +60,31 @@ const StatusBadge = ({ status }: { status: string }) => {
     switch (status) {
       case "active":
         return {
-          color: "bg-green-100 text-green-800 border-green-200",
+          colour: "bg-green-100 text-green-800 border-green-200",
           icon: <IconCheck size={14} />,
           text: "Active",
         };
       case "past_due":
         return {
-          color: "bg-orange-100 text-orange-800 border-orange-200",
+          colour: "bg-orange-100 text-orange-800 border-orange-200",
           icon: <IconAlertTriangle size={14} />,
           text: "Past Due",
         };
       case "canceled":
         return {
-          color: "bg-red-100 text-red-800 border-red-200",
+          colour: "bg-red-100 text-red-800 border-red-200",
           icon: null,
           text: "Canceled",
         };
       case "trialing":
         return {
-          color: "bg-blue-100 text-blue-800 border-blue-200",
+          colour: "bg-blue-100 text-blue-800 border-blue-200",
           icon: <IconCalendar size={14} />,
           text: "Trial",
         };
       default:
         return {
-          color: "bg-neutral-100 text-neutral-800 border-neutral-200",
+          colour: "bg-neutral-100 text-neutral-800 border-neutral-200",
           icon: null,
           text: status || "Unknown",
         };
