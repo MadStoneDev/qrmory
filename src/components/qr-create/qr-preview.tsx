@@ -33,6 +33,7 @@ interface Props {
   shadow?: boolean;
   user: User | null;
   userSettings: UserSettings;
+  qrColors: { foreground: string; background: string };
 }
 
 interface QRSizes {
@@ -45,12 +46,17 @@ function QRPreviewContent({
   shadow,
   user,
   userSettings,
+  qrColors,
 }: Props) {
   const { SVG } = useQRCode();
   const qrContainerRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const articleRef = useRef<HTMLElement>(null);
   const { reportError } = useErrorReporting();
+
+  const [originalErrorLevel, setOriginalErrorLevel] = useState(
+    userSettings.qrErrorCorrectionLevel,
+  );
 
   // Logo state
   const [showLogo, setShowLogo] = useState(false);
@@ -72,64 +78,6 @@ function QRPreviewContent({
     if (errorCorrectionSufficient) return "safe";
     return userSettings.qrErrorCorrectionLevel === "L" ? "warning" : "safe";
   }, [hasLogo, errorCorrectionSufficient, userSettings.qrErrorCorrectionLevel]);
-
-  // Sticky behavior
-  useEffect(() => {
-    const content = contentRef.current;
-    const container = articleRef.current;
-    if (!content || !container) return;
-
-    const handleScroll = () => {
-      const containerRect = container.getBoundingClientRect();
-      const contentHeight = content.offsetHeight;
-      const containerHeight = container.offsetHeight;
-
-      // Only apply sticky behavior if content is shorter than container
-      if (contentHeight >= containerHeight) {
-        content.style.position = "static";
-        content.style.top = "auto";
-        content.style.transform = "translateY(0)";
-        return;
-      }
-
-      const containerTop = containerRect.top;
-      const containerBottom = containerRect.bottom;
-      const stickyOffset = 20; // 1rem
-
-      // Calculate available space for movement
-      const moveableSpace = containerHeight - contentHeight;
-
-      if (containerTop > stickyOffset) {
-        // Article hasn't reached sticky position yet - content at top
-        content.style.position = "static";
-        content.style.top = "auto";
-        content.style.transform = "translateY(0)";
-      } else {
-        // Article top has passed sticky position
-        // Check if making content sticky would cause it to overflow bottom
-        const stickyBottomPosition = stickyOffset + contentHeight;
-
-        if (stickyBottomPosition <= containerBottom) {
-          // Content can stick without overflowing - make it sticky
-          content.style.position = "sticky";
-          content.style.top = `${stickyOffset}px`;
-          content.style.transform = "translateY(0)";
-          container.style.justifyContent = "flex-start";
-        } else {
-          // Content would overflow if sticky - position it at bottom of container
-          content.style.position = "static";
-          content.style.top = "auto";
-
-          container.style.justifyContent = "flex-end";
-        }
-      }
-    };
-
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    handleScroll(); // Initial check
-
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
 
   // Define size lookup based on user settings
   const qrSizeLookup: QRSizes = useMemo(
@@ -174,8 +122,7 @@ function QRPreviewContent({
   const handleDownload = useCallback(
     async (format: "svg" | "png" | "jpg") => {
       const startTime = Date.now();
-      const shouldIncludeLogo =
-        showLogo && hasLogo && errorCorrectionSufficient;
+      const shouldIncludeLogo = showLogo && hasLogo;
 
       try {
         if (!qrContainerRef.current) {
@@ -243,10 +190,11 @@ function QRPreviewContent({
               "g",
             );
 
-            // Calculate logo size and position (15% of QR code size, centered)
+            // Calculate logo size and position (20% of QR code size, centered)
             const viewBox = svgElement.getAttribute("viewBox") || "0 0 29 29";
             const [, , viewWidth, viewHeight] = viewBox.split(" ").map(Number);
-            const logoSize = Math.max(viewWidth, viewHeight) * 0.15;
+            const logoSize =
+              Math.max(viewWidth, viewHeight) * (shouldIncludeLogo ? 0.2 : 0);
             const logoX = (viewWidth - logoSize) / 2;
             const logoY = (viewHeight - logoSize) / 2;
 
@@ -403,6 +351,84 @@ function QRPreviewContent({
     document.body.removeChild(downloadLink);
   }, []);
 
+  const effectiveErrorCorrectionLevel = useMemo(() => {
+    if (!showLogo || !hasLogo) {
+      return userSettings.qrErrorCorrectionLevel;
+    }
+
+    // When logo is on, ensure minimum Q level
+    const currentLevel = userSettings.qrErrorCorrectionLevel;
+    if (currentLevel === "L" || currentLevel === "M") {
+      return "Q"; // Force Q level for logo compatibility
+    }
+
+    return currentLevel; // Keep Q or H as is
+  }, [showLogo, hasLogo, userSettings.qrErrorCorrectionLevel]);
+
+  // Sticky behavior
+  useEffect(() => {
+    const content = contentRef.current;
+    const container = articleRef.current;
+    if (!content || !container) return;
+
+    const handleScroll = () => {
+      const containerRect = container.getBoundingClientRect();
+      const contentHeight = content.offsetHeight;
+      const containerHeight = container.offsetHeight;
+
+      // Only apply sticky behavior if content is shorter than container
+      if (contentHeight >= containerHeight) {
+        content.style.position = "static";
+        content.style.top = "auto";
+        content.style.transform = "translateY(0)";
+        return;
+      }
+
+      const containerTop = containerRect.top;
+      const containerBottom = containerRect.bottom;
+      const stickyOffset = 20; // 1rem
+
+      // Calculate available space for movement
+      const moveableSpace = containerHeight - contentHeight;
+
+      if (containerTop > stickyOffset) {
+        // Article hasn't reached sticky position yet - content at top
+        content.style.position = "static";
+        content.style.top = "auto";
+        content.style.transform = "translateY(0)";
+      } else {
+        // Article top has passed sticky position
+        // Check if making content sticky would cause it to overflow bottom
+        const stickyBottomPosition = stickyOffset + contentHeight;
+
+        if (stickyBottomPosition <= containerBottom) {
+          // Content can stick without overflowing - make it sticky
+          content.style.position = "sticky";
+          content.style.top = `${stickyOffset}px`;
+          content.style.transform = "translateY(0)";
+          container.style.justifyContent = "flex-start";
+        } else {
+          // Content would overflow if sticky - position it at bottom of container
+          content.style.position = "static";
+          content.style.top = "auto";
+
+          container.style.justifyContent = "flex-end";
+        }
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    handleScroll(); // Initial check
+
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  useEffect(() => {
+    if (!showLogo) {
+      setOriginalErrorLevel(userSettings.qrErrorCorrectionLevel);
+    }
+  }, [userSettings.qrErrorCorrectionLevel, showLogo]);
+
   // Cleanup cache on component unmount
   useEffect(() => {
     return () => {
@@ -413,8 +439,22 @@ function QRPreviewContent({
     };
   }, []);
 
-  // Calculate preview logo size (15% of 180px display size)
-  const previewLogoSize = Math.floor(180 * 0.15);
+  // Calculate preview logo size (20% of 180px display size)
+  const previewLogoSize = useMemo(() => {
+    if (!qrContainerRef.current) return 36; // fallback for 20%
+
+    const svgElement = qrContainerRef.current.querySelector("svg");
+    if (!svgElement) return 36;
+
+    const viewBox = svgElement.getAttribute("viewBox") || "0 0 29 29";
+    const [, , viewWidth, viewHeight] = viewBox.split(" ").map(Number);
+    const logoSizeInViewBox = Math.max(viewWidth, viewHeight) * 0.2; // 20% instead of 15%
+
+    const displayWidth = 180;
+    const scaleRatio = displayWidth / Math.max(viewWidth, viewHeight);
+
+    return Math.floor(logoSizeInViewBox * scaleRatio);
+  }, [displayValue, qrState.value]);
 
   // Memoized download buttons to prevent unnecessary re-renders
   const downloadButtons = useMemo(
@@ -495,10 +535,12 @@ function QRPreviewContent({
           <SVG
             text={displayValue}
             options={{
-              errorCorrectionLevel: userSettings.qrErrorCorrectionLevel,
+              errorCorrectionLevel: effectiveErrorCorrectionLevel,
               color: {
-                dark: qrState.changed ? "#78716c" : "#000000",
-                light: "#0000",
+                dark: qrState.changed
+                  ? "#78716c"
+                  : qrColors?.foreground || "#000000",
+                light: qrColors?.background || "#0000",
               },
               width: 180,
               margin: 1,
@@ -509,7 +551,7 @@ function QRPreviewContent({
           {showLogo && hasLogo && !qrState.changed && (
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
               <div
-                className="bg-white rounded-full shadow-sm border border-neutral-200 flex items-center justify-center"
+                className="bg-white rounded-full shadow-sm flex items-center justify-center"
                 style={{
                   width: `${previewLogoSize}px`,
                   height: `${previewLogoSize}px`,
@@ -586,15 +628,18 @@ function QRPreviewContent({
                   </button>
                 </div>
 
-                {logoRecommendation === "warning" && (
-                  <div className="p-2 bg-yellow-50 border border-yellow-200 rounded text-xs">
-                    <p className="text-yellow-800">
-                      ⚠️ Your error correction level (L) may not be sufficient
-                      for a logo. Consider using M, Q, or H for better
-                      reliability.
-                    </p>
-                  </div>
-                )}
+                {logoRecommendation === "safe" &&
+                  showLogo &&
+                  hasLogo &&
+                  (userSettings.qrErrorCorrectionLevel === "L" ||
+                    userSettings.qrErrorCorrectionLevel === "M") && (
+                    <div className="p-2 bg-blue-50 border border-blue-200 rounded text-xs">
+                      <p className="text-blue-800">
+                        ℹ️ Error correction temporarily upgraded to Q level for
+                        logo compatibility.
+                      </p>
+                    </div>
+                  )}
 
                 <button
                   onClick={handleLogoRefresh}
@@ -611,7 +656,11 @@ function QRPreviewContent({
         <div className="mb-4 text-xs text-neutral-400 space-y-1">
           <div>
             Size: {userSettings.qrSize} • Error Level:{" "}
-            {userSettings.qrErrorCorrectionLevel || "M"}
+            {showLogo &&
+            (userSettings.qrErrorCorrectionLevel === "L" ||
+              userSettings.qrErrorCorrectionLevel === "M")
+              ? "Q"
+              : userSettings.qrErrorCorrectionLevel || "M"}
           </div>
         </div>
 

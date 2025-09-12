@@ -88,6 +88,17 @@ export default function QRCreator({
     subscriptionStatus: "inactive",
   },
 }: QRCreatorProps) {
+  // States
+  const [qrColors, setQRColors] = useState({
+    foreground: userSettings.colors.foreground || "#2A0B4D",
+    background: userSettings.colors.background || "#FFFFFF",
+  });
+
+  const [colorInputs, setColorInputs] = useState({
+    foreground: qrColors.foreground,
+    background: qrColors.background,
+  });
+
   // Consolidated state management
   const [qrState, setQRState] = useState<QRState>(() => ({
     title: suggestedTitles[Math.floor(Math.random() * suggestedTitles.length)],
@@ -112,6 +123,13 @@ export default function QRCreator({
   const updateQRState = useCallback((updates: Partial<QRState>) => {
     setQRState((prev) => ({ ...prev, ...updates }));
   }, []);
+
+  const updateQRColors = useCallback(
+    (updates: Partial<typeof qrColors>) => {
+      setQRColors((prev) => ({ ...prev, ...updates }));
+    },
+    [updateQRState],
+  );
 
   const updateLoadingState = useCallback(
     (key: keyof typeof loadingStates, value: boolean) => {
@@ -213,11 +231,12 @@ export default function QRCreator({
             loadingStates={loadingStates}
             shadow={shadow}
             user={user}
-            userSettings={userSettings}
             quotaInfo={quotaInfo}
             onUpdateQRState={updateQRState}
             onUpdateLoadingState={updateLoadingState}
             onGenerateQR={handleGenerateQR}
+            qrColors={qrColors}
+            onUpdateQRColors={updateQRColors}
           />
 
           <QRPreview
@@ -226,6 +245,7 @@ export default function QRCreator({
             shadow={shadow}
             user={user}
             userSettings={userSettings}
+            qrColors={qrColors}
           />
         </section>
       </div>

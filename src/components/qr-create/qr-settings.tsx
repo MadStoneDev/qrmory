@@ -21,14 +21,18 @@ import { QRActionButtons } from "@/components/ui/QRActionButtons";
 import { QRStatusIndicators } from "@/components/ui/QRStatusIndicators";
 
 import { UserRateLimiter } from "@/lib/rate-limiter";
+import { ColorPicker } from "@/components/colour-picker";
 
 interface Props {
   qrState: QRState;
   loadingStates: LoadingStates;
   shadow?: boolean;
   user: any;
-  userSettings: UserSettings;
   quotaInfo?: QuotaInfo;
+  qrColors: { foreground: string; background: string };
+  onUpdateQRColors: (
+    updates: Partial<{ foreground: string; background: string }>,
+  ) => void;
   onUpdateQRState: (updates: Partial<QRState>) => void;
   onUpdateLoadingState: (key: keyof LoadingStates, value: boolean) => void;
   onGenerateQR: () => void;
@@ -46,18 +50,25 @@ export default function QRSettingsRefactored({
   loadingStates,
   shadow = false,
   user,
-  userSettings,
   quotaInfo = {
     currentCount: 0,
     maxQuota: 3,
     subscriptionLevel: "free",
     subscriptionStatus: "inactive",
   },
+  qrColors,
+  onUpdateQRColors,
   onUpdateQRState,
   onUpdateLoadingState,
   onGenerateQR,
 }: Props) {
+  // States
   const { createDynamicQR, releaseShortcode } = useShortcodeManager(user);
+
+  const [colorInputs, setColorInputs] = useState({
+    foreground: qrColors.foreground,
+    background: qrColors.background,
+  });
 
   // Local input state for controlled inputs
   const [titleInput, setTitleInput] = useState(qrState.title);
@@ -222,6 +233,36 @@ export default function QRSettingsRefactored({
       qrState.saveData,
       canAccessQRType,
     ],
+  );
+
+  const isValidHexColor = (hex: string): boolean => {
+    return /^#[0-9A-Fa-f]{6}$/.test(hex);
+  };
+
+  const handleColorInputChange = useCallback(
+    (colorType: "foreground" | "background", value: string) => {
+      setColorInputs((prev) => ({
+        ...prev,
+        [colorType]: value,
+      }));
+    },
+    [],
+  );
+
+  const applyColorFromInput = useCallback(
+    (colorType: "foreground" | "background") => {
+      const inputValue = colorInputs[colorType];
+      if (isValidHexColor(inputValue)) {
+        onUpdateQRColors({ [colorType]: inputValue });
+      } else {
+        // Reset invalid input to current valid color
+        setColorInputs((prev) => ({
+          ...prev,
+          [colorType]: qrColors[colorType],
+        }));
+      }
+    },
+    [colorInputs, qrColors, onUpdateQRColors],
   );
 
   // Handle dynamic QR toggle with rate limiting
@@ -519,6 +560,13 @@ export default function QRSettingsRefactored({
     [onUpdateQRState],
   );
 
+  useEffect(() => {
+    setColorInputs({
+      foreground: qrColors.foreground,
+      background: qrColors.background,
+    });
+  }, [qrColors]);
+
   // Sync local state with props when they change externally
   useEffect(() => {
     if (titleInput !== qrState.title) {
@@ -566,6 +614,19 @@ export default function QRSettingsRefactored({
         {/* Dynamic QR Control Component */}
         <div className="w-full flex justify-center">
           <div className="relative w-full">{qrControl}</div>
+        </div>
+
+        <div className="mt-4 p-3 bg-neutral-50 rounded-lg border">
+          <h6 className="text-xs font-medium text-neutral-700 mb-3">
+            QR Code Colours
+          </h6>
+
+          <ColorPicker
+            colors={qrColors}
+            onChange={onUpdateQRColors}
+            showReset={true}
+            showContrastWarning={true}
+          />
         </div>
 
         {/* Action Buttons */}

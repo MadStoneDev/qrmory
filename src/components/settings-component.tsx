@@ -22,6 +22,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { ColorPicker } from "@/components/colour-picker";
 
 interface QRSizes {
   [key: string]: number;
@@ -49,6 +50,11 @@ export default function SettingsComponent({
   const [logoUrl, setLogoUrl] = useState<string | null>(
     initialSettings.logoUrl || "",
   );
+  const [qrColors, setQRColors] = useState({
+    foreground: initialSettings.colors?.foreground || "#2A0B4D",
+    background: initialSettings.colors?.background || "#FFFFFF",
+  });
+
   const [isUpdating, setIsUpdating] = useState(false);
   const [deleteUsername, setDeleteUsername] = useState("");
   const [isDeletingAccount, setIsDeletingAccount] = useState(false);
@@ -77,6 +83,7 @@ export default function SettingsComponent({
               qrSize,
               qrErrorCorrectionLevel,
               logoUrl,
+              colors: qrColors, // Add colors to settings
             },
           },
           {
@@ -99,7 +106,7 @@ export default function SettingsComponent({
     }, 500);
 
     return () => clearTimeout(timeoutId);
-  }, [qrSize, qrErrorCorrectionLevel, logoUrl, user?.id]);
+  }, [qrSize, qrErrorCorrectionLevel, logoUrl, qrColors, user?.id]);
 
   // Handle logo upload
   const handleLogoUpload = async (
@@ -315,7 +322,7 @@ export default function SettingsComponent({
         <div className="flex flex-col items-center gap-3">
           <div className="w-24 h-24 border-2 border-dashed border-neutral-300 rounded-md flex items-center justify-center overflow-hidden relative">
             {logoUrl ? (
-              <Image
+              <img
                 src={logoUrl}
                 alt="Your logo"
                 width={96}
@@ -361,6 +368,26 @@ export default function SettingsComponent({
               onChange={handleLogoUpload}
             />
           </div>
+        </div>
+      </div>
+
+      <div className="py-4 flex flex-col md:flex-row justify-between md:items-start gap-4">
+        <div className="flex flex-col gap-1">
+          <h4 className="font-sans font-semibold">Brand Colours</h4>
+          <p className="text-sm text-neutral-500">
+            Select the default colours for your QR codes
+          </p>
+        </div>
+
+        <div className="w-full max-w-[300px]">
+          <ColorPicker
+            colors={qrColors}
+            onChange={(updates) =>
+              setQRColors((prev) => ({ ...prev, ...updates }))
+            }
+            showReset={true}
+            showContrastWarning={true}
+          />
         </div>
       </div>
 
