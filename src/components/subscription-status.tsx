@@ -95,7 +95,7 @@ const StatusBadge = ({ status }: { status: string }) => {
 
   return (
     <span
-      className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border ${config.color}`}
+      className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border ${config.colour}`}
     >
       {config.icon}
       {config.text}
@@ -202,7 +202,7 @@ export default function SubscriptionStatus({
   }, [subscription?.stripe_subscription_id]);
 
   // Get usage bar color based on percentage
-  const getUsageBarColor = useCallback((percentage: number) => {
+  const getUsageBarColour = useCallback((percentage: number) => {
     if (percentage >= 100) return "bg-red-500";
     if (percentage >= 80) return "bg-orange-500";
     if (percentage >= 60) return "bg-yellow-500";
@@ -310,7 +310,7 @@ export default function SubscriptionStatus({
           {/* Usage Bar */}
           <div className="w-full bg-neutral-200 rounded-full h-3 mb-2">
             <div
-              className={`h-3 rounded-full transition-all duration-300 ${getUsageBarColor(
+              className={`h-3 rounded-full transition-all duration-300 ${getUsageBarColour(
                 quotaInfo.usagePercentage,
               )}`}
               style={{ width: `${Math.min(100, quotaInfo.usagePercentage)}%` }}

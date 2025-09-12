@@ -10,7 +10,7 @@ interface CouponData {
   type: "percent" | "amount" | "free" | "bogo";
   desc?: string;
   cta: string;
-  color: string;
+  colour: string;
   theme: "light" | "dark";
   exp?: string;
   biz: string;
@@ -159,11 +159,9 @@ export default function CouponPage() {
     );
   }
 
-  const brandColor = `#${data?.color || "3B82F6"}`;
-  const softBgColor = hexToRgba(brandColor, 0.12);
+  const brandColour = `#${data?.colour || "3B82F6"}`;
+  const softBgColour = hexToRgba(brandColour, 0.12);
   const isDarkTheme = data?.theme === "dark";
-  const bgColor = isDarkTheme ? "#212121" : "white";
-  const textColor = isDarkTheme ? "white" : "#212121";
 
   return (
     <div
@@ -186,7 +184,7 @@ export default function CouponPage() {
           {/* Coupon Content */}
           <div
             className={`flex-grow pt-3 rounded-lg`}
-            style={{ backgroundColor: softBgColor }}
+            style={{ backgroundColor: softBgColour }}
           >
             <div
               className={`mb-4 text-xl font-serif text-neutral-900 text-center`}
@@ -203,7 +201,7 @@ export default function CouponPage() {
             >
               <div
                 className="mb-5 inline-block px-3 py-1 rounded-full text-white font-semibold"
-                style={{ backgroundColor: brandColor }}
+                style={{ backgroundColor: brandColour }}
               >
                 {formatDiscount()}
               </div>
@@ -222,7 +220,7 @@ export default function CouponPage() {
 
               <button
                 className="mt-8 px-4 py-2 rounded-md text-white font-medium text-sm disabled:opacity-70 disabled:cursor-not-allowed"
-                style={{ backgroundColor: brandColor }}
+                style={{ backgroundColor: brandColour }}
                 disabled={isExpired}
                 onClick={() => alert("Coupon redeemed!")}
               >

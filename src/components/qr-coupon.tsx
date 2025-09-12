@@ -1,19 +1,6 @@
 ﻿import { useState, useEffect, Dispatch, SetStateAction } from "react";
 import { QRControlType } from "@/types/qr-controls";
-import { getSoftBgColor } from "@/utils/colour-utils";
-
-interface CouponSaveData {
-  controlType: string;
-  title: string;
-  discount: string;
-  type: string;
-  desc: string;
-  cta: string;
-  color: string;
-  theme: string;
-  exp: string;
-  biz: string;
-}
+import { getSoftBgColour } from "@/utils/colour-utils";
 
 export default function QRCoupon({
   setText,
@@ -29,7 +16,9 @@ export default function QRCoupon({
   ); // percent, amount, free, bogo
   const [description, setDescription] = useState(initialData?.desc || "");
   const [ctaText, setCtaText] = useState(initialData?.cta || "Redeem Offer");
-  const [brandColor, setBrandColor] = useState(initialData?.color || "#3B82F6"); // Default blue
+  const [brandColour, setBrandColour] = useState(
+    initialData?.colour || "#3B82F6",
+  ); // Default blue
   const [bgTheme, setBgTheme] = useState(initialData?.theme || "light"); // light or dark
   const [expiryDate, setExpiryDate] = useState(initialData?.exp || "");
   const [businessName, setBusinessName] = useState(initialData?.biz || "");
@@ -43,7 +32,7 @@ export default function QRCoupon({
       setDiscountType(initialData.type || "percent");
       setDescription(initialData.desc || "");
       setCtaText(initialData.cta || "Redeem Offer");
-      setBrandColor(initialData.color || "#3B82F6");
+      setBrandColour(initialData.colour || "#3B82F6");
       setBgTheme(initialData.theme || "light");
       setExpiryDate(initialData.exp || "");
       setBusinessName(initialData.biz || "");
@@ -83,7 +72,7 @@ export default function QRCoupon({
       type: discountType,
       desc: description,
       cta: ctaText,
-      color: brandColor,
+      color: brandColour,
       theme: bgTheme,
       exp: expiryDate,
       biz: businessName,
@@ -98,7 +87,7 @@ export default function QRCoupon({
       type: discountType,
       desc: description,
       cta: ctaText,
-      color: brandColor,
+      color: brandColour,
       theme: bgTheme,
       exp: expiryDate,
       biz: businessName,
@@ -147,7 +136,7 @@ export default function QRCoupon({
     discountType,
     description,
     ctaText,
-    brandColor,
+    brandColour,
     bgTheme,
     expiryDate,
     businessName,
@@ -164,8 +153,7 @@ export default function QRCoupon({
       setter(event.target.value);
     };
 
-  // Get the soft background color based on brand color
-  const softBgColor = getSoftBgColor(brandColor, 0.12);
+  const softBgColour = getSoftBgColour(brandColour, 0.12);
 
   return (
     <>
@@ -259,20 +247,20 @@ export default function QRCoupon({
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         <label className="control-label block">
-          Brand Color:
+          Brand Colour:
           <div className="flex items-center space-x-2">
             <input
               type="color"
               className="h-10 w-16 border-0"
-              value={brandColor}
-              onChange={handleInputChange(setBrandColor)}
+              value={brandColour}
+              onChange={handleInputChange(setBrandColour)}
             />
             <input
               type="text"
               className="control-input flex-grow"
               placeholder="#3B82F6"
-              value={brandColor}
-              onChange={handleInputChange(setBrandColor)}
+              value={brandColour}
+              onChange={handleInputChange(setBrandColour)}
             />
           </div>
         </label>
@@ -319,7 +307,7 @@ export default function QRCoupon({
 
         <div
           className={`mt-3 text-center rounded-md`}
-          style={{ backgroundColor: softBgColor }}
+          style={{ backgroundColor: softBgColour }}
         >
           <div className={`py-3 text-xl font-serif text-neutral-900`}>
             {businessName || "Your Business"}
@@ -334,7 +322,7 @@ export default function QRCoupon({
           >
             <div
               className="mb-5 inline-block px-3 py-1 rounded-full text-white font-semibold"
-              style={{ backgroundColor: brandColor }}
+              style={{ backgroundColor: brandColour }}
             >
               {formatDiscount() || "SPECIAL OFFER"}
             </div>
@@ -352,7 +340,7 @@ export default function QRCoupon({
 
             <button
               className="mt-8 px-4 py-2 rounded-md text-white font-medium text-sm"
-              style={{ backgroundColor: brandColor }}
+              style={{ backgroundColor: brandColour }}
             >
               {ctaText || "Redeem Offer"}
             </button>

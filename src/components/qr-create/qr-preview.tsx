@@ -1,12 +1,19 @@
 ﻿"use client";
 
-import React, { useRef, useCallback, useMemo } from "react";
+import React, {
+  useRef,
+  useCallback,
+  useMemo,
+  useState,
+  useEffect,
+} from "react";
 import { useQRCode } from "next-qrcode";
 import { toast } from "sonner";
 import d3ToPng from "d3-svg-to-png";
 import { UserSettings } from "@/lib/default-settings";
 import { useErrorReporting } from "@/hooks/useErrorReporting";
-import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { ErrorBoundary } from "@/components/error-boundary";
+import { User } from "@supabase/auth-js";
 
 interface QRState {
   title: string;
@@ -24,6 +31,7 @@ interface Props {
   qrState: QRState;
   displayValue: string;
   shadow?: boolean;
+  user: User | null;
   userSettings: UserSettings;
 }
 
@@ -35,11 +43,61 @@ function QRPreviewContent({
   qrState,
   displayValue,
   shadow,
+  user,
   userSettings,
 }: Props) {
   const { SVG } = useQRCode();
   const qrContainerRef = useRef<HTMLDivElement>(null);
+  const stickyRef = useRef<HTMLElement>(null);
   const { reportError } = useErrorReporting();
+
+  // Logo state
+  const [showLogo, setShowLogo] = useState(false);
+  const [logoCheckTimestamp, setLogoCheckTimestamp] = useState(Date.now());
+
+  // Check if user has logo and error correction is sufficient
+  const hasLogo = useMemo(() => {
+    return userSettings.logoUrl && userSettings.logoUrl.trim().length > 0;
+  }, [userSettings.logoUrl, logoCheckTimestamp]);
+
+  const errorCorrectionSufficient = useMemo(() => {
+    const level = userSettings.qrErrorCorrectionLevel;
+    // M, Q, H are sufficient for 15% logo coverage
+    return ["M", "Q", "H"].includes(level);
+  }, [userSettings.qrErrorCorrectionLevel]);
+
+  const logoRecommendation = useMemo(() => {
+    if (!hasLogo) return null;
+    if (errorCorrectionSufficient) return "safe";
+    return userSettings.qrErrorCorrectionLevel === "L" ? "warning" : "safe";
+  }, [hasLogo, errorCorrectionSufficient, userSettings.qrErrorCorrectionLevel]);
+
+  // Sticky behavior
+  useEffect(() => {
+    const element = stickyRef.current;
+    if (!element) return;
+
+    const handleScroll = () => {
+      const rect = element.getBoundingClientRect();
+      const parent = element.parentElement;
+      if (!parent) return;
+
+      const parentRect = parent.getBoundingClientRect();
+      const shouldStick = parentRect.top < 0 && parentRect.bottom > rect.height;
+
+      if (shouldStick) {
+        element.style.position = "sticky";
+        element.style.top = "1rem";
+      } else {
+        element.style.position = "static";
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    handleScroll(); // Initial check
+
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   // Define size lookup based on user settings
   const qrSizeLookup: QRSizes = useMemo(
@@ -62,10 +120,30 @@ function QRPreviewContent({
     new Map(),
   );
 
-  // Enhanced download handler with better error handling and caching
+  // Logo refresh handler
+  const handleLogoRefresh = useCallback(() => {
+    setLogoCheckTimestamp(Date.now());
+    if (hasLogo) {
+      toast("Logo found!", {
+        description: "You can now toggle logo display on your QR code.",
+      });
+    } else {
+      toast("No logo found", {
+        description: "Please upload a logo in your settings first.",
+        style: {
+          backgroundColor: "rgb(254, 226, 226)",
+          color: "rgb(153, 27, 27)",
+        },
+      });
+    }
+  }, [hasLogo]);
+
+  // Enhanced download handler with logo support
   const handleDownload = useCallback(
     async (format: "svg" | "png" | "jpg") => {
       const startTime = Date.now();
+      const shouldIncludeLogo =
+        showLogo && hasLogo && errorCorrectionSufficient;
 
       try {
         if (!qrContainerRef.current) {
@@ -78,7 +156,9 @@ function QRPreviewContent({
         }
 
         const filename = qrState.title || "qrmory-qr-code";
-        const cacheKey = `${filename}_${format}_${currentSize}_${qrState.value}`;
+        const cacheKey = `${filename}_${format}_${currentSize}_${
+          qrState.value
+        }_${shouldIncludeLogo ? userSettings.logoUrl : "no-logo"}`;
 
         // Check cache first
         if (downloadCache.current.has(cacheKey)) {
@@ -91,25 +171,7 @@ function QRPreviewContent({
           return;
         }
 
-        if (format === "svg") {
-          const svgData = new XMLSerializer().serializeToString(svgElement);
-          const svgBlob = new Blob([svgData], {
-            type: "image/svg+xml;charset=utf-8",
-          });
-          const svgUrl = URL.createObjectURL(svgBlob);
-
-          // Cache the result
-          downloadCache.current.set(cacheKey, { blob: svgBlob, url: svgUrl });
-
-          downloadFile(svgUrl, `${filename}.svg`);
-
-          toast("SVG downloaded successfully!", {
-            description: `Downloaded as ${filename}.svg`,
-          });
-          return;
-        }
-
-        // For PNG/JPG, create a properly sized clone
+        // Create a properly sized clone
         const clonedSvg = svgElement.cloneNode(true) as SVGElement;
 
         // Set dimensions and viewBox
@@ -141,7 +203,75 @@ function QRPreviewContent({
           });
         }
 
-        // Create temporary container for conversion
+        // Add logo if enabled and available
+        if (shouldIncludeLogo) {
+          try {
+            const logoGroup = document.createElementNS(
+              "http://www.w3.org/2000/svg",
+              "g",
+            );
+
+            // Calculate logo size and position (15% of QR code size, centered)
+            const viewBox = svgElement.getAttribute("viewBox") || "0 0 29 29";
+            const [, , viewWidth, viewHeight] = viewBox.split(" ").map(Number);
+            const logoSize = Math.max(viewWidth, viewHeight) * 0.15;
+            const logoX = (viewWidth - logoSize) / 2;
+            const logoY = (viewHeight - logoSize) / 2;
+
+            // Create white background circle for logo
+            const bgCircle = document.createElementNS(
+              "http://www.w3.org/2000/svg",
+              "circle",
+            );
+            bgCircle.setAttribute("cx", (viewWidth / 2).toString());
+            bgCircle.setAttribute("cy", (viewHeight / 2).toString());
+            bgCircle.setAttribute("r", (logoSize / 2 + 0.5).toString());
+            bgCircle.setAttribute("fill", "white");
+            bgCircle.setAttribute("stroke", "#000");
+            bgCircle.setAttribute("stroke-width", "0.2");
+            logoGroup.appendChild(bgCircle);
+
+            // Create image element for logo
+            const logoImage = document.createElementNS(
+              "http://www.w3.org/2000/svg",
+              "image",
+            );
+            logoImage.setAttribute("x", logoX.toString());
+            logoImage.setAttribute("y", logoY.toString());
+            logoImage.setAttribute("width", logoSize.toString());
+            logoImage.setAttribute("height", logoSize.toString());
+            logoImage.setAttribute("href", userSettings.logoUrl || "");
+            logoImage.setAttribute("preserveAspectRatio", "xMidYMid meet");
+            logoGroup.appendChild(logoImage);
+
+            clonedSvg.appendChild(logoGroup);
+          } catch (logoError) {
+            console.warn("Failed to add logo to QR code:", logoError);
+            // Continue without logo
+          }
+        }
+
+        if (format === "svg") {
+          const svgData = new XMLSerializer().serializeToString(clonedSvg);
+          const svgBlob = new Blob([svgData], {
+            type: "image/svg+xml;charset=utf-8",
+          });
+          const svgUrl = URL.createObjectURL(svgBlob);
+
+          // Cache the result
+          downloadCache.current.set(cacheKey, { blob: svgBlob, url: svgUrl });
+
+          downloadFile(svgUrl, `${filename}.svg`);
+
+          toast("SVG downloaded successfully!", {
+            description: `Downloaded as ${filename}.svg${
+              shouldIncludeLogo ? " with logo" : ""
+            }`,
+          });
+          return;
+        }
+
+        // For PNG/JPG, create temporary container for conversion
         const tempContainer = document.createElement("div");
         const tempId = `temp-qr-container-${Date.now()}`;
         tempContainer.id = tempId;
@@ -160,7 +290,11 @@ function QRPreviewContent({
 
           const processingTime = Date.now() - startTime;
           toast(`${format.toUpperCase()} downloaded successfully!`, {
-            description: `Downloaded as ${filename}.${format} (${userSettings.qrSize} size) in ${processingTime}ms`,
+            description: `Downloaded as ${filename}.${format} (${
+              userSettings.qrSize
+            } size)${
+              shouldIncludeLogo ? " with logo" : ""
+            } in ${processingTime}ms`,
           });
         } finally {
           // Ensure cleanup always happens
@@ -179,12 +313,13 @@ function QRPreviewContent({
             filename: qrState.title,
             size: currentSize,
             processingTime,
+            hasLogo: !!userSettings.logoUrl,
+            logoEnabled: showLogo,
           },
         });
 
         console.error(`Error downloading ${format.toUpperCase()}:`, error);
 
-        // Provide specific error messages
         let errorMessage =
           "Please try again or contact support if the issue persists.";
         if (error instanceof Error) {
@@ -194,6 +329,9 @@ function QRPreviewContent({
           } else if (error.message.includes("size")) {
             errorMessage =
               "Invalid size settings. Please try a different size.";
+          } else if (error.message.includes("logo")) {
+            errorMessage =
+              "Logo could not be added. Download will continue without logo.";
           }
         }
 
@@ -215,6 +353,10 @@ function QRPreviewContent({
       qrState.value,
       currentSize,
       userSettings.qrSize,
+      userSettings.logoUrl,
+      showLogo,
+      hasLogo,
+      errorCorrectionSufficient,
       reportError,
     ],
   );
@@ -230,7 +372,7 @@ function QRPreviewContent({
   }, []);
 
   // Cleanup cache on component unmount
-  React.useEffect(() => {
+  useEffect(() => {
     return () => {
       downloadCache.current.forEach(({ url }) => {
         URL.revokeObjectURL(url);
@@ -238,6 +380,9 @@ function QRPreviewContent({
       downloadCache.current.clear();
     };
   }, []);
+
+  // Calculate preview logo size (15% of 180px display size)
+  const previewLogoSize = Math.floor(180 * 0.15);
 
   // Memoized download buttons to prevent unnecessary re-renders
   const downloadButtons = useMemo(
@@ -290,6 +435,7 @@ function QRPreviewContent({
 
   return (
     <article
+      ref={stickyRef}
       className={`mx-auto p-4 lg:pt-8 lg:pb-10 lg:px-10 self-start lg:self-auto flex flex-col lg:w-qr-preview w-full sm:max-w-xs bg-white ${
         shadow
           ? "rounded-3xl shadow-xl shadow-neutral-300/50"
@@ -305,7 +451,7 @@ function QRPreviewContent({
 
       <div
         ref={qrContainerRef}
-        className="my-6 lg:my-16 lg:mx-auto grid place-content-center text-neutral-600 dark:text-neutral-600 text-sm"
+        className="my-6 lg:my-16 lg:mx-auto grid place-content-center text-neutral-600 dark:text-neutral-600 text-sm relative"
         role="img"
         aria-label={`QR code for ${qrState.title || "content"}`}
       >
@@ -321,11 +467,114 @@ function QRPreviewContent({
             margin: 1,
           }}
         />
+
+        {/* Logo overlay for preview */}
+        {showLogo && hasLogo && !qrState.changed && (
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <div
+              className="bg-white rounded-full shadow-sm border border-neutral-200 flex items-center justify-center"
+              style={{
+                width: `${previewLogoSize}px`,
+                height: `${previewLogoSize}px`,
+                padding: "2px",
+              }}
+            >
+              <img
+                src={userSettings.logoUrl || ""}
+                alt="QR Logo"
+                className="rounded-full object-contain"
+                style={{
+                  width: `${previewLogoSize - 4}px`,
+                  height: `${previewLogoSize - 4}px`,
+                }}
+                onError={(e) => {
+                  e.currentTarget.style.display = "none";
+                }}
+              />
+            </div>
+          </div>
+        )}
+
         {qrState.changed && (
           <div className="text-center mt-2 text-neutral-500 text-sm font-medium">
             Click "Generate QR" to update
           </div>
         )}
+      </div>
+
+      {/* Logo Controls */}
+      {user && (
+        <div className="mb-4 p-3 bg-neutral-50 rounded-lg border">
+          <h6 className="text-xs font-medium text-neutral-700 mb-2">
+            Logo Settings
+          </h6>
+
+          {!hasLogo ? (
+            <div className="text-center">
+              <p className="text-xs text-neutral-600 mb-2">
+                No logo found in your settings
+              </p>
+              <a
+                href="/settings"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-block text-xs px-3 py-1.5 bg-qrmory-purple-600 text-white rounded hover:bg-qrmory-purple-700 transition-colors"
+              >
+                Upload Logo in Settings
+              </a>
+              <button
+                onClick={handleLogoRefresh}
+                className="block mx-auto mt-2 text-xs text-qrmory-purple-600 hover:text-qrmory-purple-800 underline"
+              >
+                I've added my logo - check again
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-neutral-600">
+                  Show logo on QR
+                </span>
+                <button
+                  onClick={() => setShowLogo(!showLogo)}
+                  className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
+                    showLogo ? "bg-qrmory-purple-600" : "bg-neutral-300"
+                  }`}
+                >
+                  <span
+                    className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${
+                      showLogo ? "translate-x-5" : "translate-x-1"
+                    }`}
+                  />
+                </button>
+              </div>
+
+              {logoRecommendation === "warning" && (
+                <div className="p-2 bg-yellow-50 border border-yellow-200 rounded text-xs">
+                  <p className="text-yellow-800">
+                    ⚠️ Your error correction level (L) may not be sufficient for
+                    a logo. Consider using M, Q, or H for better reliability.
+                  </p>
+                </div>
+              )}
+
+              <button
+                onClick={handleLogoRefresh}
+                className="w-full text-xs text-neutral-600 hover:text-neutral-800 underline"
+              >
+                Refresh logo
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Settings indicator */}
+      <div className="mb-4 text-xs text-neutral-400 space-y-1">
+        <div>
+          Size: {userSettings.qrSize} • Error Level:{" "}
+          {userSettings.qrErrorCorrectionLevel || "M"}
+        </div>
       </div>
 
       {downloadButtons}

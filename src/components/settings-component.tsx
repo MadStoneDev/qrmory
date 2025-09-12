@@ -1,7 +1,7 @@
 ﻿"use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { IconHome, IconUpload, IconX } from "@tabler/icons-react";
+import { IconUpload, IconX } from "@tabler/icons-react";
 import { useQRCode } from "next-qrcode";
 import SelectSwitch from "@/components/SelectSwitch";
 import { createClient } from "@/utils/supabase/client";

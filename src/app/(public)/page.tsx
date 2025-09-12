@@ -10,6 +10,7 @@ import MainFooter from "@/components/main-footer";
 
 import { createClient } from "@/utils/supabase/server";
 import { DEFAULT_SETTINGS } from "@/lib/default-settings";
+
 import Head from "next/head";
 
 async function fetchUserProfile(userId: string) {

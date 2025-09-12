@@ -206,7 +206,7 @@ export default function QRCreator({
         <section
           className={`${
             withHeading ? "py-16" : ""
-          } flex lg:flex-row flex-col items-start gap-6 min-h-qr-card w-full`}
+          } flex lg:flex-row flex-col items-stretch gap-6 min-h-qr-card w-full`}
         >
           <QRSettings
             qrState={qrState}
@@ -224,6 +224,7 @@ export default function QRCreator({
             qrState={qrState}
             displayValue={displayValue}
             shadow={shadow}
+            user={user}
             userSettings={userSettings}
           />
         </section>

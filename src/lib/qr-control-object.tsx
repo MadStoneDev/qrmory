@@ -10,16 +10,30 @@ import QRWifi from "@/components/qr-wifi";
 import QRVCard from "@/components/qr-vcard";
 import QRCoupon from "@/components/qr-coupon";
 import QRLocation from "@/components/qr-location";
+import QRSMS from "@/components/qr-sms";
+import QREmail from "@/components/qr-email";
+import QRCalendar from "@/components/qr-calendar";
+import QRMultiLink from "@/components/qr-multilink";
+import QRPoll from "@/components/qr-poll";
+import QRImageGallery from "@/components/qr-image-gallery";
+import QRAudio from "@/components/qr-audio";
 import {
   IconBrandFacebookFilled,
   IconBrandInstagram,
   IconBrandXFilled,
   IconBrandYoutubeFilled,
+  IconCalendar,
+  IconChartBar,
   IconIdBadge2,
+  IconLink,
+  IconMail,
   IconMapPin,
   IconNotes,
+  IconPhone,
+  IconPhoto,
   IconRouter,
   IconTicket,
+  IconVolume,
   IconWorld,
 } from "@tabler/icons-react";
 
@@ -141,6 +155,94 @@ export const qrControls: QRControlsObject = {
         setText={setText}
         setChanged={setChanged}
         setSaveData={setSaveData}
+      />
+    ),
+  },
+  sms: {
+    title: "SMS",
+    description: "Send a text message",
+    icon: <IconPhone size={24} strokeWidth={1.5} />,
+    component: (setText, setChanged, setSaveData) => (
+      <QRSMS
+        setText={setText}
+        setChanged={setChanged}
+        setSaveData={setSaveData}
+      />
+    ),
+  },
+  email: {
+    title: "Email",
+    description: "Compose an email",
+    icon: <IconMail size={24} strokeWidth={1.5} />,
+    component: (setText, setChanged, setSaveData) => (
+      <QREmail
+        setText={setText}
+        setChanged={setChanged}
+        setSaveData={setSaveData}
+      />
+    ),
+  },
+  calendar: {
+    title: "Calendar Event",
+    description: "Add to calendar",
+    icon: <IconCalendar size={24} strokeWidth={1.5} />,
+    component: (setText, setChanged, setSaveData) => (
+      <QRCalendar
+        setText={setText}
+        setChanged={setChanged}
+        setSaveData={setSaveData}
+      />
+    ),
+  },
+  multilink: {
+    title: "Multi-Link",
+    description: "Multiple links in one place",
+    icon: <IconLink size={24} strokeWidth={1.5} />,
+    component: (setText, setChanged, setSaveData) => (
+      <QRMultiLink
+        setText={setText}
+        setChanged={setChanged}
+        setSaveData={setSaveData}
+      />
+    ),
+  },
+  poll: {
+    title: "Poll",
+    description: "Create a poll or survey",
+    icon: <IconChartBar size={24} strokeWidth={1.5} />,
+    component: (setText, setChanged, setSaveData) => (
+      <QRPoll
+        setText={setText}
+        setChanged={setChanged}
+        setSaveData={setSaveData}
+      />
+    ),
+  },
+  imageGallery: {
+    title: "Image Gallery",
+    description: "Share multiple photos",
+    icon: <IconPhoto size={24} strokeWidth={1.5} />,
+    component: (setText, setChanged, setSaveData, user, subscriptionLevel) => (
+      <QRImageGallery
+        setText={setText}
+        setChanged={setChanged}
+        setSaveData={setSaveData}
+        user={user}
+        subscriptionLevel={subscriptionLevel || 0}
+      />
+    ),
+  },
+  audio: {
+    title: "Audio",
+    description: "Share audio files",
+    icon: <IconVolume size={24} strokeWidth={1.5} />,
+    component: (setText, setChanged, setSaveData, user, subscriptionLevel) => (
+      <QRAudio
+        setText={setText}
+        setChanged={setChanged}
+        setSaveData={setSaveData}
+        user={user}
+        subscriptionLevel={subscriptionLevel || 0}
       />
     ),
   },

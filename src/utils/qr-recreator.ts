@@ -59,7 +59,7 @@ export const recreateQRValue = (content: any): string => {
           type: content.type,
           desc: content.desc,
           cta: content.cta,
-          color: content.color,
+          color: content.colour,
           theme: content.theme,
           exp: content.exp,
           biz: content.biz,

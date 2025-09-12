@@ -28,6 +28,13 @@ import QRVCard from "@/components/qr-vcard";
 import QRWebsite from "@/components/qr-website";
 import QRWifi from "@/components/qr-wifi";
 import QRYoutube from "@/components/qr-youtube";
+import QRSMS from "@/components/qr-sms";
+import QREmail from "@/components/qr-email";
+import QRCalendar from "@/components/qr-calendar";
+import QRMultiLink from "@/components/qr-multilink";
+import QRPoll from "@/components/qr-poll";
+import QRImageGallery from "@/components/qr-image-gallery";
+import QRAudio from "@/components/qr-audio";
 import Link from "next/link";
 
 interface MyCodeItemProps {
@@ -40,6 +47,8 @@ interface MyCodeItemProps {
   created_at: string;
   is_active: boolean;
   settings: UserSettings;
+  user?: any;
+  subscriptionLevel?: number;
 }
 
 interface QRSizes {
@@ -56,6 +65,8 @@ export default function MyCodeItem({
   created_at,
   is_active,
   settings,
+  user,
+  subscriptionLevel = 0,
 }: MyCodeItemProps) {
   const { SVG } = useQRCode();
   const [isEditing, setIsEditing] = useState(false);
@@ -290,6 +301,73 @@ export default function MyCodeItem({
             setChanged={updateChanged}
             setSaveData={updateSaveData}
             initialData={currentContent}
+          />
+        );
+      case "sms":
+        return (
+          <QRSMS
+            setText={updateTextValue}
+            setChanged={updateChanged}
+            setSaveData={updateSaveData}
+            initialData={currentContent}
+          />
+        );
+      case "email":
+        return (
+          <QREmail
+            setText={updateTextValue}
+            setChanged={updateChanged}
+            setSaveData={updateSaveData}
+            initialData={currentContent}
+          />
+        );
+      case "calendar":
+        return (
+          <QRCalendar
+            setText={updateTextValue}
+            setChanged={updateChanged}
+            setSaveData={updateSaveData}
+            initialData={currentContent}
+          />
+        );
+      case "multilink":
+        return (
+          <QRMultiLink
+            setText={updateTextValue}
+            setChanged={updateChanged}
+            setSaveData={updateSaveData}
+            initialData={currentContent}
+          />
+        );
+      case "poll":
+        return (
+          <QRPoll
+            setText={updateTextValue}
+            setChanged={updateChanged}
+            setSaveData={updateSaveData}
+            initialData={currentContent}
+          />
+        );
+      case "image_gallery":
+        return (
+          <QRImageGallery
+            setText={updateTextValue}
+            setChanged={updateChanged}
+            setSaveData={updateSaveData}
+            initialData={currentContent}
+            user={user}
+            subscriptionLevel={subscriptionLevel}
+          />
+        );
+      case "audio":
+        return (
+          <QRAudio
+            setText={updateTextValue}
+            setChanged={updateChanged}
+            setSaveData={updateSaveData}
+            initialData={currentContent}
+            user={user}
+            subscriptionLevel={subscriptionLevel}
           />
         );
       case "facebook":

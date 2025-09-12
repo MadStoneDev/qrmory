@@ -7,13 +7,63 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "12.2.12 (cd3cf9e)"
   }
   public: {
     Tables: {
+      error_reports: {
+        Row: {
+          client_ip: string | null
+          context: Json | null
+          created_at: string | null
+          fingerprint: string | null
+          id: string
+          message: string
+          stack: string | null
+          timestamp: string
+          url: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          client_ip?: string | null
+          context?: Json | null
+          created_at?: string | null
+          fingerprint?: string | null
+          id: string
+          message: string
+          stack?: string | null
+          timestamp: string
+          url?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          client_ip?: string | null
+          context?: Json | null
+          created_at?: string | null
+          fingerprint?: string | null
+          id?: string
+          message?: string
+          stack?: string | null
+          timestamp?: string
+          url?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "error_reports_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       payment_events: {
         Row: {
           amount_due: number | null
@@ -23,8 +73,9 @@ export type Database = {
           event_type: string
           failure_reason: string | null
           id: string
+          paddle_payment_id: string | null
           processed_at: string
-          stripe_invoice_id: string
+          stripe_invoice_id: string | null
         }
         Insert: {
           amount_due?: number | null
@@ -34,8 +85,9 @@ export type Database = {
           event_type: string
           failure_reason?: string | null
           id?: string
+          paddle_payment_id?: string | null
           processed_at?: string
-          stripe_invoice_id: string
+          stripe_invoice_id?: string | null
         }
         Update: {
           amount_due?: number | null
@@ -45,8 +97,9 @@ export type Database = {
           event_type?: string
           failure_reason?: string | null
           id?: string
+          paddle_payment_id?: string | null
           processed_at?: string
-          stripe_invoice_id?: string
+          stripe_invoice_id?: string | null
         }
         Relationships: []
       }
@@ -196,6 +249,7 @@ export type Database = {
           id: string
           is_active: boolean | null
           name: string
+          paddle_product_id: string | null
           price_in_cents: number
           quantity: number
           stripe_price_id: string
@@ -206,6 +260,7 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           name: string
+          paddle_product_id?: string | null
           price_in_cents: number
           quantity: number
           stripe_price_id: string
@@ -216,6 +271,7 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           name?: string
+          paddle_product_id?: string | null
           price_in_cents?: number
           quantity?: number
           stripe_price_id?: string
@@ -280,6 +336,7 @@ export type Database = {
           is_active: boolean
           level: number
           name: string
+          paddle_product_id: string | null
           price_in_cents: number
           quota_amount: number
           sort_order: number
@@ -295,6 +352,7 @@ export type Database = {
           is_active?: boolean
           level: number
           name: string
+          paddle_product_id?: string | null
           price_in_cents?: number
           quota_amount?: number
           sort_order?: number
@@ -310,6 +368,7 @@ export type Database = {
           is_active?: boolean
           level?: number
           name?: string
+          paddle_product_id?: string | null
           price_in_cents?: number
           quota_amount?: number
           sort_order?: number
@@ -323,10 +382,12 @@ export type Database = {
           created_at: string
           current_period_end: string
           id: string
+          paddle_price_id: string | null
+          paddle_subscription_id: string | null
           plan_name: string | null
           status: string
           stripe_price_id: string | null
-          stripe_subscription_id: string
+          stripe_subscription_id: string | null
           subscription_type: string | null
           updated_at: string | null
           user_id: string
@@ -335,10 +396,12 @@ export type Database = {
           created_at?: string
           current_period_end: string
           id?: string
+          paddle_price_id?: string | null
+          paddle_subscription_id?: string | null
           plan_name?: string | null
           status: string
           stripe_price_id?: string | null
-          stripe_subscription_id: string
+          stripe_subscription_id?: string | null
           subscription_type?: string | null
           updated_at?: string | null
           user_id: string
@@ -347,10 +410,12 @@ export type Database = {
           created_at?: string
           current_period_end?: string
           id?: string
+          paddle_price_id?: string | null
+          paddle_subscription_id?: string | null
           plan_name?: string | null
           status?: string
           stripe_price_id?: string | null
-          stripe_subscription_id?: string
+          stripe_subscription_id?: string | null
           subscription_type?: string | null
           updated_at?: string | null
           user_id?: string
@@ -490,17 +555,21 @@ export type Database = {
         Args: { p_user_id: string }
         Returns: boolean
       }
+      cleanup_old_error_reports: {
+        Args: Record<PropertyKey, never>
+        Returns: number
+      }
       get_user_subscription_details: {
         Args: { p_user_id: string }
         Returns: {
+          booster_quota: number
+          can_create_more: boolean
+          remaining_quota: number
           subscription_level: number
           subscription_name: string
           subscription_quota: number
-          booster_quota: number
           total_quota: number
           used_quota: number
-          remaining_quota: number
-          can_create_more: boolean
         }[]
       }
       get_user_total_quota: {
@@ -510,60 +579,60 @@ export type Database = {
       handle_new_subscription: {
         Args:
           | {
-              p_user_id: string
-              p_subscription_id: string
-              p_price_id: string
-              p_status: string
-              p_plan_name: string
               p_current_period_end: string
+              p_plan_name: string
+              p_price_id: string
               p_quota_amount: number
+              p_status: string
+              p_subscription_id: string
+              p_user_id: string
             }
           | {
-              p_user_id: string
-              p_subscription_id: string
-              p_price_id: string
-              p_status: string
-              p_plan_name: string
               p_current_period_end: string
+              p_plan_name: string
+              p_price_id: string
               p_quota_amount: number
+              p_status: string
+              p_subscription_id: string
+              p_user_id: string
             }
         Returns: undefined
       }
       handle_quota_purchase: {
         Args:
           | {
-              p_user_id: string
+              p_amount_paid: number
+              p_expires_at?: string
               p_package_id: string
               p_quantity: number
-              p_amount_paid: number
               p_stripe_checkout_id: string
-              p_expires_at?: string
+              p_user_id: string
             }
           | {
-              p_user_id: string
+              p_amount_paid: number
+              p_expires_at?: string
               p_package_id: string
               p_quantity: number
-              p_amount_paid: number
               p_stripe_checkout_id: string
-              p_expires_at?: string
+              p_user_id: string
             }
         Returns: undefined
       }
       handle_subscription_updated: {
         Args:
           | {
-              p_subscription_id: string
+              p_current_period_end: string
+              p_plan_name: string
               p_price_id: string
               p_status: string
-              p_plan_name: string
-              p_current_period_end: string
+              p_subscription_id: string
             }
           | {
-              p_subscription_id: string
+              p_current_period_end: string
+              p_plan_name: string
               p_price_id: string
               p_status: string
-              p_plan_name: string
-              p_current_period_end: string
+              p_subscription_id: string
             }
         Returns: undefined
       }

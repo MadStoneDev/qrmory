@@ -19,6 +19,7 @@ import { QRState, LoadingStates, QuotaStatus } from "@/types/qr-types";
 import { QRTypeSelector } from "@/components/ui/QRTypeSelector";
 import { QRActionButtons } from "@/components/ui/QRActionButtons";
 import { QRStatusIndicators } from "@/components/ui/QRStatusIndicators";
+
 import { UserRateLimiter } from "@/lib/rate-limiter";
 
 interface Props {
@@ -32,6 +33,13 @@ interface Props {
   onUpdateLoadingState: (key: keyof LoadingStates, value: boolean) => void;
   onGenerateQR: () => void;
 }
+
+// Define which QR types require paid subscriptions
+const PREMIUM_QR_TYPES = ["imageGallery", "audio"];
+const SUBSCRIPTION_REQUIRED_TYPES = {
+  imageGallery: 1, // Requires Explorer or higher
+  audio: 1, // Requires Explorer or higher
+};
 
 export default function QRSettingsRefactored({
   qrState,
@@ -55,17 +63,60 @@ export default function QRSettingsRefactored({
   const [titleInput, setTitleInput] = useState(qrState.title);
   const [textInput, setTextInput] = useState(qrState.textValue);
 
+  // Get user subscription level
+  const userSubscriptionLevel = user?.subscription_level || 0;
+
   // QR control component state
-  const [qrControl, setQRControl] = useState(() =>
-    qrControls[qrState.activeSelector].component(
+  const [qrControl, setQRControl] = useState(() => {
+    // Check if user can access this QR type
+    if (
+      PREMIUM_QR_TYPES.includes(qrState.activeSelector) &&
+      userSubscriptionLevel === 0
+    ) {
+      return (
+        <div className="text-center p-6 bg-gradient-to-br from-qrmory-purple-50 to-qrmory-purple-100 rounded-lg border border-qrmory-purple-200">
+          <div className="w-16 h-16 mx-auto mb-4 bg-qrmory-purple-200 rounded-full flex items-center justify-center">
+            <svg
+              className="w-8 h-8 text-qrmory-purple-600"
+              fill="currentColor"
+              viewBox="0 0 20 20"
+            >
+              <path
+                fillRule="evenodd"
+                d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z"
+                clipRule="evenodd"
+              />
+            </svg>
+          </div>
+          <h3 className="text-lg font-semibold text-qrmory-purple-800 mb-2">
+            Premium Feature
+          </h3>
+          <p className="text-qrmory-purple-600 mb-4">
+            {qrControls[qrState.activeSelector]?.title} QR codes require a paid
+            subscription.
+          </p>
+          <a
+            href="/subscription"
+            className="inline-block bg-qrmory-purple-600 text-white px-6 py-2 rounded-lg hover:bg-qrmory-purple-700 transition-colors"
+          >
+            Upgrade Now
+          </a>
+        </div>
+      );
+    }
+
+    return qrControls[qrState.activeSelector].component(
       (value: string) => {
         setTextInput(value);
         onUpdateQRState({ textValue: value, changed: true });
       },
       (changed: boolean) => onUpdateQRState({ changed }),
       (data: any) => onUpdateQRState({ saveData: data }),
-    ),
-  );
+      user,
+      userSubscriptionLevel,
+      qrState.saveData,
+    );
+  });
 
   // Memoized quota status
   const quotaStatus: QuotaStatus = useMemo(() => {
@@ -74,9 +125,41 @@ export default function QRSettingsRefactored({
     return { hasReachedQuota, isNearQuota };
   }, [quotaInfo.currentCount, quotaInfo.maxQuota]);
 
-  // Handle selector changes
+  // Check if user can access a QR type
+  const canAccessQRType = useCallback(
+    (qrType: string): boolean => {
+      if (!PREMIUM_QR_TYPES.includes(qrType)) return true;
+
+      const requiredLevel =
+        SUBSCRIPTION_REQUIRED_TYPES[
+          qrType as keyof typeof SUBSCRIPTION_REQUIRED_TYPES
+        ];
+      return userSubscriptionLevel >= requiredLevel;
+    },
+    [userSubscriptionLevel],
+  );
+
+  // Handle selector changes with subscription validation
   const handleSelectorChange = useCallback(
     (key: string) => {
+      // Check if user can access this QR type
+      if (!canAccessQRType(key)) {
+        toast("Premium Feature Required", {
+          description: `${qrControls[key]?.title} QR codes require a paid subscription.`,
+          style: {
+            backgroundColor: "rgb(254, 226, 226)",
+            color: "rgb(153, 27, 27)",
+          },
+          action: {
+            label: "Upgrade",
+            onClick: () => {
+              window.location.href = "/subscription";
+            },
+          },
+        });
+        return;
+      }
+
       setTextInput("");
       onUpdateQRState({
         textValue: "",
@@ -85,27 +168,91 @@ export default function QRSettingsRefactored({
         changed: true,
       });
 
-      setQRControl(
-        qrControls[key].component(
-          (value: string) => {
-            setTextInput(value);
-            onUpdateQRState({ textValue: value, changed: true });
-          },
-          (changed: boolean) => onUpdateQRState({ changed }),
-          (data: any) => onUpdateQRState({ saveData: data }),
-        ),
-      );
+      // Create appropriate component based on subscription level
+      if (PREMIUM_QR_TYPES.includes(key) && userSubscriptionLevel === 0) {
+        setQRControl(
+          <div className="text-center p-6 bg-gradient-to-br from-qrmory-purple-50 to-qrmory-purple-100 rounded-lg border border-qrmory-purple-200">
+            <div className="w-16 h-16 mx-auto mb-4 bg-qrmory-purple-200 rounded-full flex items-center justify-center">
+              <svg
+                className="w-8 h-8 text-qrmory-purple-600"
+                fill="currentColor"
+                viewBox="0 0 20 20"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            </div>
+            <h3 className="text-lg font-semibold text-qrmory-purple-800 mb-2">
+              Premium Feature
+            </h3>
+            <p className="text-qrmory-purple-600 mb-4">
+              {qrControls[key]?.title} QR codes require a paid subscription.
+            </p>
+            <a
+              href="/subscription"
+              className="inline-block bg-qrmory-purple-600 text-white px-6 py-2 rounded-lg hover:bg-qrmory-purple-700 transition-colors"
+            >
+              Upgrade Now
+            </a>
+          </div>,
+        );
+      } else {
+        setQRControl(
+          qrControls[key].component(
+            (value: string) => {
+              setTextInput(value);
+              onUpdateQRState({ textValue: value, changed: true });
+            },
+            (changed: boolean) => onUpdateQRState({ changed }),
+            (data: any) => onUpdateQRState({ saveData: data }),
+            user,
+            userSubscriptionLevel,
+            qrState.saveData,
+          ),
+        );
+      }
     },
-    [onUpdateQRState],
+    [
+      onUpdateQRState,
+      user,
+      userSubscriptionLevel,
+      qrState.saveData,
+      canAccessQRType,
+    ],
   );
 
   // Handle dynamic QR toggle with rate limiting
   const handleMakeDynamic = useCallback(async () => {
+    // Check subscription for premium QR types
+    if (
+      PREMIUM_QR_TYPES.includes(qrState.activeSelector) &&
+      userSubscriptionLevel === 0
+    ) {
+      toast("Premium Feature Required", {
+        description:
+          "Dynamic QR codes for this type require a paid subscription.",
+        style: {
+          backgroundColor: "rgb(254, 226, 226)",
+          color: "rgb(153, 27, 27)",
+        },
+        action: {
+          label: "Upgrade",
+          onClick: () => {
+            window.location.href = "/subscription";
+          },
+        },
+      });
+      return;
+    }
+
     // Validate rate limit first
-    const subscriptionLevel = user?.subscription_level || 0;
+    const subscriptionLevel = userSubscriptionLevel as 0 | 1 | 2 | 3;
     const rateLimitResult = await UserRateLimiter.checkUserLimit(
       "qr_generation",
-      user?.id,
+      user?.id || "anonymous",
       subscriptionLevel,
     );
 
@@ -212,22 +359,61 @@ export default function QRSettingsRefactored({
       onUpdateLoadingState("makingDynamic", false);
     }
   }, [
-    qrState.isDynamic,
-    qrState.isShortcodeSaved,
-    qrState.shortCode,
+    qrState,
     quotaInfo,
     createDynamicQR,
     releaseShortcode,
     onUpdateQRState,
     onUpdateLoadingState,
     user,
+    userSubscriptionLevel,
   ]);
 
-  // Handle save QR with rate limiting
+  // Handle save QR with rate limiting and subscription validation
   const handleSaveQR = useCallback(async () => {
     if (qrState.textValue.length === 0) {
       toast("Please enter content first", {
         description: "QR code needs content to be saved.",
+      });
+      return;
+    }
+
+    // Check subscription for premium QR types
+    if (
+      PREMIUM_QR_TYPES.includes(qrState.activeSelector) &&
+      userSubscriptionLevel === 0
+    ) {
+      toast("Premium Feature Required", {
+        description: "Saving this QR code type requires a paid subscription.",
+        style: {
+          backgroundColor: "rgb(254, 226, 226)",
+          color: "rgb(153, 27, 27)",
+        },
+        action: {
+          label: "Upgrade",
+          onClick: () => {
+            window.location.href = "/subscription";
+          },
+        },
+      });
+      return;
+    }
+
+    // Rate limiting for save operations
+    const subscriptionLevel = userSubscriptionLevel as 0 | 1 | 2 | 3;
+    const rateLimitResult = await UserRateLimiter.checkUserLimit(
+      "qr_save",
+      user?.id || "anonymous",
+      subscriptionLevel,
+    );
+
+    if (!rateLimitResult.success) {
+      toast("Rate limit exceeded", {
+        description: `Please wait ${rateLimitResult.retryAfter} seconds before saving more QR codes.`,
+        style: {
+          backgroundColor: "rgb(254, 226, 226)",
+          color: "rgb(153, 27, 27)",
+        },
       });
       return;
     }
@@ -258,25 +444,6 @@ export default function QRSettingsRefactored({
       return;
     }
 
-    // Rate limiting for save operations
-    const subscriptionLevel = user?.subscription_level || 0;
-    const rateLimitResult = await UserRateLimiter.checkUserLimit(
-      "qr_save",
-      user?.id,
-      subscriptionLevel,
-    );
-
-    if (!rateLimitResult.success) {
-      toast("Rate limit exceeded", {
-        description: `Please wait ${rateLimitResult.retryAfter} seconds before saving more QR codes.`,
-        style: {
-          backgroundColor: "rgb(254, 226, 226)",
-          color: "rgb(153, 27, 27)",
-        },
-      });
-      return;
-    }
-
     onUpdateLoadingState("saving", true);
 
     try {
@@ -288,8 +455,13 @@ export default function QRSettingsRefactored({
               ? {}
               : { controlType: qrState.activeSelector }),
             ...qrState.saveData,
+            // Add creator ID for subscription validation on viewers
+            creatorId: user?.id,
           }
-        : null;
+        : {
+            controlType: qrState.activeSelector,
+            creatorId: user?.id,
+          };
 
       const { data, error } = await supabase.from("qr_codes").insert({
         user_id: user.id,
@@ -329,7 +501,14 @@ export default function QRSettingsRefactored({
     } finally {
       onUpdateLoadingState("saving", false);
     }
-  }, [qrState, quotaInfo, user, onUpdateQRState, onUpdateLoadingState]);
+  }, [
+    qrState,
+    quotaInfo,
+    user,
+    onUpdateQRState,
+    onUpdateLoadingState,
+    userSubscriptionLevel,
+  ]);
 
   // Handle title input changes with debouncing
   const handleTitleChange = useCallback(
@@ -365,6 +544,8 @@ export default function QRSettingsRefactored({
       <QRTypeSelector
         activeSelector={qrState.activeSelector}
         onSelectorChange={handleSelectorChange}
+        userSubscriptionLevel={userSubscriptionLevel}
+        premiumTypes={PREMIUM_QR_TYPES}
       />
 
       {/* Main Form */}
