@@ -55,11 +55,6 @@ export async function POST(request: Request) {
     const data = JSON.parse(body);
     const supabase = await createClient();
 
-    console.log(`Paddle webhook: ${data.event_type}`, {
-      subscription_id: data.data?.id,
-      user_id: data.data?.custom_data?.user_id,
-    });
-
     switch (data.event_type) {
       case "subscription.created":
       case "subscription.updated":
@@ -152,10 +147,6 @@ async function handleSubscription(supabase: any, data: any) {
       console.error("Failed to update user profile:", profileError);
       return;
     }
-
-    console.log(
-      `Updated user ${userId} to level ${plan.level} with ${plan.quota_amount} quota`,
-    );
   } catch (error) {
     console.error("Error handling subscription:", error);
     throw error;
@@ -200,8 +191,6 @@ async function handleCancellation(supabase: any, data: any) {
       console.error("Failed to reset user profile:", profileError);
       return;
     }
-
-    console.log(`Reset user ${userId} to free plan due to cancellation`);
   } catch (error) {
     console.error("Error handling cancellation:", error);
     throw error;
