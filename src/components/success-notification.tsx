@@ -1,4 +1,5 @@
-﻿"use client";
+﻿// components/success-notification.tsx - FIXED to remove booster references
+"use client";
 
 import { useEffect } from "react";
 import { toast } from "sonner";
@@ -7,8 +8,8 @@ import { IconCheck, IconX } from "@tabler/icons-react";
 interface SuccessNotificationProps {
   searchParams: {
     success?: string;
-    booster_success?: string;
     canceled?: string;
+    // ✅ FIXED: Removed booster_success since boosters are no longer supported
   };
 }
 
@@ -30,23 +31,6 @@ export default function SuccessNotification({
       // Clean up URL
       const url = new URL(window.location.href);
       url.searchParams.delete("success");
-      window.history.replaceState({}, "", url.toString());
-    }
-
-    if (searchParams.booster_success === "true") {
-      toast("Booster package purchased!", {
-        description:
-          "Your additional QR codes have been added to your account.",
-        icon: <IconCheck size={16} />,
-        style: {
-          backgroundColor: "rgb(220, 252, 231)",
-          color: "rgb(22, 101, 52)",
-        },
-      });
-
-      // Clean up URL
-      const url = new URL(window.location.href);
-      url.searchParams.delete("booster_success");
       window.history.replaceState({}, "", url.toString());
     }
 

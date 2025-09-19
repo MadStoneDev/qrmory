@@ -196,8 +196,7 @@ export default async function DashboardPage() {
   // Calculate total available quota
   const planQuota =
     profile.dynamic_qr_quota || currentPackage.quota_amount || 3;
-  const additionalQuota = profile.extra_quota_from_boosters || 0;
-  const totalQuota = planQuota + additionalQuota;
+  const totalQuota = planQuota;
 
   // Check if subscription is expiring soon (within 7 days)
   const isExpiringSoon =
@@ -305,14 +304,6 @@ export default async function DashboardPage() {
                 <span className="font-bold">{planQuota}</span> Dynamic codes
               </p>
             </div>
-            {additionalQuota > 0 && (
-              <div className="flex justify-between">
-                <p className="text-sm">Additional Quota</p>
-                <p className="text-sm font-medium">
-                  +{additionalQuota} QR codes
-                </p>
-              </div>
-            )}
           </div>
 
           {isExpiringSoon && (

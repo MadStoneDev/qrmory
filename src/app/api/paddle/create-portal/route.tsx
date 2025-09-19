@@ -13,28 +13,50 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
     }
 
-    // Get user's main subscription
+    // Get user's active subscription - FIXED: removed non-existent subscription_type filter
     const { data: subscription } = await supabase
       .from("subscriptions")
       .select("paddle_subscription_id")
       .eq("user_id", user.id)
-      .eq("subscription_type", "main")
       .eq("status", "active")
       .single();
 
     if (!subscription?.paddle_subscription_id) {
       return NextResponse.json(
-        { error: "No active subscription" },
+        { error: "No active subscription found" },
         { status: 404 },
       );
     }
 
-    // Paddle billing portal URL
-    const portalUrl = `https://checkout.paddle.com/subscription/update?subscription=${subscription.paddle_subscription_id}`;
+    // FIXED: Use correct Paddle portal URL structure
+    const response = await fetch(
+      "https://api.paddle.com/billing-portal-sessions",
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${process.env.PADDLE_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          subscription_id: subscription.paddle_subscription_id,
+          return_url: `${process.env.NEXT_PUBLIC_SITE_URL}/subscription`,
+        }),
+      },
+    );
 
-    return NextResponse.json({ url: portalUrl });
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error("Paddle portal error:", errorData);
+      return NextResponse.json(
+        { error: "Failed to create portal session" },
+        { status: 500 },
+      );
+    }
+
+    const portalData = await response.json();
+    return NextResponse.json({ url: portalData.data.url });
   } catch (error: any) {
-    console.error("Paddle portal error:", error);
+    console.error("Portal creation error:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

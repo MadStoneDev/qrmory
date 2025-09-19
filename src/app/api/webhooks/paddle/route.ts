@@ -1,18 +1,38 @@
-﻿// /api/webhooks/paddle/route.ts - Much simpler webhook
+﻿// /api/webhooks/paddle/route.ts
 import { NextResponse } from "next/server";
 import { createClient } from "@/utils/supabase/server";
 import crypto from "crypto";
 
 function verifyPaddleWebhook(body: string, signature: string): boolean {
-  const webhookSecret = process.env.PADDLE_WEBHOOK_SECRET!;
+  const webhookSecret = process.env.PADDLE_WEBHOOK_SECRET;
+  if (!webhookSecret) {
+    console.error("PADDLE_WEBHOOK_SECRET not configured");
+    return false;
+  }
 
-  // Paddle v2 uses HMAC-SHA256
-  const hmac = crypto.createHmac("sha256", webhookSecret);
-  hmac.update(body);
-  const expectedSignature = hmac.digest("hex");
+  // FIXED: Parse Paddle signature correctly
+  const parts = signature.split(",");
+  const timestamp = parts
+    .find((part) => part.startsWith("ts="))
+    ?.replace("ts=", "");
+  const signatureHash = parts
+    .find((part) => part.startsWith("h1="))
+    ?.replace("h1=", "");
+
+  if (!timestamp || !signatureHash) {
+    console.error("Invalid signature format");
+    return false;
+  }
+
+  // FIXED: Create signature the way Paddle expects
+  const payload = timestamp + ":" + body;
+  const expectedSignature = crypto
+    .createHmac("sha256", webhookSecret)
+    .update(payload)
+    .digest("hex");
 
   return crypto.timingSafeEqual(
-    Buffer.from(signature, "hex"),
+    Buffer.from(signatureHash, "hex"),
     Buffer.from(expectedSignature, "hex"),
   );
 }
@@ -20,198 +40,170 @@ function verifyPaddleWebhook(body: string, signature: string): boolean {
 export async function POST(request: Request) {
   try {
     const body = await request.text();
-    const signature =
-      request.headers
-        .get("paddle-signature")
-        ?.replace("ts=", "")
-        .split(",")[1]
-        ?.replace("h1=", "") || "";
+    const signature = request.headers.get("paddle-signature");
+
+    if (!signature) {
+      console.error("Missing paddle-signature header");
+      return NextResponse.json({ error: "Missing signature" }, { status: 401 });
+    }
 
     if (!verifyPaddleWebhook(body, signature)) {
-      console.error("Invalid Paddle signature");
+      console.error("Webhook signature verification failed");
       return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
     }
 
     const data = JSON.parse(body);
     const supabase = await createClient();
 
-    console.log("Paddle v2 webhook received:", data.event_type);
+    console.log(`Paddle webhook: ${data.event_type}`, {
+      subscription_id: data.data?.id,
+      user_id: data.data?.custom_data?.user_id,
+    });
 
     switch (data.event_type) {
       case "subscription.created":
-        await handleSubscriptionCreated(supabase, data);
-        break;
       case "subscription.updated":
-        await handleSubscriptionUpdated(supabase, data);
+        await handleSubscription(supabase, data);
         break;
       case "subscription.canceled":
-        await handleSubscriptionCancelled(supabase, data);
+      case "subscription.paused":
+        await handleCancellation(supabase, data);
         break;
-      case "transaction.completed":
-        await handleTransactionCompleted(supabase, data);
-        break;
+      default:
+        console.log(`Unhandled event type: ${data.event_type}`);
     }
 
     return NextResponse.json({ received: true });
   } catch (error) {
-    console.error("Paddle webhook error:", error);
+    console.error("Webhook error:", error);
     return NextResponse.json({ error: "Webhook failed" }, { status: 500 });
   }
 }
 
-async function handleSubscriptionCreated(supabase: any, data: any) {
+async function handleSubscription(supabase: any, data: any) {
   const subscription = data.data;
-  const customData = subscription.custom_data;
-  const userId = customData.user_id;
-  const planType = customData.type || "main";
+  const userId = subscription.custom_data?.user_id;
+  const priceId = subscription.items?.[0]?.price?.id;
 
-  // Insert subscription record
-  await supabase.from("subscriptions").insert({
-    user_id: userId,
-    paddle_checkout_id: subscription.id,
-    plan_name: subscription.items[0]?.price.name || "Unknown",
-    status: subscription.status,
-    subscription_type: planType,
-    current_period_end: subscription.current_billing_period?.ends_at,
-    paddle_price_id: subscription.items[0]?.price.id,
-  });
+  if (!userId) {
+    console.error("Missing user_id in webhook data", {
+      subscription_id: subscription.id,
+    });
+    return;
+  }
 
-  // Update user profile
-  if (planType === "main") {
-    const priceId = subscription.items[0]?.price.id;
-    const { data: packageData } = await supabase
-      .from("subscription_packages")
-      .select("level, quota_amount")
-      .eq("paddle_price_id", priceId)
-      .single();
+  if (!priceId) {
+    console.error("Missing price_id in webhook data", {
+      subscription_id: subscription.id,
+    });
+    return;
+  }
 
-    if (packageData) {
-      await supabase
-        .from("profiles")
-        .update({
-          subscription_level: packageData.level,
-          dynamic_qr_quota: packageData.quota_amount,
-          subscription_status: "active",
-        })
-        .eq("id", userId);
+  // Get plan details from price ID
+  const { data: plan, error: planError } = await supabase
+    .from("subscription_packages")
+    .select("level, quota_amount, name")
+    .eq("paddle_price_id", priceId)
+    .single();
+
+  if (planError || !plan) {
+    console.error("No plan found for price_id:", priceId, planError);
+    return;
+  }
+
+  try {
+    // FIXED: Use user_id for conflict resolution since paddle_subscription_id might change
+    const { error: subscriptionError } = await supabase
+      .from("subscriptions")
+      .upsert(
+        {
+          user_id: userId,
+          paddle_subscription_id: subscription.id,
+          plan_name: plan.name,
+          status: subscription.status,
+          current_period_end:
+            subscription.current_billing_period?.ends_at ||
+            subscription.scheduled_change?.effective_at,
+          paddle_price_id: priceId,
+          updated_at: new Date().toISOString(),
+        },
+        {
+          onConflict: "user_id", // FIXED: Use user_id as primary conflict resolution
+        },
+      );
+
+    if (subscriptionError) {
+      console.error("Failed to upsert subscription:", subscriptionError);
+      return;
     }
-  } else {
-    // Handle booster
-    const priceId = subscription.items[0]?.price.id;
-    const { data: quotaData } = await supabase
-      .from("quota_packages")
-      .select("quantity")
-      .eq("paddle_price_id", priceId)
-      .single();
 
-    if (quotaData) {
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("extra_quota_from_boosters")
-        .eq("id", userId)
-        .single();
+    // Update user profile
+    const { error: profileError } = await supabase
+      .from("profiles")
+      .update({
+        subscription_level: plan.level,
+        dynamic_qr_quota: plan.quota_amount,
+        subscription_status: subscription.status,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", userId);
 
-      const currentExtra = profile?.extra_quota_from_boosters || 0;
-      await supabase
-        .from("profiles")
-        .update({
-          extra_quota_from_boosters: currentExtra + quotaData.quantity,
-        })
-        .eq("id", userId);
+    if (profileError) {
+      console.error("Failed to update user profile:", profileError);
+      return;
     }
+
+    console.log(
+      `Updated user ${userId} to level ${plan.level} with ${plan.quota_amount} quota`,
+    );
+  } catch (error) {
+    console.error("Error handling subscription:", error);
+    throw error;
   }
 }
 
-async function handleSubscriptionUpdated(supabase: any, data: any) {
+async function handleCancellation(supabase: any, data: any) {
   const subscription = data.data;
+  const userId = subscription.custom_data?.user_id;
 
-  await supabase
-    .from("subscriptions")
-    .update({
-      status: subscription.status,
-      current_period_end: subscription.current_billing_period?.ends_at,
-    })
-    .eq("paddle_checkout_id", subscription.id);
-}
+  if (!userId) {
+    console.error("Missing user_id in cancellation webhook");
+    return;
+  }
 
-async function handleSubscriptionCancelled(supabase: any, data: any) {
-  const subscription = data.data;
+  try {
+    // Update subscription status
+    const { error: subscriptionError } = await supabase
+      .from("subscriptions")
+      .update({
+        status: "canceled",
+        updated_at: new Date().toISOString(),
+      })
+      .eq("paddle_subscription_id", subscription.id);
 
-  await supabase
-    .from("subscriptions")
-    .update({
-      status: "canceled",
-    })
-    .eq("paddle_checkout_id", subscription.id);
+    if (subscriptionError) {
+      console.error("Failed to update subscription status:", subscriptionError);
+    }
 
-  // Handle downgrade logic similar to v1 implementation
-  const customData = subscription.custom_data;
-  if (customData.type === "main") {
-    await supabase
+    // Reset user to free plan (level 0)
+    const { error: profileError } = await supabase
       .from("profiles")
       .update({
         subscription_level: 0,
-        dynamic_qr_quota: 3,
+        dynamic_qr_quota: 3, // Default free quota
         subscription_status: "canceled",
+        updated_at: new Date().toISOString(),
       })
-      .eq("id", customData.user_id);
-  }
+      .eq("id", userId);
 
-  // Get subscription details to determine what to downgrade
-  const { data: sub } = await supabase
-    .from("subscriptions")
-    .select("user_id, subscription_type")
-    .eq("paddle_checkout_id", data.checkout?.id || data.subscription_id) // Use checkout ID
-    .single();
-
-  if (sub) {
-    if (sub.subscription_type === "main") {
-      // Downgrade to free
-      await supabase
-        .from("profiles")
-        .update({
-          subscription_level: 0,
-          dynamic_qr_quota: 3,
-          subscription_status: "cancelled",
-        })
-        .eq("id", sub.user_id);
-    } else {
-      // Remove booster quota
-      const { data: quotaData } = await supabase
-        .from("quota_packages")
-        .select("quantity")
-        .eq("paddle_price_id", data.subscription_plan_id)
-        .single();
-
-      if (quotaData) {
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("extra_quota_from_boosters")
-          .eq("id", sub.user_id)
-          .single();
-
-        const currentExtra = profile?.extra_quota_from_boosters || 0;
-        const newExtra = Math.max(0, currentExtra - quotaData.quantity);
-
-        await supabase
-          .from("profiles")
-          .update({
-            extra_quota_from_boosters: newExtra,
-          })
-          .eq("id", sub.user_id);
-      }
+    if (profileError) {
+      console.error("Failed to reset user profile:", profileError);
+      return;
     }
+
+    console.log(`Reset user ${userId} to free plan due to cancellation`);
+  } catch (error) {
+    console.error("Error handling cancellation:", error);
+    throw error;
   }
-}
-
-async function handleTransactionCompleted(supabase: any, data: any) {
-  const transaction = data.data;
-
-  await supabase.from("payment_events").insert({
-    paddle_payment_id: transaction.id,
-    event_type: "transaction_completed",
-    amount_paid: transaction.details.totals.total,
-    currency: transaction.currency_code,
-    processed_at: new Date().toISOString(),
-  });
 }

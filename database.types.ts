@@ -64,47 +64,10 @@ export type Database = {
           },
         ]
       }
-      payment_events: {
-        Row: {
-          amount_due: number | null
-          amount_paid: number | null
-          created_at: string | null
-          currency: string | null
-          event_type: string
-          failure_reason: string | null
-          id: string
-          paddle_payment_id: string | null
-          processed_at: string
-        }
-        Insert: {
-          amount_due?: number | null
-          amount_paid?: number | null
-          created_at?: string | null
-          currency?: string | null
-          event_type: string
-          failure_reason?: string | null
-          id?: string
-          paddle_payment_id?: string | null
-          processed_at?: string
-        }
-        Update: {
-          amount_due?: number | null
-          amount_paid?: number | null
-          created_at?: string | null
-          currency?: string | null
-          event_type?: string
-          failure_reason?: string | null
-          id?: string
-          paddle_payment_id?: string | null
-          processed_at?: string
-        }
-        Relationships: []
-      }
       profiles: {
         Row: {
           created_at: string
           dynamic_qr_quota: number
-          extra_quota_from_boosters: number | null
           id: string
           paddle_customer_id: string | null
           queued_for_delete: string | null
@@ -115,7 +78,6 @@ export type Database = {
         Insert: {
           created_at?: string
           dynamic_qr_quota?: number
-          extra_quota_from_boosters?: number | null
           id: string
           paddle_customer_id?: string | null
           queued_for_delete?: string | null
@@ -126,7 +88,6 @@ export type Database = {
         Update: {
           created_at?: string
           dynamic_qr_quota?: number
-          extra_quota_from_boosters?: number | null
           id?: string
           paddle_customer_id?: string | null
           queued_for_delete?: string | null
@@ -232,39 +193,6 @@ export type Database = {
           },
         ]
       }
-      quota_packages: {
-        Row: {
-          created_at: string
-          description: string | null
-          id: string
-          is_active: boolean | null
-          name: string
-          paddle_price_id: string | null
-          price_in_cents: number
-          quantity: number
-        }
-        Insert: {
-          created_at?: string
-          description?: string | null
-          id?: string
-          is_active?: boolean | null
-          name: string
-          paddle_price_id?: string | null
-          price_in_cents: number
-          quantity: number
-        }
-        Update: {
-          created_at?: string
-          description?: string | null
-          id?: string
-          is_active?: boolean | null
-          name?: string
-          paddle_price_id?: string | null
-          price_in_cents?: number
-          quantity?: number
-        }
-        Relationships: []
-      }
       subscription_packages: {
         Row: {
           billing_interval: string
@@ -320,9 +248,9 @@ export type Database = {
           id: string
           paddle_checkout_id: string | null
           paddle_price_id: string | null
+          paddle_subscription_id: string | null
           plan_name: string | null
           status: string
-          subscription_type: string | null
           updated_at: string | null
           user_id: string
         }
@@ -332,9 +260,9 @@ export type Database = {
           id?: string
           paddle_checkout_id?: string | null
           paddle_price_id?: string | null
+          paddle_subscription_id?: string | null
           plan_name?: string | null
           status: string
-          subscription_type?: string | null
           updated_at?: string | null
           user_id: string
         }
@@ -344,9 +272,9 @@ export type Database = {
           id?: string
           paddle_checkout_id?: string | null
           paddle_price_id?: string | null
+          paddle_subscription_id?: string | null
           plan_name?: string | null
           status?: string
-          subscription_type?: string | null
           updated_at?: string | null
           user_id?: string
         }
@@ -381,51 +309,6 @@ export type Database = {
           settings?: Json
           updated_at?: string
           user_id?: string
-        }
-        Relationships: []
-      }
-      webhook_events: {
-        Row: {
-          created_at: string | null
-          error_message: string | null
-          event_type: string
-          id: string
-          paddle_event_id: string | null
-          processed_at: string | null
-          processing_time_ms: number | null
-          raw_data: Json | null
-          received_at: string
-          retry_count: number | null
-          status: string
-          updated_at: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          error_message?: string | null
-          event_type: string
-          id?: string
-          paddle_event_id?: string | null
-          processed_at?: string | null
-          processing_time_ms?: number | null
-          raw_data?: Json | null
-          received_at?: string
-          retry_count?: number | null
-          status: string
-          updated_at?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          error_message?: string | null
-          event_type?: string
-          id?: string
-          paddle_event_id?: string | null
-          processed_at?: string | null
-          processing_time_ms?: number | null
-          raw_data?: Json | null
-          received_at?: string
-          retry_count?: number | null
-          status?: string
-          updated_at?: string | null
         }
         Relationships: []
       }

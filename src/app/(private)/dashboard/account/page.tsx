@@ -90,9 +90,7 @@ export default async function AccountInfo() {
     totalQRCodes,
   } = userData;
   const subscriptionLevel = profile?.subscription_level || 0;
-  const totalQuota =
-    (profile?.dynamic_qr_quota || 3) +
-    (profile?.extra_quota_from_boosters || 0);
+  const totalQuota = profile?.dynamic_qr_quota || 3;
 
   return (
     <div className="flex flex-col w-full space-y-6">

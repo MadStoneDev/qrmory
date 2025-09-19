@@ -7,14 +7,6 @@ export const SUBSCRIPTION_LEVELS = {
   "3": "Champion",
 } as const;
 
-// Default quotas (fallback values if database is unavailable)
-export const DEFAULT_QUOTAS = {
-  0: 3, // Free
-  1: 10, // Explorer
-  2: 50, // Creator
-  3: 250, // Champion
-} as const;
-
 export function getSubscriptionLevelName(level: number | string): string {
   const levelStr = level.toString() as keyof typeof SUBSCRIPTION_LEVELS;
   return SUBSCRIPTION_LEVELS[levelStr] || "Unknown";
