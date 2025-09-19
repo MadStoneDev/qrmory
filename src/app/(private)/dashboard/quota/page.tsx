@@ -135,8 +135,7 @@ export default async function QuotaPage() {
   // Calculate total available quota
   const planQuota =
     profile.dynamic_qr_quota || packageToDisplay.quota_amount || 3;
-  const additionalQuota = profile.extra_quota_from_boosters || 0;
-  const totalQuota = planQuota + additionalQuota;
+  const totalQuota = planQuota;
 
   // Calculate usage percentage
   const usagePercentage = Math.min(
@@ -221,18 +220,6 @@ export default async function QuotaPage() {
             </p>
             <p className="text-xs text-neutral-500">
               Dynamic QR codes from your subscription
-            </p>
-          </div>
-
-          <div className="bg-neutral-50 p-4 rounded-md">
-            <p className="text-sm font-medium text-neutral-700">
-              Booster Quota
-            </p>
-            <p className="text-2xl font-bold text-qrmory-purple-800">
-              {additionalQuota}
-            </p>
-            <p className="text-xs text-neutral-500">
-              Extra QR codes from booster subscriptions
             </p>
           </div>
 
