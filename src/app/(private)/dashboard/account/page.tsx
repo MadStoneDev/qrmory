@@ -27,37 +27,30 @@ async function getUserData() {
   if (!user) return null;
 
   // Get profile and subscription data
-  const [
-    { data: profile },
-    { data: mainSub },
-    { data: boosterSubs },
-    { count: qrCount },
-  ] = await Promise.all([
-    supabase.from("profiles").select("*").eq("id", user.id).single(),
-    supabase
-      .from("subscriptions")
-      .select("*")
-      .eq("user_id", user.id)
-      .eq("subscription_type", "main")
-      .eq("status", "active")
-      .single(),
-    supabase
-      .from("subscriptions")
-      .select("*")
-      .eq("user_id", user.id)
-      .eq("subscription_type", "booster")
-      .eq("status", "active"),
-    supabase
-      .from("qr_codes")
-      .select("id", { count: "exact" })
-      .eq("user_id", user.id),
-  ]);
+  const [{ data: profile }, { data: mainSub }, { count: qrCount }] =
+    await Promise.all([
+      supabase.from("profiles").select("*").eq("id", user.id).single(),
+      supabase
+        .from("subscriptions")
+        .select("*")
+        .eq("user_id", user.id)
+        .eq("status", "active")
+        .single(),
+      supabase
+        .from("subscriptions")
+        .select("*")
+        .eq("user_id", user.id)
+        .eq("status", "active"),
+      supabase
+        .from("qr_codes")
+        .select("id", { count: "exact" })
+        .eq("user_id", user.id),
+    ]);
 
   return {
     user,
     profile,
     mainSubscription: mainSub,
-    boosterSubscriptions: boosterSubs || [],
     totalQRCodes: qrCount || 0,
   };
 }
@@ -82,13 +75,7 @@ export default async function AccountInfo() {
     );
   }
 
-  const {
-    user,
-    profile,
-    mainSubscription,
-    boosterSubscriptions,
-    totalQRCodes,
-  } = userData;
+  const { user, profile, mainSubscription, totalQRCodes } = userData;
   const subscriptionLevel = profile?.subscription_level || 0;
   const totalQuota = profile?.dynamic_qr_quota || 3;
 
@@ -184,7 +171,7 @@ export default async function AccountInfo() {
                 Active Subscriptions
               </p>
               <p className="text-2xl font-bold text-green-900">
-                {(mainSubscription ? 1 : 0) + boosterSubscriptions.length}
+                {mainSubscription ? 1 : 0}
               </p>
             </div>
             <IconCreditCard className="text-green-600" size={28} />

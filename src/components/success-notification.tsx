@@ -9,7 +9,6 @@ interface SuccessNotificationProps {
   searchParams: {
     success?: string;
     canceled?: string;
-    // ✅ FIXED: Removed booster_success since boosters are no longer supported
   };
 }
 

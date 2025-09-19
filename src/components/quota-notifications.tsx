@@ -135,11 +135,7 @@ export default function QuotaNotification({
           <p className="text-amber-700 mt-1">
             You've used {quotaData.usedDynamicQRs} of your{" "}
             {quotaData.totalQuota} dynamic QR codes.
-            {quotaData.subscriptionLevel === "Free" ? (
-              <span> Upgrade your plan to create more.</span>
-            ) : (
-              <span> Purchase a booster package to add more capacity.</span>
-            )}
+            <span> Upgrade your plan to create more.</span>
           </p>
           <Link
             href={`/dashboard/subscription`}
@@ -166,11 +162,7 @@ export default function QuotaNotification({
           </h4>
           <p className="text-red-700 mt-1">
             You've used all {quotaData.totalQuota} of your dynamic QR codes.
-            {quotaData.subscriptionLevel === "Free" ? (
-              <span> Upgrade your plan to create more QR codes.</span>
-            ) : (
-              <span> Purchase a booster package to add more capacity.</span>
-            )}
+            <span> Upgrade your plan to create more QR codes.</span>
           </p>
           <Link
             href={`/dashboard/subscription`}

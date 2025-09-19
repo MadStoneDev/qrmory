@@ -17,14 +17,6 @@ export function formatPrice(priceInCents: number): string {
   return `$${(priceInCents / 100).toFixed(2)}`;
 }
 
-// Helper function to calculate total quota
-export function calculateTotalQuota(
-  subscriptionQuota: number,
-  boosterQuota: number = 0,
-): number {
-  return (subscriptionQuota || 0) + (boosterQuota || 0);
-}
-
 // Helper function to calculate usage percentage
 export function calculateUsagePercentage(used: number, total: number): number {
   if (total === 0) return 0;

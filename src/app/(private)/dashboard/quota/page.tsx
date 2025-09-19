@@ -18,7 +18,6 @@ interface UserData {
   profile: Profile | null;
   dynamicQRCount: number;
   currentPackage: SubscriptionPackage | null;
-  boosterSubscriptions: Subscription[];
 }
 
 async function fetchUserData(): Promise<UserData> {
@@ -33,7 +32,6 @@ async function fetchUserData(): Promise<UserData> {
       profile: null,
       dynamicQRCount: 0,
       currentPackage: null,
-      boosterSubscriptions: [],
     };
   }
 
@@ -50,7 +48,6 @@ async function fetchUserData(): Promise<UserData> {
       profile: null,
       dynamicQRCount: 0,
       currentPackage: null,
-      boosterSubscriptions: [],
     };
   }
 
@@ -74,30 +71,15 @@ async function fetchUserData(): Promise<UserData> {
     .eq("is_active", true)
     .single();
 
-  // Fetch active booster subscriptions
-  const { data: boosterSubscriptions, error: boosterError } = await supabase
-    .from("subscriptions")
-    .select("*")
-    .eq("user_id", user.id)
-    .eq("subscription_type", "booster")
-    .eq("status", "active")
-    .order("created_at", { ascending: false });
-
-  if (boosterError) {
-    console.error("Error fetching booster subscriptions:", boosterError);
-  }
-
   return {
     profile: profile as Profile,
     dynamicQRCount: dynamicQRCount || 0,
     currentPackage: currentPackage as SubscriptionPackage | null,
-    boosterSubscriptions: (boosterSubscriptions as Subscription[]) || [],
   };
 }
 
 export default async function QuotaPage() {
-  const { profile, dynamicQRCount, currentPackage, boosterSubscriptions } =
-    await fetchUserData();
+  const { profile, dynamicQRCount, currentPackage } = await fetchUserData();
 
   if (!profile) {
     return (
@@ -199,15 +181,13 @@ export default async function QuotaPage() {
 
           {isOut && (
             <p className="mt-2 text-sm text-red-600">
-              You've used all your dynamic QR codes. Upgrade your plan or
-              purchase a quota booster to create more.
+              You've used all your dynamic QR codes. Upgrade your plan.
             </p>
           )}
 
           {!isOut && isLow && (
             <p className="mt-2 text-sm text-amber-600">
-              You're running low on dynamic QR codes. Consider upgrading your
-              plan or purchasing a quota booster.
+              You're running low on dynamic QR codes.
             </p>
           )}
         </div>
@@ -242,69 +222,6 @@ export default async function QuotaPage() {
           </div>
         </div>
       </div>
-
-      {/* Active booster subscriptions */}
-      {boosterSubscriptions.length > 0 && (
-        <div className="bg-white rounded-lg shadow-sm border p-6 mb-6">
-          <h2 className="text-lg font-bold text-qrmory-purple-800 mb-4">
-            Active Booster Subscriptions
-          </h2>
-
-          <div className="space-y-3">
-            {boosterSubscriptions.map((subscription) => (
-              <div
-                key={subscription.id}
-                className="flex justify-between items-center p-3 bg-orange-50 border border-orange-200 rounded-lg"
-              >
-                <div>
-                  <p className="font-medium text-orange-800">
-                    {subscription.plan_name || "Booster Subscription"}
-                  </p>
-                  <p className="text-sm text-orange-600">
-                    Status: {subscription.status}
-                  </p>
-                </div>
-                <div className="text-right">
-                  <p className="text-sm text-orange-600">
-                    Renews:{" "}
-                    {new Date(
-                      subscription.current_period_end,
-                    ).toLocaleDateString()}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="mt-4 text-right">
-            <Link
-              href={`/dashboard/subscription`}
-              className="text-sm font-medium text-qrmory-purple-800 hover:text-qrmory-purple-600"
-            >
-              Manage booster subscriptions →
-            </Link>
-          </div>
-        </div>
-      )}
-
-      {/* No booster subscriptions */}
-      {boosterSubscriptions.length === 0 && (
-        <div className="bg-white rounded-lg shadow-sm border p-6 text-center">
-          <h2 className="text-lg font-bold text-qrmory-purple-800 mb-2">
-            Need More QR Codes?
-          </h2>
-          <p className="text-neutral-600 mb-3">
-            You don't have any booster subscriptions yet. Add monthly boosters
-            to increase your quota.
-          </p>
-          <Link
-            href={`/dashboard/subscription`}
-            className="inline-flex items-center justify-center rounded-md px-4 py-2 text-sm font-medium text-white bg-qrmory-purple-800 hover:bg-qrmory-purple-700"
-          >
-            View Booster Subscriptions
-          </Link>
-        </div>
-      )}
     </section>
   );
 }
