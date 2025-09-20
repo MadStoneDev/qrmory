@@ -1,4 +1,4 @@
-﻿// /api/paddle/create-portal/route.ts
+﻿// /api/paddle/create-portal/route.ts - FIXED
 import { NextResponse } from "next/server";
 import { createClient } from "@/utils/supabase/server";
 
@@ -13,7 +13,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
     }
 
-    // Get user's active subscription - FIXED: removed non-existent subscription_type filter
+    // Get user's active subscription
     const { data: subscription } = await supabase
       .from("subscriptions")
       .select("paddle_subscription_id")
@@ -28,21 +28,23 @@ export async function POST(request: Request) {
       );
     }
 
-    // FIXED: Use correct Paddle portal URL structure
-    const response = await fetch(
-      "https://api.paddle.com/billing-portal-sessions",
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${process.env.PADDLE_API_KEY}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          subscription_id: subscription.paddle_subscription_id,
-          return_url: `${process.env.NEXT_PUBLIC_SITE_URL}/subscription`,
-        }),
+    // Determine environment
+    const isProd = process.env.NODE_ENV === "production";
+    const paddleApiUrl = isProd
+      ? "https://api.paddle.com/billing-portal-sessions"
+      : "https://sandbox-api.paddle.com/billing-portal-sessions";
+
+    const response = await fetch(paddleApiUrl, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${process.env.PADDLE_API_KEY}`,
+        "Content-Type": "application/json",
       },
-    );
+      body: JSON.stringify({
+        subscription_id: subscription.paddle_subscription_id,
+        return_url: `${process.env.NEXT_PUBLIC_SITE_URL}/dashboard/subscription`,
+      }),
+    });
 
     if (!response.ok) {
       const errorData = await response.json();

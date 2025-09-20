@@ -1,17 +1,12 @@
-﻿// /api/paddle/create-checkout/route.ts - FIXED VERSION
+﻿// /api/paddle/create-checkout/route.ts - SIMPLIFIED VERSION
 import { NextResponse } from "next/server";
 import { createClient } from "@/utils/supabase/server";
 
 export async function POST(request: Request) {
   try {
-    console.log("=== Paddle Checkout Debug Start ===");
-
     const { level } = await request.json();
-    console.log("Requested level:", level);
 
-    // Validate level parameter
     if (level === undefined || level === null) {
-      console.log("ERROR: Level is missing");
       return NextResponse.json({ error: "Level is required" }, { status: 400 });
     }
 
@@ -21,17 +16,38 @@ export async function POST(request: Request) {
     } = await supabase.auth.getUser();
 
     if (!user) {
-      console.log("ERROR: User not authenticated");
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
     }
-
-    console.log("User ID:", user.id);
 
     const levelInt = parseInt(level);
 
     // Handle Free plan (level 0) - no checkout needed
     if (levelInt === 0) {
-      // ... keep existing free plan logic ...
+      // Update user to free plan
+      const { error: profileError } = await supabase
+        .from("profiles")
+        .update({
+          subscription_level: 0,
+          dynamic_qr_quota: 3, // Free plan quota
+          subscription_status: "active",
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", user.id);
+
+      if (profileError) {
+        console.error("Error updating profile to free:", profileError);
+        return NextResponse.json(
+          { error: "Failed to update profile" },
+          { status: 500 },
+        );
+      }
+
+      // Remove any existing subscription
+      await supabase.from("subscriptions").delete().eq("user_id", user.id);
+
+      return NextResponse.json({
+        url: `${process.env.NEXT_PUBLIC_SITE_URL}/dashboard/subscription?success=true&plan=Free`,
+      });
     }
 
     // Get subscription package details
@@ -43,43 +59,28 @@ export async function POST(request: Request) {
       .single();
 
     if (packageError || !packageData) {
-      console.error("Package query error:", packageError);
-      console.log("Available packages query result:", packageData);
       return NextResponse.json(
         { error: "Subscription package not found" },
         { status: 404 },
       );
     }
 
-    console.log("Package found:", {
-      name: packageData.name,
-      priceId: packageData.paddle_price_id,
-      level: packageData.level,
-    });
-
-    // Validate Paddle price ID
     if (!packageData.paddle_price_id) {
-      console.log("ERROR: No Paddle price ID configured");
       return NextResponse.json(
         {
           error: `No Paddle price ID configured for plan: ${packageData.name}`,
-          planId: level,
-          planName: packageData.name,
         },
         { status: 500 },
       );
     }
 
-    // FIXED: Check environment and set correct API URL
+    // Determine environment and API URL
     const isProd = process.env.NODE_ENV === "production";
     const paddleApiUrl = isProd
       ? "https://api.paddle.com/transactions"
       : "https://sandbox-api.paddle.com/transactions";
 
-    console.log("Using Paddle API URL:", paddleApiUrl);
-    console.log("Environment:", isProd ? "production" : "sandbox");
-
-    // Get user profile for customer ID
+    // Get user's existing Paddle customer ID
     const { data: profile } = await supabase
       .from("profiles")
       .select("paddle_customer_id")
@@ -88,7 +89,7 @@ export async function POST(request: Request) {
 
     const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
 
-    // FIXED: Correct Paddle API payload structure
+    // Create checkout session
     const checkoutPayload = {
       items: [
         {
@@ -96,14 +97,9 @@ export async function POST(request: Request) {
           quantity: 1,
         },
       ],
-      // FIXED: Use correct field names for Paddle API
       customer: profile?.paddle_customer_id
-        ? {
-            id: profile.paddle_customer_id,
-          }
-        : {
-            email: user.email,
-          },
+        ? { id: profile.paddle_customer_id }
+        : { email: user.email },
       custom_data: {
         user_id: user.id,
         level: levelInt.toString(),
@@ -118,20 +114,6 @@ export async function POST(request: Request) {
       },
     };
 
-    console.log("Paddle payload:", JSON.stringify(checkoutPayload, null, 2));
-
-    // Verify API key exists
-    if (!process.env.PADDLE_API_KEY) {
-      console.log("ERROR: PADDLE_API_KEY not found in environment");
-      return NextResponse.json(
-        { error: "Paddle API key not configured" },
-        { status: 500 },
-      );
-    }
-
-    console.log("Making request to Paddle API...");
-
-    // FIXED: Make request to correct Paddle endpoint
     const paddleResponse = await fetch(paddleApiUrl, {
       method: "POST",
       headers: {
@@ -141,96 +123,30 @@ export async function POST(request: Request) {
       body: JSON.stringify(checkoutPayload),
     });
 
-    console.log("Paddle response status:", paddleResponse.status);
-    console.log(
-      "Paddle response headers:",
-      Object.fromEntries(paddleResponse.headers.entries()),
-    );
-
-    const responseText = await paddleResponse.text();
-    console.log("Paddle raw response:", responseText);
-
     if (!paddleResponse.ok) {
-      let errorData;
-      try {
-        errorData = JSON.parse(responseText);
-      } catch {
-        errorData = { message: responseText };
-      }
-
-      console.error("Paddle API error details:", {
-        status: paddleResponse.status,
-        statusText: paddleResponse.statusText,
-        errorData: errorData,
-        priceId: packageData.paddle_price_id,
-        planName: packageData.name,
-        apiUrl: paddleApiUrl,
-      });
-
+      const errorData = await paddleResponse.json();
+      console.error("Paddle API error:", errorData);
       return NextResponse.json(
-        {
-          error: "Failed to create checkout session",
-          details: errorData,
-          paddleStatus: paddleResponse.status,
-          priceId: packageData.paddle_price_id,
-          planName: packageData.name,
-          apiUrl: paddleApiUrl,
-        },
+        { error: "Failed to create checkout session" },
         { status: 500 },
       );
     }
 
-    let checkoutData;
-    try {
-      checkoutData = JSON.parse(responseText);
-    } catch (parseError) {
-      console.error("Failed to parse Paddle response:", parseError);
+    const checkoutData = await paddleResponse.json();
+    const checkoutUrl = checkoutData.data?.checkout?.url;
+
+    if (!checkoutUrl) {
       return NextResponse.json(
-        { error: "Invalid response from Paddle API" },
+        { error: "No checkout URL returned from Paddle" },
         { status: 500 },
       );
     }
 
-    console.log("Parsed Paddle response:", checkoutData);
-
-    // FIXED: Handle the actual response structure from your logs
-    let checkoutUrl;
-    if (checkoutData.data?.checkout?.url) {
-      checkoutUrl = checkoutData.data.checkout.url;
-      console.log("Found checkout URL:", checkoutUrl);
-    } else if (checkoutData.data?.checkout_url) {
-      checkoutUrl = checkoutData.data.checkout_url;
-    } else if (checkoutData.checkout_url) {
-      checkoutUrl = checkoutData.checkout_url;
-    } else {
-      console.error(
-        "No checkout URL found in response structure:",
-        JSON.stringify(checkoutData, null, 2),
-      );
-      return NextResponse.json(
-        {
-          error: "No checkout URL returned from Paddle",
-          response: checkoutData,
-        },
-        { status: 500 },
-      );
-    }
-
-    console.log("Checkout URL:", checkoutUrl);
-    console.log("=== Paddle Checkout Debug End ===");
-
-    return NextResponse.json({
-      url: checkoutUrl,
-    });
+    return NextResponse.json({ url: checkoutUrl });
   } catch (error: any) {
-    console.error("Paddle checkout error:", error);
-    console.error("Error stack:", error.stack);
+    console.error("Checkout error:", error);
     return NextResponse.json(
-      {
-        error: "Internal server error",
-        message: error.message,
-        stack: process.env.NODE_ENV === "development" ? error.stack : undefined,
-      },
+      { error: "Internal server error" },
       { status: 500 },
     );
   }
