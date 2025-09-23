@@ -38,7 +38,7 @@ const TermsAndConditions = () => {
         </p>
         <p>
           These Terms of Service were last updated on{" "}
-          <span className="font-bold">2 September 2022.</span>
+          <span className="font-bold">23 September 2025.</span>
         </p>
         <h3>Limitations of Use</h3>
         <p>
