@@ -24,7 +24,7 @@ export default function CheckEmailPage() {
           <span className={`text-sm`}>
             If you have any problems, please get in touch with us through our{" "}
             <a
-              href={`/support/contact`}
+              href={`/help/contact`}
               className={`text-qrmory-purple-500 font-bold`}
             >
               contact form

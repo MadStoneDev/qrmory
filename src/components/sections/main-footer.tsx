@@ -3,7 +3,7 @@
 export default function MainFooter() {
   // Constants
   const exploreLinks = {
-    // about: ["About", "/about"],
+    about: ["About", "/about"],
     // aboutQRCodes: ["More About QR Codes", "/more-about-qr-codes"],
     // features: ["Features", "/features"],
     pricing: ["Pricing", "/pricing"],

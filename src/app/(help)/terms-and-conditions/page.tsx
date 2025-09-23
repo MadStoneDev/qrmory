@@ -1,5 +1,11 @@
 import MainNavigation from "@/components/main-navigation";
 
+export const metadata = {
+  title: "Terms + Conditions | QRmory",
+  description:
+    "Terms of Service for QRmory QR code generator. Usage policies, subscription terms, refund policy, and user responsibilities.",
+};
+
 const TermsAndConditions = () => {
   return (
     <main className="flex flex-col w-full policy-document">
@@ -49,7 +55,7 @@ const TermsAndConditions = () => {
             materials and software on this website;
           </li>
           <li>
-            transfer the materials to another person or “mirror” the materials
+            transfer the materials to another person or "mirror" the materials
             on any other server;
           </li>
           <li>
@@ -70,7 +76,7 @@ const TermsAndConditions = () => {
             advertising or spam;
           </li>
           <li>
-            harvest, collect, or gather user data without the user’s consent; or
+            harvest, collect, or gather user data without the user's consent; or
           </li>
           <li>
             use this website or its associated services in such a way that may
@@ -118,6 +124,21 @@ const TermsAndConditions = () => {
           You give us permission to use your username and other identifying
           information associated with your account in a manner that is
           consistent with your privacy preferences, and our Privacy Policy.{" "}
+        </p>
+        <h3>Returns and Refunds</h3>
+        <p>
+          All subscription fees and service charges are non-refundable. You may
+          cancel your subscription at any time to prevent future renewals, but
+          you will retain access to all paid features until the end of your
+          current billing period.{" "}
+        </p>
+        <p>
+          We offer a free tier that allows you to explore and test our QR code
+          generation services before committing to any paid subscription. By
+          choosing to upgrade to a paid plan, you acknowledge that you have had
+          the opportunity to fully evaluate our service and make an informed
+          decision. Therefore, there is no right of withdrawal or refund once a
+          subscription purchase is completed.{" "}
         </p>
         <h3>Liability</h3>
         <p>

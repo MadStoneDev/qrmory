@@ -6,12 +6,13 @@ import HomeInfo from "@/components/home-info-section";
 import QRCreator from "@/components/qr-create/qr-creator";
 
 import MainNavigation from "@/components/main-navigation";
-import MainFooter from "@/components/main-footer";
+import MainFooter from "@/components/sections/main-footer";
 
 import { createClient } from "@/utils/supabase/server";
 import { DEFAULT_SETTINGS } from "@/lib/default-settings";
 
 import Head from "next/head";
+import FAQSection from "@/components/sections/faq-section";
 
 async function fetchUserProfile(userId: string) {
   if (!userId) return null;
@@ -115,10 +116,6 @@ export default async function Home() {
 
   return (
     <>
-      <Head>
-        <link rel="canonical" href="https://qrmory.com/" />
-      </Head>
-
       <main className="mb-8 flex min-h-screen flex-col items-center justify-between">
         <MainNavigation />
 
@@ -161,7 +158,7 @@ export default async function Home() {
           smartly. Trust us, it's riveting stuff! 😉
         </p>
 
-        <section>{/* TODO Sprint#3: Add a FAQ Section */}</section>
+        <FAQSection />
       </main>
 
       <MainFooter />

@@ -27,7 +27,7 @@ export default function ContactForm() {
         type={"text"}
         name={"name"}
         label={"Your name"}
-        placeholder={"eg. Donatero"}
+        placeholder={"eg. Donato di Niccolò"}
         value={formData.name}
         onChange={handleChange}
       />

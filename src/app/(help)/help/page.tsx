@@ -2,7 +2,7 @@
 
 import MainNavigation from "@/components/main-navigation";
 import ContactForm from "@/components/ui/contact-form";
-import MainFooter from "@/components/main-footer";
+import MainFooter from "@/components/sections/main-footer";
 import { IconForms, IconMail } from "@tabler/icons-react";
 import Link from "next/link";
 
@@ -37,7 +37,7 @@ export default function ContactPage() {
           className={`py-10 px-2 sm:px-16 grid grid-cols-3 justify-center w-full max-w-60 sm:max-w-2xl`}
         >
           <Link
-            href={`/support/contact`}
+            href={`/help/contact`}
             className={`aspect-square flex flex-col gap-2 items-center justify-center border border-qrmory-purple-500 rounded-xl bg-qrmory-purple-800 text-white opacity-80 hover:opacity-100 hover:scale-105 transition-all duration-300 ease-in-out`}
           >
             <IconMail size={30} strokeWidth={1.5} />

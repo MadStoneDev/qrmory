@@ -1,5 +1,5 @@
 import React from "react";
-import MainFooter from "@/components/main-footer";
+import MainFooter from "@/components/sections/main-footer";
 
 export const metadata = {
   title: "QRmory - Generate an arsenal of QR Codes",
