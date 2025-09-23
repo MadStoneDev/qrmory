@@ -120,7 +120,7 @@ export function ColorPicker({
     showContrastWarning &&
     isValidHexColour(colors.foreground) &&
     isValidHexColour(colors.background) &&
-    getContrastRatio(colors.foreground, colors.background) < 4.5;
+    getContrastRatio(colors.foreground, colors.background) < 2.5;
 
   return (
     <div className={`space-y-3 ${className}`}>

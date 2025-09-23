@@ -157,6 +157,7 @@ export default async function SubscriptionPage({
         <h2 className="text-lg font-semibold mb-4">Subscription Plans</h2>
         {subscriptionPackages.length > 0 ? (
           <SubscriptionPlans
+            profile={profile}
             currentLevel={currentLevel}
             packages={subscriptionPackages}
             subscription={subscription}
