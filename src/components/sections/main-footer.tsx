@@ -6,7 +6,7 @@ export default function MainFooter() {
     // about: ["About", "/about"],
     // aboutQRCodes: ["More About QR Codes", "/more-about-qr-codes"],
     // features: ["Features", "/features"],
-    // pricing: ["Pricing", "/pricing"],
+    pricing: ["Pricing", "/pricing"],
     // blog: ["Blog", "/blog"],
   };
 
