@@ -667,8 +667,6 @@ const PrivacyPolicy = () => {
           us using the following details:{" "}
         </p>
         <p>
-          Richard H.
-          <br />
           <a href="/contact">https://qrmory.com/contact</a>
         </p>
         <p>
@@ -678,8 +676,6 @@ const PrivacyPolicy = () => {
           details are as follows:
         </p>
         <p>
-          Richard H.
-          <br />
           <a href="/contact">https://qrmory.com/contact</a>
         </p>
       </section>

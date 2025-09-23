@@ -1,7 +1,7 @@
 ﻿import React from "react";
 
-import MainNavigation from "@/components/main-navigation";
 import ContactForm from "@/components/ui/contact-form";
+import MainNavigation from "@/components/main-navigation";
 import MainFooter from "@/components/sections/main-footer";
 
 export const metadata = {
