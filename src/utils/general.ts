@@ -1,4 +1,5 @@
-﻿export const cleanTitle = (title: string, makeLowercase = false) => {
+﻿// /utils/general.ts
+export const cleanTitle = (title: string, makeLowercase = false) => {
   const cleanedUpTitle = title.replaceAll(" ", "-");
 
   return makeLowercase ? cleanedUpTitle.toLowerCase() : cleanedUpTitle;
@@ -114,6 +115,5 @@ export const generateShortCode = (codeLength: number, checkList?: string[]) => {
     newShortCode = shuffledArray.join("");
   } while (checkList?.includes(newShortCode));
 
-  console.log(newShortCode);
   return newShortCode;
 };

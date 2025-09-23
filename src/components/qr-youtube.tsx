@@ -1,21 +1,72 @@
-﻿import { useState } from "react";
+﻿import { useState, useEffect } from "react";
 import { QRControlType } from "@/types/qr-controls";
 
-export default function QRYoutube({ setText, setChanged }: QRControlType) {
+interface YoutubeSaveData {
+  controlType: string;
+  videoId: string;
+  linkFormat: string;
+}
+
+export default function QRYoutube({
+  setText,
+  setChanged,
+  setSaveData,
+  initialData,
+}: QRControlType) {
   // States
-  const [enteredLink, setEnteredLink] = useState("");
-  const [mainLink, setMainLink] = useState(`https://www.youtube.com/`);
-  const [altLink, setAltLink] = useState(`https://www.youtube.com/watch?v=`);
+  const [enteredLink, setEnteredLink] = useState(initialData?.videoId || "");
+  const [mainLink, setMainLink] = useState(
+    initialData?.linkFormat || `https://www.youtube.com/`,
+  );
+  const [altLink, setAltLink] = useState(
+    initialData?.linkFormat === `https://www.youtube.com/watch?v=`
+      ? `https://www.youtube.com/`
+      : `https://www.youtube.com/watch?v=`,
+  );
+  const [isInitialized, setIsInitialized] = useState(false);
 
   // Update the parent component with the current value
   const updateParentValue = (value: string) => {
     if (value.length > 0) {
-      setText(`${mainLink}${value}`);
+      const fullLink = `${mainLink}${value}`;
+      setText(fullLink);
+
+      // Update save data
+      if (setSaveData) {
+        const saveData: YoutubeSaveData = {
+          controlType: "youtube",
+          videoId: value,
+          linkFormat: mainLink,
+        };
+        setSaveData(saveData);
+      }
     } else {
       setText("");
+      if (setSaveData) setSaveData(null);
     }
     setChanged(true);
   };
+
+  // Initialize from saved data if available
+  useEffect(() => {
+    if (initialData && !isInitialized) {
+      setEnteredLink(initialData.videoId || "");
+      if (initialData.linkFormat) {
+        setMainLink(initialData.linkFormat);
+        setAltLink(
+          initialData.linkFormat === `https://www.youtube.com/watch?v=`
+            ? `https://www.youtube.com/`
+            : `https://www.youtube.com/watch?v=`,
+        );
+      }
+      setIsInitialized(true);
+
+      // Update parent with initial value
+      if (initialData.videoId) {
+        updateParentValue(initialData.videoId);
+      }
+    }
+  }, [initialData, isInitialized]);
 
   // Handle input change
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -32,7 +83,18 @@ export default function QRYoutube({ setText, setChanged }: QRControlType) {
 
     // Update the parent with the new format if there's existing input
     if (enteredLink.length > 0) {
-      setText(`${altLink}${enteredLink}`);
+      const fullLink = `${altLink}${enteredLink}`;
+      setText(fullLink);
+
+      // Update save data with new format
+      if (setSaveData && enteredLink.length > 0) {
+        const saveData: YoutubeSaveData = {
+          controlType: "youtube",
+          videoId: enteredLink,
+          linkFormat: altLink,
+        };
+        setSaveData(saveData);
+      }
     }
   };
 
@@ -40,6 +102,7 @@ export default function QRYoutube({ setText, setChanged }: QRControlType) {
   const handleInputBlur = () => {
     if (enteredLink.length === 0) {
       setText("");
+      if (setSaveData) setSaveData(null);
       return;
     }
 
@@ -76,14 +139,26 @@ export default function QRYoutube({ setText, setChanged }: QRControlType) {
 
     // Update state and parent
     setEnteredLink(fixedLink);
-    setText(mainLink + fixedLink);
+
+    const fullLink = mainLink + fixedLink;
+    setText(fullLink);
+
+    // Update save data
+    if (setSaveData) {
+      const saveData: YoutubeSaveData = {
+        controlType: "youtube",
+        videoId: fixedLink,
+        linkFormat: mainLink,
+      };
+      setSaveData(saveData);
+    }
   };
 
   return (
     <>
       <label className="control-label">
         Enter YouTube Link:
-        <p className={`font-sansLight italic text-stone-400`}>
+        <p className={`font-sansLight italic text-neutral-400`}>
           (you can paste the full link{" "}
           <span className={`px-1 font-sans font-black uppercase`}>or</span> your
           username{" "}

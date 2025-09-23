@@ -16,9 +16,9 @@
   return `rgba(${r}, ${g}, ${b}, ${opacity})`;
 }
 
-export function getSoftBgColor(
-  brandColor: string,
+export function getSoftBgColour(
+  brandColour: string,
   opacity: number = 0.15,
 ): string {
-  return hexToRgba(brandColor, opacity);
+  return hexToRgba(brandColour, opacity);
 }

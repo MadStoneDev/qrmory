@@ -2,7 +2,12 @@
 import Link from "next/link";
 
 import MainNavigation from "@/components/main-navigation";
-import MainFooter from "@/components/main-footer";
+import MainFooter from "@/components/sections/main-footer";
+
+export const metadata = {
+  title: "404 | QRmory",
+  description: "Page not found - 404",
+};
 
 export default function NotFound() {
   return (
@@ -31,12 +36,42 @@ export default function NotFound() {
             I'll get back to singing...I mean, working. <br />
             Meanwhile, try these destinations instead:
           </p>
-          <ul className={`my-4 flex flex-col items-center gap-2`}>
+          <ul className={`my-4 flex flex-col items-center gap-6`}>
             <Link
               href={"/"}
               className={`group relative font-bold text-qrmory-purple-400`}
             >
               Home
+              <div
+                className={`absolute left-0 -bottom-0.5 w-0 group-hover:w-full h-[1px] bg-qrmory-purple-400 transition-all duration-300`}
+              ></div>
+            </Link>
+
+            <Link
+              href={"/about"}
+              className={`group relative font-bold text-qrmory-purple-400`}
+            >
+              About
+              <div
+                className={`absolute left-0 -bottom-0.5 w-0 group-hover:w-full h-[1px] bg-qrmory-purple-400 transition-all duration-300`}
+              ></div>
+            </Link>
+
+            <Link
+              href={"/pricing"}
+              className={`group relative font-bold text-qrmory-purple-400`}
+            >
+              Pricing
+              <div
+                className={`absolute left-0 -bottom-0.5 w-0 group-hover:w-full h-[1px] bg-qrmory-purple-400 transition-all duration-300`}
+              ></div>
+            </Link>
+
+            <Link
+              href={"/help"}
+              className={`group relative font-bold text-qrmory-purple-400`}
+            >
+              Help Center
               <div
                 className={`absolute left-0 -bottom-0.5 w-0 group-hover:w-full h-[1px] bg-qrmory-purple-400 transition-all duration-300`}
               ></div>

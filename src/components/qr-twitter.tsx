@@ -1,21 +1,63 @@
-﻿import { useState } from "react";
+﻿import { useState, useEffect } from "react";
 import { QRControlType } from "@/types/qr-controls";
 
-export default function QRTwitter({ setText, setChanged }: QRControlType) {
+interface TwitterSaveData {
+  controlType: string;
+  username: string;
+  domain: string;
+}
+
+export default function QRTwitter({
+  setText,
+  setChanged,
+  setSaveData,
+  initialData,
+}: QRControlType) {
   // States
-  const [enteredLink, setEnteredLink] = useState("");
-  const [mainLink, setMainLink] = useState(`twitter.com/`);
-  const [altLink, setAltLink] = useState(`x.com/`);
+  const [enteredLink, setEnteredLink] = useState(initialData?.username || "");
+  const [mainLink, setMainLink] = useState(
+    initialData?.domain ? `${initialData.domain}/` : `twitter.com/`,
+  );
+  const [altLink, setAltLink] = useState(
+    initialData?.domain === "x.com" ? `twitter.com/` : `x.com/`,
+  );
+  const [isInitialized, setIsInitialized] = useState(false);
 
   // Update the parent component with the current value
   const updateParentValue = (value: string) => {
     if (value.length > 0) {
       setText(`${mainLink}${value}`);
+      if (setSaveData) {
+        const saveData: TwitterSaveData = {
+          controlType: "twitter",
+          username: value,
+          domain: mainLink.replace("/", ""),
+        };
+        setSaveData(saveData);
+      }
     } else {
       setText("");
+      if (setSaveData) setSaveData(null);
     }
     setChanged(true);
   };
+
+  // Initialize from saved data if available
+  useEffect(() => {
+    if (initialData && !isInitialized) {
+      setEnteredLink(initialData.username || "");
+      if (initialData.domain) {
+        setMainLink(`${initialData.domain}/`);
+        setAltLink(initialData.domain === "x.com" ? `twitter.com/` : `x.com/`);
+      }
+      setIsInitialized(true);
+
+      // Update parent with initial value
+      if (initialData.username) {
+        updateParentValue(initialData.username);
+      }
+    }
+  }, [initialData, isInitialized]);
 
   // Handle input change
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -24,10 +66,31 @@ export default function QRTwitter({ setText, setChanged }: QRControlType) {
     updateParentValue(newValue);
   };
 
+  // Handle toggling between Twitter and X domains
+  const handleToggleDomain = () => {
+    const temp = mainLink;
+    setMainLink(altLink);
+    setAltLink(temp);
+
+    // Update with new domain
+    if (enteredLink.length > 0) {
+      setText(`${altLink}${enteredLink}`);
+      if (setSaveData) {
+        const saveData: TwitterSaveData = {
+          controlType: "twitter",
+          username: enteredLink,
+          domain: altLink.replace("/", ""),
+        };
+        setSaveData(saveData);
+      }
+    }
+  };
+
   // Handle input blur (when focus leaves the input)
   const handleInputBlur = () => {
     if (enteredLink.length === 0) {
       setText("");
+      if (setSaveData) setSaveData(null);
       return;
     }
 
@@ -81,20 +144,24 @@ export default function QRTwitter({ setText, setChanged }: QRControlType) {
 
     // Update state and parent
     setEnteredLink(fixedLink);
-    setText(mainLink + fixedLink);
+    updateParentValue(fixedLink);
   };
 
   return (
     <>
       <label className="control-label">
         Enter Twitter Username:
-        <p className={`font-sansLight italic text-stone-400`}>
+        <p className={`font-sansLight italic text-neutral-400`}>
           (you can paste the full link{" "}
           <span className={`px-1 font-sans font-black uppercase`}>or</span> just
           the username)
         </p>
         <div className="flex flex-row flex-nowrap">
-          <p className="pt-2 text-qrmory-purple-400 font-bold text-sm md:text-lg">
+          <p
+            className="pt-2 text-qrmory-purple-400 font-bold text-sm md:text-lg cursor-pointer hover:text-qrmory-purple-600"
+            onClick={handleToggleDomain}
+            title="Click to toggle between twitter.com and x.com"
+          >
             https://{mainLink}
           </p>
           <input

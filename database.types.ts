@@ -7,15 +7,71 @@ export type Json =
   | Json[]
 
 export type Database = {
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: "12.2.12 (cd3cf9e)"
+  }
   public: {
     Tables: {
+      error_reports: {
+        Row: {
+          client_ip: string | null
+          context: Json | null
+          created_at: string | null
+          fingerprint: string | null
+          id: string
+          message: string
+          stack: string | null
+          timestamp: string
+          url: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          client_ip?: string | null
+          context?: Json | null
+          created_at?: string | null
+          fingerprint?: string | null
+          id: string
+          message: string
+          stack?: string | null
+          timestamp: string
+          url?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          client_ip?: string | null
+          context?: Json | null
+          created_at?: string | null
+          fingerprint?: string | null
+          id?: string
+          message?: string
+          stack?: string | null
+          timestamp?: string
+          url?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "error_reports_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string
           dynamic_qr_quota: number
           id: string
-          stripe_customer_id: string | null
-          subscription_level: Database["public"]["Enums"]["subscription_level"]
+          paddle_customer_id: string | null
+          queued_for_delete: string | null
+          subscription_level: number | null
           subscription_status: string | null
           updated_at: string
         }
@@ -23,8 +79,9 @@ export type Database = {
           created_at?: string
           dynamic_qr_quota?: number
           id: string
-          stripe_customer_id?: string | null
-          subscription_level?: Database["public"]["Enums"]["subscription_level"]
+          paddle_customer_id?: string | null
+          queued_for_delete?: string | null
+          subscription_level?: number | null
           subscription_status?: string | null
           updated_at?: string
         }
@@ -32,36 +89,48 @@ export type Database = {
           created_at?: string
           dynamic_qr_quota?: number
           id?: string
-          stripe_customer_id?: string | null
-          subscription_level?: Database["public"]["Enums"]["subscription_level"]
+          paddle_customer_id?: string | null
+          queued_for_delete?: string | null
+          subscription_level?: number | null
           subscription_status?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_profiles_subscription_level"
+            columns: ["subscription_level"]
+            isOneToOne: false
+            referencedRelation: "subscription_packages"
+            referencedColumns: ["level"]
+          },
+        ]
       }
       qr_code_analytics: {
         Row: {
+          browser: string | null
+          country: string | null
+          device_type: string | null
           id: string
-          ip_address: string | null
-          location: string | null
           qr_code_id: string
           referrer: string | null
           scanned_at: string
           user_agent: string | null
         }
         Insert: {
+          browser?: string | null
+          country?: string | null
+          device_type?: string | null
           id?: string
-          ip_address?: string | null
-          location?: string | null
           qr_code_id: string
           referrer?: string | null
           scanned_at?: string
           user_agent?: string | null
         }
         Update: {
+          browser?: string | null
+          country?: string | null
+          device_type?: string | null
           id?: string
-          ip_address?: string | null
-          location?: string | null
           qr_code_id?: string
           referrer?: string | null
           scanned_at?: string
@@ -79,35 +148,38 @@ export type Database = {
       }
       qr_codes: {
         Row: {
-          content: string
+          content: Json
           created_at: string
           id: string
           is_active: boolean | null
-          name: string
-          redirect_url: string | null
-          type: Database["public"]["Enums"]["qr_code_type"]
+          qr_value: string | null
+          shortcode: string | null
+          title: string
+          type: string
           updated_at: string
           user_id: string
         }
         Insert: {
-          content: string
+          content: Json
           created_at?: string
           id?: string
           is_active?: boolean | null
-          name: string
-          redirect_url?: string | null
-          type: Database["public"]["Enums"]["qr_code_type"]
+          qr_value?: string | null
+          shortcode?: string | null
+          title?: string
+          type?: string
           updated_at?: string
           user_id: string
         }
         Update: {
-          content?: string
+          content?: Json
           created_at?: string
           id?: string
           is_active?: boolean | null
-          name?: string
-          redirect_url?: string | null
-          type?: Database["public"]["Enums"]["qr_code_type"]
+          qr_value?: string | null
+          shortcode?: string | null
+          title?: string
+          type?: string
           updated_at?: string
           user_id?: string
         }
@@ -121,93 +193,64 @@ export type Database = {
           },
         ]
       }
-      quota_packages: {
+      subscription_packages: {
         Row: {
-          created_at: string
+          billing_interval: string
+          created_at: string | null
           description: string | null
+          features: Json
           id: string
-          is_active: boolean | null
+          is_active: boolean
+          level: number
           name: string
+          paddle_price_id: string | null
           price_in_cents: number
-          quantity: number
-          stripe_price_id: string
+          quota_amount: number
+          sort_order: number
+          updated_at: string | null
         }
         Insert: {
-          created_at?: string
+          billing_interval?: string
+          created_at?: string | null
           description?: string | null
+          features?: Json
           id?: string
-          is_active?: boolean | null
+          is_active?: boolean
+          level: number
           name: string
-          price_in_cents: number
-          quantity: number
-          stripe_price_id: string
+          paddle_price_id?: string | null
+          price_in_cents?: number
+          quota_amount?: number
+          sort_order?: number
+          updated_at?: string | null
         }
         Update: {
-          created_at?: string
+          billing_interval?: string
+          created_at?: string | null
           description?: string | null
+          features?: Json
           id?: string
-          is_active?: boolean | null
+          is_active?: boolean
+          level?: number
           name?: string
+          paddle_price_id?: string | null
           price_in_cents?: number
-          quantity?: number
-          stripe_price_id?: string
+          quota_amount?: number
+          sort_order?: number
+          updated_at?: string | null
         }
         Relationships: []
-      }
-      quota_purchases: {
-        Row: {
-          expires_at: string | null
-          id: string
-          package_id: string
-          purchased_at: string
-          quantity: number
-          stripe_checkout_id: string
-          user_id: string
-        }
-        Insert: {
-          expires_at?: string | null
-          id?: string
-          package_id: string
-          purchased_at?: string
-          quantity: number
-          stripe_checkout_id: string
-          user_id: string
-        }
-        Update: {
-          expires_at?: string | null
-          id?: string
-          package_id?: string
-          purchased_at?: string
-          quantity?: number
-          stripe_checkout_id?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "quota_purchases_package_id_fkey"
-            columns: ["package_id"]
-            isOneToOne: false
-            referencedRelation: "quota_packages"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "quota_purchases_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
       }
       subscriptions: {
         Row: {
           created_at: string
           current_period_end: string
           id: string
+          paddle_checkout_id: string | null
+          paddle_price_id: string | null
+          paddle_subscription_id: string | null
           plan_name: string | null
           status: string
-          stripe_price_id: string | null
-          stripe_subscription_id: string
           updated_at: string | null
           user_id: string
         }
@@ -215,10 +258,11 @@ export type Database = {
           created_at?: string
           current_period_end: string
           id?: string
+          paddle_checkout_id?: string | null
+          paddle_price_id?: string | null
+          paddle_subscription_id?: string | null
           plan_name?: string | null
           status: string
-          stripe_price_id?: string | null
-          stripe_subscription_id: string
           updated_at?: string | null
           user_id: string
         }
@@ -226,10 +270,11 @@ export type Database = {
           created_at?: string
           current_period_end?: string
           id?: string
+          paddle_checkout_id?: string | null
+          paddle_price_id?: string | null
+          paddle_subscription_id?: string | null
           plan_name?: string | null
           status?: string
-          stripe_price_id?: string | null
-          stripe_subscription_id?: string
           updated_at?: string | null
           user_id?: string
         }
@@ -237,55 +282,164 @@ export type Database = {
           {
             foreignKeyName: "subscriptions_user_id_fkey"
             columns: ["user_id"]
-            isOneToOne: false
+            isOneToOne: true
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
       }
+      user_settings: {
+        Row: {
+          created_at: string
+          id: string
+          settings: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          settings?: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          settings?: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
-      [_ in never]: never
+      active_subscription_packages: {
+        Row: {
+          billing_interval: string | null
+          created_at: string | null
+          description: string | null
+          features: Json | null
+          id: string | null
+          is_active: boolean | null
+          name: string | null
+          paddle_price_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          billing_interval?: string | null
+          created_at?: string | null
+          description?: string | null
+          features?: Json | null
+          id?: string | null
+          is_active?: boolean | null
+          name?: string | null
+          paddle_price_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          billing_interval?: string | null
+          created_at?: string | null
+          description?: string | null
+          features?: Json | null
+          id?: string | null
+          is_active?: boolean | null
+          name?: string | null
+          paddle_price_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
+      check_dynamic_qr_quota: {
+        Args: { p_user_id: string }
+        Returns: boolean
+      }
+      cleanup_old_error_reports: {
+        Args: Record<PropertyKey, never>
+        Returns: number
+      }
+      get_user_subscription_details: {
+        Args: { p_user_id: string }
+        Returns: {
+          booster_quota: number
+          can_create_more: boolean
+          remaining_quota: number
+          subscription_level: number
+          subscription_name: string
+          subscription_quota: number
+          total_quota: number
+          used_quota: number
+        }[]
+      }
+      get_user_total_quota: {
+        Args: { p_user_id: string }
+        Returns: number
+      }
       handle_new_subscription: {
-        Args: {
-          p_user_id: string
-          p_subscription_id: string
-          p_price_id: string
-          p_status: string
-          p_plan_name: string
-          p_current_period_end: string
-          p_quota_amount: number
-        }
+        Args:
+          | {
+              p_current_period_end: string
+              p_plan_name: string
+              p_price_id: string
+              p_quota_amount: number
+              p_status: string
+              p_subscription_id: string
+              p_user_id: string
+            }
+          | {
+              p_current_period_end: string
+              p_plan_name: string
+              p_price_id: string
+              p_quota_amount: number
+              p_status: string
+              p_subscription_id: string
+              p_user_id: string
+            }
         Returns: undefined
       }
       handle_quota_purchase: {
-        Args: {
-          p_user_id: string
-          p_package_id: string
-          p_quantity: number
-          p_amount_paid: number
-          p_stripe_checkout_id: string
-          p_expires_at?: string
-        }
+        Args:
+          | {
+              p_amount_paid: number
+              p_expires_at?: string
+              p_package_id: string
+              p_quantity: number
+              p_stripe_checkout_id: string
+              p_user_id: string
+            }
+          | {
+              p_amount_paid: number
+              p_expires_at?: string
+              p_package_id: string
+              p_quantity: number
+              p_stripe_checkout_id: string
+              p_user_id: string
+            }
         Returns: undefined
       }
       handle_subscription_updated: {
-        Args: {
-          p_subscription_id: string
-          p_price_id: string
-          p_status: string
-          p_plan_name: string
-          p_current_period_end: string
-        }
+        Args:
+          | {
+              p_current_period_end: string
+              p_plan_name: string
+              p_price_id: string
+              p_status: string
+              p_subscription_id: string
+            }
+          | {
+              p_current_period_end: string
+              p_plan_name: string
+              p_price_id: string
+              p_status: string
+              p_subscription_id: string
+            }
         Returns: undefined
       }
     }
     Enums: {
-      qr_code_type: "static" | "dynamic"
-      quota_package_type: "static" | "dynamic"
-      subscription_level: "0" | "1" | "2" | "3" | "4"
+      [_ in never]: never
     }
     CompositeTypes: {
       [_ in never]: never
@@ -293,27 +447,33 @@ export type Database = {
   }
 }
 
-type PublicSchema = Database[Extract<keyof Database, "public">]
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
+
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
 
 export type Tables<
-  PublicTableNameOrOptions extends
-    | keyof (PublicSchema["Tables"] & PublicSchema["Views"])
-    | { schema: keyof Database },
-  TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
-    ? keyof (Database[PublicTableNameOrOptions["schema"]]["Tables"] &
-        Database[PublicTableNameOrOptions["schema"]]["Views"])
+  DefaultSchemaTableNameOrOptions extends
+    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
     : never = never,
-> = PublicTableNameOrOptions extends { schema: keyof Database }
-  ? (Database[PublicTableNameOrOptions["schema"]]["Tables"] &
-      Database[PublicTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
       Row: infer R
     }
     ? R
     : never
-  : PublicTableNameOrOptions extends keyof (PublicSchema["Tables"] &
-        PublicSchema["Views"])
-    ? (PublicSchema["Tables"] &
-        PublicSchema["Views"])[PublicTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
         Row: infer R
       }
       ? R
@@ -321,20 +481,24 @@ export type Tables<
     : never
 
 export type TablesInsert<
-  PublicTableNameOrOptions extends
-    | keyof PublicSchema["Tables"]
-    | { schema: keyof Database },
-  TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
-    ? keyof Database[PublicTableNameOrOptions["schema"]]["Tables"]
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
-> = PublicTableNameOrOptions extends { schema: keyof Database }
-  ? Database[PublicTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Insert: infer I
     }
     ? I
     : never
-  : PublicTableNameOrOptions extends keyof PublicSchema["Tables"]
-    ? PublicSchema["Tables"][PublicTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
         Insert: infer I
       }
       ? I
@@ -342,20 +506,24 @@ export type TablesInsert<
     : never
 
 export type TablesUpdate<
-  PublicTableNameOrOptions extends
-    | keyof PublicSchema["Tables"]
-    | { schema: keyof Database },
-  TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
-    ? keyof Database[PublicTableNameOrOptions["schema"]]["Tables"]
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
-> = PublicTableNameOrOptions extends { schema: keyof Database }
-  ? Database[PublicTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Update: infer U
     }
     ? U
     : never
-  : PublicTableNameOrOptions extends keyof PublicSchema["Tables"]
-    ? PublicSchema["Tables"][PublicTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
         Update: infer U
       }
       ? U
@@ -363,29 +531,41 @@ export type TablesUpdate<
     : never
 
 export type Enums<
-  PublicEnumNameOrOptions extends
-    | keyof PublicSchema["Enums"]
-    | { schema: keyof Database },
-  EnumName extends PublicEnumNameOrOptions extends { schema: keyof Database }
-    ? keyof Database[PublicEnumNameOrOptions["schema"]]["Enums"]
+  DefaultSchemaEnumNameOrOptions extends
+    | keyof DefaultSchema["Enums"]
+    | { schema: keyof DatabaseWithoutInternals },
+  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
     : never = never,
-> = PublicEnumNameOrOptions extends { schema: keyof Database }
-  ? Database[PublicEnumNameOrOptions["schema"]]["Enums"][EnumName]
-  : PublicEnumNameOrOptions extends keyof PublicSchema["Enums"]
-    ? PublicSchema["Enums"][PublicEnumNameOrOptions]
+> = DefaultSchemaEnumNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
     : never
 
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
-    | keyof PublicSchema["CompositeTypes"]
-    | { schema: keyof Database },
+    | keyof DefaultSchema["CompositeTypes"]
+    | { schema: keyof DatabaseWithoutInternals },
   CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof Database[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
     : never = never,
-> = PublicCompositeTypeNameOrOptions extends { schema: keyof Database }
-  ? Database[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
-  : PublicCompositeTypeNameOrOptions extends keyof PublicSchema["CompositeTypes"]
-    ? PublicSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+> = PublicCompositeTypeNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
     : never
+
+export const Constants = {
+  public: {
+    Enums: {},
+  },
+} as const

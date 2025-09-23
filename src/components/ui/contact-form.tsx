@@ -27,7 +27,7 @@ export default function ContactForm() {
         type={"text"}
         name={"name"}
         label={"Your name"}
-        placeholder={"eg. Donatero"}
+        placeholder={"eg. Donato di Niccolò"}
         value={formData.name}
         onChange={handleChange}
       />
@@ -65,7 +65,7 @@ export default function ContactForm() {
           formData.email.length < 6 ||
           formData.message.length < 20
         }
-        className={`py-2 w-full bg-qrmory-purple-500 disabled:bg-stone-300 rounded-md text-white text-sm md:text-base font-bold`}
+        className={`py-2 w-full bg-qrmory-purple-500 disabled:bg-neutral-300 rounded-md text-white text-sm md:text-base font-bold`}
       >
         Send
       </button>

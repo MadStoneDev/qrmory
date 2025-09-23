@@ -1,9 +1,20 @@
-﻿import { useState } from "react";
+﻿import { useState, useEffect } from "react";
 import { QRControlType } from "@/types/qr-controls";
 
-export default function QRInstagram({ setText, setChanged }: QRControlType) {
+interface InstagramSaveData {
+  controlType: string;
+  username: string;
+}
+
+export default function QRInstagram({
+  setText,
+  setChanged,
+  setSaveData,
+  initialData,
+}: QRControlType) {
   // States
-  const [enteredLink, setEnteredLink] = useState("");
+  const [enteredLink, setEnteredLink] = useState(initialData?.username || "");
+  const [isInitialized, setIsInitialized] = useState(false);
 
   // Main Link
   const mainLink = `instagram.com/`;
@@ -12,11 +23,32 @@ export default function QRInstagram({ setText, setChanged }: QRControlType) {
   const updateParentValue = (value: string) => {
     if (value.length > 0) {
       setText(`${mainLink}${value}`);
+      if (setSaveData) {
+        const saveData: InstagramSaveData = {
+          controlType: "instagram",
+          username: value,
+        };
+        setSaveData(saveData);
+      }
     } else {
       setText("");
+      if (setSaveData) setSaveData(null);
     }
     setChanged(true);
   };
+
+  // Initialize from saved data if available
+  useEffect(() => {
+    if (initialData && !isInitialized) {
+      setEnteredLink(initialData.username || "");
+      setIsInitialized(true);
+
+      // Update parent with initial value
+      if (initialData.username) {
+        updateParentValue(initialData.username);
+      }
+    }
+  }, [initialData, isInitialized]);
 
   // Handle input change
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -29,6 +61,7 @@ export default function QRInstagram({ setText, setChanged }: QRControlType) {
   const handleInputBlur = () => {
     if (enteredLink.length === 0) {
       setText("");
+      if (setSaveData) setSaveData(null);
       return;
     }
 
@@ -48,14 +81,14 @@ export default function QRInstagram({ setText, setChanged }: QRControlType) {
 
     // Update state and parent
     setEnteredLink(fixedLink);
-    setText(mainLink + fixedLink);
+    updateParentValue(fixedLink);
   };
 
   return (
     <>
       <label className="control-label">
         Enter Instagram Username:
-        <p className={`font-sansLight italic text-stone-400`}>
+        <p className={`font-sansLight italic text-neutral-400`}>
           (you can paste the full link{" "}
           <span className={`px-1 font-sans font-black uppercase`}>or</span> just
           the username)

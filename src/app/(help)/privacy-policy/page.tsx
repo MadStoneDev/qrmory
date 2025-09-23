@@ -1,5 +1,11 @@
 import MainNavigation from "@/components/main-navigation";
 
+export const metadata = {
+  title: "Privacy Policy | QRmory",
+  description:
+    "Learn how QRmory collects, uses, and protects your personal information. Details on data handling, cookies, and your privacy rights.",
+};
+
 const PrivacyPolicy = () => {
   return (
     <main className="flex flex-col w-full policy-document">
@@ -661,8 +667,6 @@ const PrivacyPolicy = () => {
           us using the following details:{" "}
         </p>
         <p>
-          Richard H.
-          <br />
           <a href="/contact">https://qrmory.com/contact</a>
         </p>
         <p>
@@ -672,8 +676,6 @@ const PrivacyPolicy = () => {
           details are as follows:
         </p>
         <p>
-          Richard H.
-          <br />
           <a href="/contact">https://qrmory.com/contact</a>
         </p>
       </section>

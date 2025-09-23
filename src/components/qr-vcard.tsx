@@ -1,14 +1,49 @@
 ﻿import { useState, useEffect } from "react";
 import { QRControlType } from "@/types/qr-controls";
 
-export default function QRVCard({ setText, setChanged }: QRControlType) {
+interface VCardSaveData {
+  controlType: string;
+  fullName: string;
+  company: string;
+  email: string;
+  phone: string;
+  website: string;
+  position: string;
+}
+
+export default function QRVCard({
+  setText,
+  setChanged,
+  setSaveData,
+  initialData,
+}: QRControlType) {
   // States for vCard fields
-  const [fullName, setFullName] = useState("");
-  const [company, setCompany] = useState("");
-  const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
-  const [website, setWebsite] = useState("");
-  const [position, setPosition] = useState("");
+  const [fullName, setFullName] = useState(initialData?.fullName || "");
+  const [company, setCompany] = useState(initialData?.company || "");
+  const [email, setEmail] = useState(initialData?.email || "");
+  const [phone, setPhone] = useState(initialData?.phone || "");
+  const [website, setWebsite] = useState(initialData?.website || "");
+  const [position, setPosition] = useState(initialData?.position || "");
+  const [isInitialized, setIsInitialized] = useState(false);
+
+  // Initialize from saved data if available
+  useEffect(() => {
+    if (initialData && !isInitialized) {
+      setFullName(initialData.fullName || "");
+      setCompany(initialData.company || "");
+      setEmail(initialData.email || "");
+      setPhone(initialData.phone || "");
+      setWebsite(initialData.website || "");
+      setPosition(initialData.position || "");
+      setIsInitialized(true);
+
+      // Only update parent if we have required fields
+      if (initialData.fullName && (initialData.email || initialData.phone)) {
+        // Trigger update to recreate the QR code value
+        setTimeout(updateParentValue, 0);
+      }
+    }
+  }, [initialData, isInitialized]);
 
   // Base64 encode JSON data for privacy
   const encodeVCardData = () => {
@@ -39,9 +74,24 @@ export default function QRVCard({ setText, setChanged }: QRControlType) {
       const vCardUrl = `https://qrmory.com/vcard/${encodedData}`;
       setText(vCardUrl);
       setChanged(true);
+
+      // Update save data
+      if (setSaveData) {
+        const saveData: VCardSaveData = {
+          controlType: "vcard",
+          fullName,
+          company,
+          email,
+          phone,
+          website,
+          position,
+        };
+        setSaveData(saveData);
+      }
     } else {
       setText("");
       setChanged(true);
+      if (setSaveData) setSaveData(null);
     }
   };
 
@@ -132,7 +182,7 @@ export default function QRVCard({ setText, setChanged }: QRControlType) {
         />
       </label>
 
-      <div className={`-mt-5 text-xs text-gray-500`}>
+      <div className={`-mt-5 text-xs text-neutral-500`}>
         Rest assured that your information will be encoded in the QR code URL
         for privacy.
       </div>

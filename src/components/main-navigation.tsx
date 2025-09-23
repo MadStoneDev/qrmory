@@ -60,7 +60,7 @@ export default function MainNavigation({
         {/*    className={`flex flex-col bg-neutral-100 border-none w-fit text-neutral-900`}*/}
         {/*  >*/}
         {/*    <Link*/}
-        {/*      href={`/auth/sign-up`}*/}
+        {/*      href={`/register`}*/}
         {/*      className={`py-1 px-2 hover:bg-qrmory-purple-400 hover:text-white transition-all duration-300`}*/}
         {/*    >*/}
         {/*      Create a Free Account*/}

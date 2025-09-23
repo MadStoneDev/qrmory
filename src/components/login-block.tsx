@@ -1,175 +1,280 @@
 ﻿"use client";
 
 import Link from "next/link";
-import { ChangeEvent, FormEvent, useState } from "react";
+import { useRouter } from "next/navigation";
+import { ChangeEvent, FormEvent, useState, useEffect } from "react";
 
+import { handleAuth, verifyOtp } from "@/app/(auth)/login/actions";
 import AuthText from "@/components/auth-text";
-import {
-  loginWithMagicLink,
-  loginWithPassword,
-} from "@/app/(auth)/auth/login/actions";
+import OTPInput from "@/components/otp-input";
 
 export const LoginBlock = () => {
+  // Hooks
+  const router = useRouter();
+
   // States
-  const [showPassword, setShowPassword] = useState(false);
-  const [useMagicLink, setUseMagicLink] = useState(false);
-  const [magicLinkSent, setMagicLinkSent] = useState(false);
-  const [error, setError] = useState("");
+  const [magicCodeSent, setMagicCodeSent] = useState(false);
+  const [otp, setOtp] = useState("");
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isValidEmail, setIsValidEmail] = useState(false);
+  const [isEmailDirty, setIsEmailDirty] = useState(false);
+
+  const [countdownTime, setCountdownTime] = useState(60);
+  const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [lastSentTimestamp, setLastSentTimestamp] = useState<number | null>(
+    null,
+  );
 
   const [formData, setFormData] = useState({
     email: "",
-    password: "",
   });
 
   // Functions
-  const handleChange = (event: ChangeEvent) => {
-    const target = event.target as HTMLInputElement;
-
-    setFormData({
-      ...formData,
-      [target.name]: target.value,
-    });
-  };
-
-  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+  const handleVerifyOtp = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
-    setError("");
 
-    const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-    if (!emailRegex.test(formData.email.trim())) {
-      setError("Please enter a valid email address.");
-      setIsLoading(false);
+    if (otp.length < 6) {
       return;
     }
 
+    setIsSubmitting(true);
+
     try {
-      if (useMagicLink) {
-        const response = await loginWithMagicLink({
-          email: formData.email.trim(),
-        });
+      const formDataObj = new FormData();
+      formDataObj.append("email", formData.email);
+      formDataObj.append("otp", otp);
 
-        if (response.success) {
-          setMagicLinkSent(true);
-        } else {
-          setError(response.error || "Failed to send magic link");
-        }
-      } else {
-        if (!formData.password) {
-          setError("Password is required");
-          setIsLoading(false);
-          return;
-        }
+      const response = await verifyOtp(formDataObj);
 
-        const loginResponse = await loginWithPassword({
-          email: formData.email.trim(),
-          password: formData.password,
-        });
-
-        if (loginResponse?.error) {
-          setError(loginResponse.error);
-          setIsLoading(false);
-          return;
-        }
-      }
-    } catch (error) {
-      if (error instanceof Error && error.message.includes("NEXT_REDIRECT")) {
+      if (!response.success) {
+        setIsSubmitting(false);
         return;
       }
 
-      console.error("Unexpected error during login:", error);
-      setError("An unexpected error occurred. Please try again later.");
-    } finally {
-      setIsLoading(false);
+      if (response.redirectTo) {
+        router.push(response.redirectTo);
+      }
+    } catch (error) {
+      console.error("OTP verification error:", error);
+      setIsSubmitting(false);
     }
   };
 
-  if (magicLinkSent) {
+  const handleChange = (e: ChangeEvent) => {
+    const target = e.target as HTMLInputElement;
+
+    if (target.name === "email") {
+      // Prevent spaces completely by removing any space the user tries to type
+      const noSpacesValue = target.value.replace(/\s/g, "");
+
+      // Update the form data with the no-spaces value
+      setFormData({
+        ...formData,
+        [target.name]: noSpacesValue,
+      });
+
+      if (!isEmailDirty) setIsEmailDirty(true);
+      validateEmail(noSpacesValue);
+    } else {
+      setFormData({
+        ...formData,
+        [target.name]: target.value,
+      });
+    }
+  };
+
+  const validateEmail = (value: string) => {
+    // More comprehensive email regex that prevents consecutive dots and requires proper domain format
+    const emailRegex =
+      /^[a-zA-Z0-9](?:[a-zA-Z0-9._-]*[a-zA-Z0-9])?@[a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?)+$/;
+    setIsValidEmail(emailRegex.test(value));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!isValidEmail) return;
+
+    setIsLoading(true);
+    setIsSubmitting(true);
+    setError(null);
+
+    // Create FormData object
+    const formDataObj = new FormData();
+    formDataObj.append("email", formData.email);
+
+    try {
+      const response = await handleAuth(formDataObj);
+
+      if (!response.success) {
+        setError(response.error || "Something went wrong");
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Show OTP input
+      setMagicCodeSent(true);
+      // Store email in session storage for potential recovery
+      try {
+        sessionStorage.setItem("authEmail", formData.email);
+      } catch (e) {
+        console.error("Storage error:", e);
+      }
+    } catch (error) {
+      console.error("Form submission error:", error);
+      setError("An unexpected error occurred. Please try again.");
+    } finally {
+      setIsLoading(false);
+      setIsSubmitting(false);
+    }
+  };
+
+  // Effects
+  useEffect(() => {
+    const savedData = localStorage.getItem("magicLinkData");
+
+    if (savedData) {
+      try {
+        const { timestamp, email } = JSON.parse(savedData);
+        const currentTime = new Date().getTime();
+        const elapsedSeconds = Math.floor((currentTime - timestamp) / 1000);
+
+        // If the countdown is still active
+        if (elapsedSeconds < 60) {
+          setLastSentTimestamp(timestamp);
+          setMagicCodeSent(true);
+          setCountdownTime(60 - elapsedSeconds);
+
+          if (email) {
+            setFormData((prev) => ({ ...prev, email }));
+          }
+        } else {
+          localStorage.removeItem("magicLinkData");
+        }
+      } catch (e) {
+        console.error("Error parsing stored magic link data:", e);
+        localStorage.removeItem("magicLinkData");
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+
+    if (magicCodeSent && countdownTime > 0) {
+      timer = setInterval(() => {
+        setCountdownTime((prevTime) => {
+          const newTime = prevTime - 1;
+          if (newTime <= 0) {
+            clearInterval(timer);
+            return 0;
+          }
+          return newTime;
+        });
+      }, 1000);
+    }
+
+    return () => {
+      if (timer) clearInterval(timer);
+    };
+  }, [magicCodeSent, countdownTime]);
+
+  // Render magic link sent confirmation
+  if (magicCodeSent) {
     return (
-      <div className="mt-16 flex flex-col w-full max-w-full lg:max-w-2xl bg-emerald-500 p-4 rounded-2xl text-white">
-        <span className="text-lg font-bold">
-          Check your email for the login link.
+      <form
+        onSubmit={handleVerifyOtp}
+        className={`p-4 grid gap-10 w-full lg:max-w-sm`}
+      >
+        <article>
+          <h1 className={`text-xl font-bold`}>Magic Code Sent!</h1>
+          <h2 className={`text-base text-neutral-600 font-light max-w-sm`}>
+            We've sent you a magic code to your email address. Remember to check
+            your junk folder too just in case.
+          </h2>
+        </article>
+
+        <OTPInput
+          length={6}
+          value={otp}
+          onChange={(value) => setOtp(value)}
+          className={`flex w-full`}
+          inputClassName={`h-12 w-12 bg-transparent text-xl text-qrmory-purple-600 border-neutral-300 focus:border-qrmory-purple-600 font-bold`}
+          autoFocus
+        />
+
+        <button
+          type={`submit`}
+          className={`p-3 rounded-lg bg-qrmory-purple-500 text-neutral-50 font-bold ${
+            isSubmitting ? "opacity-70" : ""
+          }`}
+          disabled={otp.length !== 6 || isSubmitting}
+        >
+          {isSubmitting ? "Verifying..." : "Verify Code"}
+        </button>
+
+        <span className="mt-2 text-sm text-neutral-600 ">
+          {countdownTime > 0
+            ? `You can request another link in ${countdownTime} seconds`
+            : "You can now request another link"}
         </span>
-        <span className="text-sm italic text-center">
-          We've sent you a magic link to{" "}
-          <span className={"font-bold"}>{formData.email}</span>
-        </span>
-      </div>
+        {countdownTime === 0 && (
+          <button
+            type={`button`}
+            onClick={() => setMagicCodeSent(false)}
+            className="mt-2 self-center px-4 py-1 bg-white text-emerald-600 rounded-md text-sm font-semibold"
+          >
+            Send a new link
+          </button>
+        )}
+      </form>
     );
   }
 
   return (
-    <form onSubmit={handleSubmit} className={`grid gap-10 w-full max-w-sm`}>
-      <article>
-        <h1 className={`md:text-xl font-bold`}>Welcome Back!</h1>
-        <h2 className={`text-sm md:text-base text-neutral-600 font-light`}>
-          Let's get you back into your account
-        </h2>
-      </article>
+    <>
+      <form
+        onSubmit={handleSubmit}
+        className={`p-4 grid gap-10 w-full lg:max-w-sm`}
+      >
+        <article>
+          <h1 className={`text-xl font-bold`}>Welcome Back!</h1>
+          <h2 className={`text-base text-neutral-600 font-light`}>
+            Let's get you back into your account
+          </h2>
+        </article>
 
-      <AuthText
-        type={"email"}
-        name={"email"}
-        label={"Email Address"}
-        placeholder={"eg. geralt@rivia.com"}
-        value={formData.email}
-        onChange={handleChange}
-      />
-
-      {!useMagicLink && (
         <AuthText
-          type={"password"}
-          name={"password"}
-          label={"Password"}
-          placeholder={"eg. 1173!Ciri"}
-          value={formData.password}
+          type={"email"}
+          name={"email"}
+          label={"Email Address"}
+          placeholder={"eg. geralt@rivia.com"}
+          value={formData.email}
           onChange={handleChange}
         />
-      )}
 
-      {useMagicLink ? (
-        <button
-          className={`-my-4 mx-auto w-fit text-qrmory-purple-500 font-bold text-sm`}
-          onClick={() => setUseMagicLink(false)}
-        >
-          Login with password instead?
-        </button>
-      ) : (
-        <button
-          className={`-my-4 mx-auto w-fit text-qrmory-purple-500 font-bold text-sm`}
-          onClick={() => setUseMagicLink(true)}
-        >
-          Login with magic link instead?
-        </button>
-      )}
+        {error && <p className="text-red-600 text-sm">{error}</p>}
 
-      {error && <p className="text-red-600 text-sm">{error}</p>}
-
-      <article className={`grid gap-3`}>
-        <button
-          type="submit"
-          disabled={formData.email.length < 6 || isLoading}
-          className={`py-2 w-full bg-qrmory-purple-500 disabled:bg-stone-300 rounded-md text-white text-sm md:text-base font-bold`}
-        >
-          {isLoading
-            ? "Logging you in..."
-            : useMagicLink
-              ? "Send Magic Link"
-              : "Login"}
-        </button>
-
-        <h4 className={`text-xs md:text-sm font-light text-center`}>
-          Don't have an account yet?{" "}
-          <Link href={"/sign-up"} className={`group relative font-bold`}>
-            Create one here
-            <div
-              className={`absolute left-0 -bottom-0.5 w-0 group-hover:w-full h-[1px] bg-qrmory-purple-500 transition-all duration-300`}
-            ></div>
-          </Link>
-          .
-        </h4>
-      </article>
-    </form>
+        <article className={`grid gap-3`}>
+          <button
+            type="submit"
+            disabled={
+              (magicCodeSent && countdownTime > 0) ||
+              formData.email.length < 6 ||
+              isLoading
+            }
+            className={`py-2 w-full bg-qrmory-purple-500 disabled:bg-neutral-300 rounded-md text-white text-base font-bold`}
+          >
+            {isLoading
+              ? "Logging you in..."
+              : magicCodeSent && countdownTime > 0
+                ? `You can retry in (${countdownTime})`
+                : "Send Magic Code"}
+          </button>
+        </article>
+      </form>
+    </>
   );
 };

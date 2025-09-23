@@ -1,19 +1,29 @@
-﻿import { JSX } from "react";
+﻿// types/qr-controls.ts
+import { ReactElement } from "react";
 
 export interface QRControlType {
-  setText: Function;
-  setChanged: Function;
+  setText: (value: string) => void;
+  setChanged: (changed: boolean) => void;
+  setSaveData: (data: any) => void;
+  initialData?: any;
+  user?: any;
+  subscriptionLevel?: number;
 }
 
-export interface QRType {
+export interface QRControl {
   title: string;
   description: string;
+  icon: ReactElement;
   component: (
     setText: (value: string) => void,
-    setChange: (change: boolean) => void,
-  ) => JSX.Element;
+    setChanged: (changed: boolean) => void,
+    setSaveData: (data: any) => void,
+    user?: any,
+    subscriptionLevel?: number,
+    initialData?: any,
+  ) => ReactElement;
 }
 
 export interface QRControlsObject {
-  [key: string]: QRType;
+  [key: string]: QRControl;
 }

@@ -1,8 +1,13 @@
 ﻿import React from "react";
 
-import MainNavigation from "@/components/main-navigation";
 import ContactForm from "@/components/ui/contact-form";
-import MainFooter from "@/components/main-footer";
+import MainNavigation from "@/components/main-navigation";
+import MainFooter from "@/components/sections/main-footer";
+
+export const metadata = {
+  title: "Contact Us | QRmory",
+  description: "Have any questions? Feedback? Suggestions? We want to hear it!",
+};
 
 export default function ContactPage() {
   return (

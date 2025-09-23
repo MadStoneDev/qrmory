@@ -1,270 +1,653 @@
-﻿import React, { useState, useEffect } from "react";
+﻿// components/qr-settings.tsx
+"use client";
 
+import React, { useState, useCallback, useMemo, useEffect } from "react";
+import { toast } from "sonner";
+
+import { createClient } from "@/utils/supabase/client";
+import { UserSettings } from "@/lib/default-settings";
 import { qrControls } from "@/lib/qr-control-object";
-import { IconBolt, IconDeviceFloppy, IconRocket } from "@tabler/icons-react";
 
-import { generateShortCode } from "@/utils/general";
+import { useShortcodeManager } from "@/hooks/useShortcodeManager";
+
+import {
+  validateQuotaForDynamicQR,
+  validateQuotaForSave,
+  QuotaInfo,
+} from "@/utils/quota-validation";
+import { QRState, LoadingStates, QuotaStatus } from "@/types/qr-types";
+import { QRTypeSelector } from "@/components/ui/QRTypeSelector";
+import { QRActionButtons } from "@/components/ui/QRActionButtons";
+import { QRStatusIndicators } from "@/components/ui/QRStatusIndicators";
+
+import { UserRateLimiter } from "@/lib/rate-limiter";
+import { ColorPicker } from "@/components/colour-picker";
 
 interface Props {
-  initialQRTitle: string;
-  initialTextValue: string;
-  initialQRChanged: boolean;
-  initialActiveSelector: string;
+  qrState: QRState;
+  loadingStates: LoadingStates;
   shadow?: boolean;
   user: any;
-  onUpdate: (updates: {
-    qrTitle?: string;
-    textValue?: string;
-    qrChanged?: boolean;
-    activeSelector?: string;
-    qrShortCode?: string;
-    qrValue?: string;
-  }) => void;
+  quotaInfo?: QuotaInfo;
+  qrColors: { foreground: string; background: string };
+  onUpdateQRColors: (
+    updates: Partial<{ foreground: string; background: string }>,
+  ) => void;
+  onUpdateQRState: (updates: Partial<QRState>) => void;
+  onUpdateLoadingState: (key: keyof LoadingStates, value: boolean) => void;
+  onGenerateQR: () => void;
 }
 
-export default function QRSettings({
-  initialQRTitle,
-  initialTextValue,
-  initialQRChanged,
-  initialActiveSelector,
+// Define which QR types require paid subscriptions
+const PREMIUM_QR_TYPES = ["imageGallery", "audio"];
+const SUBSCRIPTION_REQUIRED_TYPES = {
+  imageGallery: 1, // Requires Explorer or higher
+  audio: 1, // Requires Explorer or higher
+};
+
+export default function QRSettingsRefactored({
+  qrState,
+  loadingStates,
   shadow = false,
   user,
-  onUpdate,
+  quotaInfo = {
+    currentCount: 0,
+    maxQuota: 3,
+    subscriptionLevel: "free",
+    subscriptionStatus: "inactive",
+  },
+  qrColors,
+  onUpdateQRColors,
+  onUpdateQRState,
+  onUpdateLoadingState,
+  onGenerateQR,
 }: Props) {
   // States
-  const [qrTitle, setQRTitle] = useState(initialQRTitle);
-  const [textValue, setTextValue] = useState(initialTextValue);
-  const [qrChanged, setQRChanged] = useState(initialQRChanged);
-  const [activeSelector, setActiveSelector] = useState(initialActiveSelector);
+  const { createDynamicQR, releaseShortcode } = useShortcodeManager(user);
 
-  const [isDynamic, setIsDynamic] = useState(false);
-  const [loadingDynamic, setLoadingDynamic] = useState(false);
-  const [qrShortCode, setQRShortCode] = useState("");
+  const [colorInputs, setColorInputs] = useState({
+    foreground: qrColors.foreground,
+    background: qrColors.background,
+  });
 
-  // Functions
-  const updateTextValue = (value: string) => {
-    setTextValue(value);
-  };
+  // Local input state for controlled inputs
+  const [titleInput, setTitleInput] = useState(qrState.title);
+  const [textInput, setTextInput] = useState(qrState.textValue);
 
-  const updateQRChanged = (changed: boolean) => {
-    setQRChanged(changed);
-  };
+  // Get user subscription level
+  const userSubscriptionLevel = user?.subscription_level || 0;
 
-  // Initialize the QR control component with correct callbacks
-  const [qrControl, setQRControl] = useState(() =>
-    qrControls[activeSelector].component(updateTextValue, updateQRChanged),
+  // QR control component state
+  const [qrControl, setQRControl] = useState(() => {
+    // Check if user can access this QR type
+    if (
+      PREMIUM_QR_TYPES.includes(qrState.activeSelector) &&
+      userSubscriptionLevel === 0
+    ) {
+      return (
+        <div className="text-center p-6 bg-gradient-to-br from-qrmory-purple-50 to-qrmory-purple-100 rounded-lg border border-qrmory-purple-200">
+          <div className="w-16 h-16 mx-auto mb-4 bg-qrmory-purple-200 rounded-full flex items-center justify-center">
+            <svg
+              className="w-8 h-8 text-qrmory-purple-600"
+              fill="currentColor"
+              viewBox="0 0 20 20"
+            >
+              <path
+                fillRule="evenodd"
+                d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z"
+                clipRule="evenodd"
+              />
+            </svg>
+          </div>
+          <h3 className="text-lg font-semibold text-qrmory-purple-800 mb-2">
+            Premium Feature
+          </h3>
+          <p className="text-qrmory-purple-600 mb-4">
+            {qrControls[qrState.activeSelector]?.title} QR codes require a paid
+            subscription.
+          </p>
+          <a
+            href="/dashboard/subscription"
+            className="inline-block bg-qrmory-purple-600 text-white px-6 py-2 rounded-lg hover:bg-qrmory-purple-700 transition-colors"
+          >
+            Upgrade Now
+          </a>
+        </div>
+      );
+    }
+
+    return qrControls[qrState.activeSelector].component(
+      (value: string) => {
+        setTextInput(value);
+        onUpdateQRState({ textValue: value, changed: true });
+      },
+      (changed: boolean) => onUpdateQRState({ changed }),
+      (data: any) => onUpdateQRState({ saveData: data }),
+      user,
+      userSubscriptionLevel,
+      qrState.saveData,
+    );
+  });
+
+  // Memoized quota status
+  const quotaStatus: QuotaStatus = useMemo(() => {
+    const hasReachedQuota = quotaInfo.currentCount >= quotaInfo.maxQuota;
+    const isNearQuota = quotaInfo.currentCount >= quotaInfo.maxQuota - 1;
+    return { hasReachedQuota, isNearQuota };
+  }, [quotaInfo.currentCount, quotaInfo.maxQuota]);
+
+  // Check if user can access a QR type
+  const canAccessQRType = useCallback(
+    (qrType: string): boolean => {
+      if (!PREMIUM_QR_TYPES.includes(qrType)) return true;
+
+      const requiredLevel =
+        SUBSCRIPTION_REQUIRED_TYPES[
+          qrType as keyof typeof SUBSCRIPTION_REQUIRED_TYPES
+        ];
+      return userSubscriptionLevel >= requiredLevel;
+    },
+    [userSubscriptionLevel],
   );
 
-  // Function to handle selector change
-  const handleActiveSelector = (key: string) => {
-    setTextValue("");
-    setActiveSelector(key);
-    setQRControl(qrControls[key].component(updateTextValue, updateQRChanged));
-    setQRChanged(true);
-  };
+  // Handle selector changes with subscription validation
+  const handleSelectorChange = useCallback(
+    (key: string) => {
+      // Check if user can access this QR type
+      if (!canAccessQRType(key)) {
+        toast("Premium Feature Required", {
+          description: `${qrControls[key]?.title} QR codes require a paid subscription.`,
+          style: {
+            backgroundColor: "rgb(254, 226, 226)",
+            color: "rgb(153, 27, 27)",
+          },
+          action: {
+            label: "Upgrade",
+            onClick: () => {
+              window.location.href = "/dashboard/subscription";
+            },
+          },
+        });
+        return;
+      }
 
-  // Function to generate the QR code
-  const handleGenerateQR = () => {
-    if (textValue.length > 0) {
-      onUpdate({
-        qrValue: textValue,
-        qrChanged: false,
-        qrShortCode,
+      setTextInput("");
+      onUpdateQRState({
+        textValue: "",
+        saveData: null,
+        activeSelector: key,
+        changed: true,
       });
 
-      setQRChanged(false);
-    }
+      // Create appropriate component based on subscription level
+      if (PREMIUM_QR_TYPES.includes(key) && userSubscriptionLevel === 0) {
+        setQRControl(
+          <div className="text-center p-6 bg-gradient-to-br from-qrmory-purple-50 to-qrmory-purple-100 rounded-lg border border-qrmory-purple-200">
+            <div className="w-16 h-16 mx-auto mb-4 bg-qrmory-purple-200 rounded-full flex items-center justify-center">
+              <svg
+                className="w-8 h-8 text-qrmory-purple-600"
+                fill="currentColor"
+                viewBox="0 0 20 20"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            </div>
+            <h3 className="text-lg font-semibold text-qrmory-purple-800 mb-2">
+              Premium Feature
+            </h3>
+            <p className="text-qrmory-purple-600 mb-4">
+              {qrControls[key]?.title} QR codes require a paid subscription.
+            </p>
+            <a
+              href="/dashboard/subscription"
+              className="inline-block bg-qrmory-purple-600 text-white px-6 py-2 rounded-lg hover:bg-qrmory-purple-700 transition-colors"
+            >
+              Upgrade Now
+            </a>
+          </div>,
+        );
+      } else {
+        setQRControl(
+          qrControls[key].component(
+            (value: string) => {
+              setTextInput(value);
+              onUpdateQRState({ textValue: value, changed: true });
+            },
+            (changed: boolean) => onUpdateQRState({ changed }),
+            (data: any) => onUpdateQRState({ saveData: data }),
+            user,
+            userSubscriptionLevel,
+            qrState.saveData,
+          ),
+        );
+      }
+    },
+    [
+      onUpdateQRState,
+      user,
+      userSubscriptionLevel,
+      qrState.saveData,
+      canAccessQRType,
+    ],
+  );
+
+  const isValidHexColor = (hex: string): boolean => {
+    return /^#[0-9A-Fa-f]{6}$/.test(hex);
   };
 
-  const handleMakeDynamic = () => {
-    if (isDynamic) {
-      setQRShortCode("");
-      setIsDynamic(false);
+  const handleColorInputChange = useCallback(
+    (colorType: "foreground" | "background", value: string) => {
+      setColorInputs((prev) => ({
+        ...prev,
+        [colorType]: value,
+      }));
+    },
+    [],
+  );
+
+  const applyColorFromInput = useCallback(
+    (colorType: "foreground" | "background") => {
+      const inputValue = colorInputs[colorType];
+      if (isValidHexColor(inputValue)) {
+        onUpdateQRColors({ [colorType]: inputValue });
+      } else {
+        // Reset invalid input to current valid color
+        setColorInputs((prev) => ({
+          ...prev,
+          [colorType]: qrColors[colorType],
+        }));
+      }
+    },
+    [colorInputs, qrColors, onUpdateQRColors],
+  );
+
+  // Handle dynamic QR toggle with rate limiting
+  const handleMakeDynamic = useCallback(async () => {
+    // Check subscription for premium QR types
+    if (
+      PREMIUM_QR_TYPES.includes(qrState.activeSelector) &&
+      userSubscriptionLevel === 0
+    ) {
+      toast("Premium Feature Required", {
+        description:
+          "Dynamic QR codes for this type require a paid subscription.",
+        style: {
+          backgroundColor: "rgb(254, 226, 226)",
+          color: "rgb(153, 27, 27)",
+        },
+        action: {
+          label: "Upgrade",
+          onClick: () => {
+            window.location.href = "/dashboard/subscription";
+          },
+        },
+      });
       return;
     }
 
-    setLoadingDynamic(true);
+    // Validate rate limit first
+    const subscriptionLevel = userSubscriptionLevel as 0 | 1 | 2 | 3;
+    const rateLimitResult = await UserRateLimiter.checkUserLimit(
+      "qr_generation",
+      user?.id || "anonymous",
+      subscriptionLevel,
+    );
+
+    if (!rateLimitResult.success) {
+      toast("Rate limit exceeded", {
+        description: `Please wait ${rateLimitResult.retryAfter} seconds before creating more QR codes.`,
+        style: {
+          backgroundColor: "rgb(254, 226, 226)",
+          color: "rgb(153, 27, 27)",
+        },
+      });
+      return;
+    }
+
+    // If turning off dynamic mode and not saved, allow it
+    if (qrState.isDynamic && !qrState.isShortcodeSaved) {
+      if (qrState.shortCode) {
+        await releaseShortcode(qrState.shortCode);
+      }
+      onUpdateQRState({
+        shortCode: "",
+        isDynamic: false,
+      });
+      return;
+    }
+
+    // If turning off dynamic but already saved, prevent it
+    if (qrState.isDynamic && qrState.isShortcodeSaved) {
+      toast("Dynamic QR Code already saved", {
+        description:
+          "Dynamic QR codes cannot be converted back to static after saving.",
+      });
+      return;
+    }
+
+    // Validate quota
+    const validation = validateQuotaForDynamicQR(quotaInfo);
+    if (!validation.canProceed) {
+      toast("Dynamic QR quota reached", {
+        description: validation.reason,
+        style: {
+          backgroundColor: "rgb(254, 226, 226)",
+          color: "rgb(153, 27, 27)",
+        },
+        action: validation.shouldUpgrade
+          ? {
+              label: "Upgrade",
+              onClick: () => {
+                window.location.href = "/dashboard/subscription";
+              },
+            }
+          : undefined,
+      });
+      return;
+    }
+
+    onUpdateLoadingState("makingDynamic", true);
 
     try {
-      const shortCode = generateShortCode(8);
-      setQRShortCode(shortCode);
-      setIsDynamic(true);
+      const uniqueCode = await createDynamicQR();
+
+      onUpdateQRState({
+        shortCode: uniqueCode,
+        isDynamic: true,
+      });
+
+      const dynamicUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/${uniqueCode}`;
+      toast("Dynamic QR Code Created", {
+        description: "Your unique URL is ready to be saved.",
+        action: {
+          label: "Copy URL",
+          onClick: () => {
+            navigator.clipboard
+              .writeText(dynamicUrl)
+              .then(() => {
+                toast("URL Copied!", {
+                  description: dynamicUrl,
+                  duration: 3000,
+                });
+              })
+              .catch((err) => {
+                console.error("Failed to copy URL:", err);
+                toast("Failed to copy URL", {
+                  style: {
+                    backgroundColor: "rgb(254, 226, 226)",
+                    color: "rgb(153, 27, 27)",
+                  },
+                });
+              });
+          },
+        },
+      });
     } catch (error) {
-      console.error(error);
+      console.error("Error creating dynamic QR code:", error);
+      toast("Error creating dynamic QR code", {
+        description:
+          error instanceof Error ? error.message : "Please try again later.",
+        style: {
+          backgroundColor: "rgb(254, 226, 226)",
+          color: "rgb(153, 27, 27)",
+        },
+      });
+    } finally {
+      onUpdateLoadingState("makingDynamic", false);
     }
+  }, [
+    qrState,
+    quotaInfo,
+    createDynamicQR,
+    releaseShortcode,
+    onUpdateQRState,
+    onUpdateLoadingState,
+    user,
+    userSubscriptionLevel,
+  ]);
 
-    setTimeout(() => {
-      setLoadingDynamic(false);
-    }, 1000);
-  };
-
-  // Update component when props change
-  useEffect(() => {
-    setQRTitle(initialQRTitle);
-  }, [initialQRTitle]);
-
-  useEffect(() => {
-    setTextValue(initialTextValue);
-  }, [initialTextValue]);
-
-  useEffect(() => {
-    setQRChanged(initialQRChanged);
-  }, [initialQRChanged]);
-
-  // Notify parent of state changes when local state changes
-  useEffect(() => {
-    // Prevent calling onUpdate during initialization
-    if (
-      qrTitle === initialQRTitle &&
-      textValue === initialTextValue &&
-      qrChanged === initialQRChanged &&
-      activeSelector === initialActiveSelector &&
-      qrShortCode === ""
-    ) {
+  // Handle save QR with rate limiting and subscription validation
+  const handleSaveQR = useCallback(async () => {
+    if (qrState.textValue.length === 0) {
+      toast("Please enter content first", {
+        description: "QR code needs content to be saved.",
+      });
       return;
     }
 
-    onUpdate({
-      qrTitle,
-      textValue,
-      qrChanged,
-      activeSelector,
-      qrShortCode,
+    // Check subscription for premium QR types
+    if (
+      PREMIUM_QR_TYPES.includes(qrState.activeSelector) &&
+      userSubscriptionLevel === 0
+    ) {
+      toast("Premium Feature Required", {
+        description: "Saving this QR code type requires a paid subscription.",
+        style: {
+          backgroundColor: "rgb(254, 226, 226)",
+          color: "rgb(153, 27, 27)",
+        },
+        action: {
+          label: "Upgrade",
+          onClick: () => {
+            window.location.href = "/dashboard/subscription";
+          },
+        },
+      });
+      return;
+    }
+
+    // Rate limiting for save operations
+    const subscriptionLevel = userSubscriptionLevel as 0 | 1 | 2 | 3;
+    const rateLimitResult = await UserRateLimiter.checkUserLimit(
+      "qr_save",
+      user?.id || "anonymous",
+      subscriptionLevel,
+    );
+
+    if (!rateLimitResult.success) {
+      toast("Rate limit exceeded", {
+        description: `Please wait ${rateLimitResult.retryAfter} seconds before saving more QR codes.`,
+        style: {
+          backgroundColor: "rgb(254, 226, 226)",
+          color: "rgb(153, 27, 27)",
+        },
+      });
+      return;
+    }
+
+    // Validate quota
+    const validation = validateQuotaForSave(
+      quotaInfo,
+      qrState.isDynamic,
+      qrState.isShortcodeSaved,
+    );
+
+    if (!validation.canProceed) {
+      toast("Cannot save QR code", {
+        description: validation.reason,
+        style: {
+          backgroundColor: "rgb(254, 226, 226)",
+          color: "rgb(153, 27, 27)",
+        },
+        action: validation.shouldUpgrade
+          ? {
+              label: "Upgrade",
+              onClick: () => {
+                window.location.href = "/dashboard/subscription";
+              },
+            }
+          : undefined,
+      });
+      return;
+    }
+
+    onUpdateLoadingState("saving", true);
+
+    try {
+      const supabase = createClient();
+
+      const enhancedSaveData = qrState.saveData
+        ? {
+            ...(qrState.saveData.controlType
+              ? {}
+              : { controlType: qrState.activeSelector }),
+            ...qrState.saveData,
+            // Add creator ID for subscription validation on viewers
+            creatorId: user?.id,
+          }
+        : {
+            controlType: qrState.activeSelector,
+            creatorId: user?.id,
+          };
+
+      const { data, error } = await supabase.from("qr_codes").insert({
+        user_id: user.id,
+        type: qrState.isDynamic ? "dynamic" : "static",
+        content: enhancedSaveData,
+        shortcode: qrState.isDynamic ? qrState.shortCode : null,
+        is_active: true,
+        title:
+          qrState.title || `${qrControls[qrState.activeSelector].title} QR`,
+        qr_value: qrState.textValue,
+      });
+
+      if (error) throw error;
+
+      // Mark the shortcode as saved if it's dynamic
+      if (qrState.isDynamic) {
+        onUpdateQRState({ isShortcodeSaved: true });
+      }
+
+      toast("QR code saved successfully!", {
+        description: `Your ${
+          qrState.isDynamic ? "dynamic" : "static"
+        } QR code has been saved.`,
+      });
+    } catch (error) {
+      console.error("Error saving QR code:", error);
+      toast("Error saving QR code", {
+        description:
+          error instanceof Error
+            ? error.message
+            : "Something went wrong. Please try again later.",
+        style: {
+          backgroundColor: "rgb(254, 226, 226)",
+          color: "rgb(153, 27, 27)",
+        },
+      });
+    } finally {
+      onUpdateLoadingState("saving", false);
+    }
+  }, [
+    qrState,
+    quotaInfo,
+    user,
+    onUpdateQRState,
+    onUpdateLoadingState,
+    userSubscriptionLevel,
+  ]);
+
+  // Handle title input changes with debouncing
+  const handleTitleChange = useCallback(
+    (value: string) => {
+      setTitleInput(value);
+      onUpdateQRState({ title: value });
+    },
+    [onUpdateQRState],
+  );
+
+  useEffect(() => {
+    setColorInputs({
+      foreground: qrColors.foreground,
+      background: qrColors.background,
     });
-  }, [qrTitle, textValue, qrChanged, activeSelector, qrShortCode]);
+  }, [qrColors]);
+
+  // Sync local state with props when they change externally
+  useEffect(() => {
+    if (titleInput !== qrState.title) {
+      setTitleInput(qrState.title);
+    }
+  }, [qrState.title, titleInput]);
+
+  useEffect(() => {
+    if (textInput !== qrState.textValue) {
+      setTextInput(qrState.textValue);
+    }
+  }, [qrState.textValue, textInput]);
 
   return (
     <article
       className={`p-4 sm:p-6 lg:px-8 flex flex-col grow bg-white max-w-full ${
         shadow
-          ? "sm:rounded-3xl sm:shadow-xl shadow-stone-300/50"
-          : "lg:rounded-3xl lg:shadow-xl lg:shadow-stone-300/50"
+          ? "sm:rounded-3xl sm:shadow-xl shadow-neutral-300/50"
+          : "lg:rounded-3xl lg:shadow-xl lg:shadow-neutral-300/50"
       }`}
     >
-      <div className="mb-4 pb-4 flex flex-row flex-wrap justify-start items-center content-end self-start border-b-2 border-stone-100 transition-all">
-        {Object.keys(qrControls).map((key) => (
-          <article
-            className={`${
-              activeSelector === key
-                ? "bg-qrmory-purple-800 text-white"
-                : "bg-white hover:bg-qrmory-purple-500 border-stone-400 hover:border-qrmory-purple-500 text-stone-500 hover:text-white"
-            } qr-selector cursor-pointer m-1 py-2 px-5 flex justify-center items-center rounded border text-xs lg:text-sm transition-all duration-300`}
-            key={`qr-control-${qrControls[key].title.toLowerCase()}`}
-            data-selector={key}
-            onClick={() => handleActiveSelector(key)}
-          >
-            {qrControls[key].title}
-          </article>
-        ))}
+      {/* QR Type Selector */}
+      <QRTypeSelector
+        activeSelector={qrState.activeSelector}
+        onSelectorChange={handleSelectorChange}
+        userSubscriptionLevel={userSubscriptionLevel}
+        premiumTypes={PREMIUM_QR_TYPES}
+      />
 
-        <p className="m-2 inline text-black text-sm italic">more coming soon</p>
-      </div>
-
+      {/* Main Form */}
       <div className="mx-auto flex flex-col grow justify-center w-full text-left">
+        {/* Title Input */}
         <label className="control-label">
           Enter QR Title (optional):
           <input
             type="text"
             className="block py-2 control-input w-full"
-            onChange={(el) => {
-              setQRTitle(el.target.value);
-            }}
-            value={qrTitle}
+            onChange={(e) => handleTitleChange(e.target.value)}
+            value={titleInput}
+            placeholder="Enter a descriptive title..."
+            maxLength={100}
           />
         </label>
 
+        {/* Dynamic QR Control Component */}
         <div className="w-full flex justify-center">
           <div className="relative w-full">{qrControl}</div>
         </div>
 
-        <section
-          className={`mt-8 flex flex-col md:flex-row items-center justify-between gap-2`}
-        >
-          {/* Dynamic QR button section (commented out in original) */}
-          {/* {!user && (
-            <article className={`flex flex-col md:flex-row items-center justify-between gap-2`}>
-              <button
-                className={`py-2.5 px-4 hover:enabled:translate-x-1 hover:enabled:-translate-y-1 flex items-center justify-center gap-2 border disabled:border-none border-qrmory-purple-800 ${
-                  isDynamic
-                    ? "bg-qrmory-purple-800 text-white"
-                    : "bg-white disabled:bg-stone-300 hover:enabled:bg-qrmory-purple-400 text-qrmory-purple-800 disabled:text-stone-600"
-                } w-48 max-w-full text-xs lg:text-sm hover:enabled:text-white rounded uppercase font-semibold transition-all duration-300`}
-                onClick={handleMakeDynamic}
-                disabled={loadingDynamic}
-              >
-                <IconBolt
-                  className={`${
-                    loadingDynamic ? "animate-pulse duration-1000" : ""
-                  }`}
-                />
-                <span>Make Dynamic</span>
-              </button>
+        <div className="mt-4 p-3 bg-neutral-50 rounded-lg border">
+          <h6 className="text-xs font-medium text-neutral-700 mb-3">
+            QR Code Colours
+          </h6>
 
-              <button
-                className={`py-2.5 px-4 hover:enabled:translate-x-1 hover:enabled:-translate-y-1 flex items-center justify-center gap-2 border disabled:border-none border-qrmory-purple-800 hover:enabled:border-qrmory-purple-400 bg-white disabled:bg-stone-300 hover:enabled:bg-qrmory-purple-400 text-qrmory-purple-800 disabled:text-stone-600 w-48 max-w-full text-xs lg:text-sm hover:enabled:text-white rounded uppercase font-semibold transition-all duration-300`}
-                onClick={handleSaveQR}
-                disabled={textValue.length === 0}
-              >
-                <IconDeviceFloppy />
-                <span>Save QR Code</span>
-              </button>
-            </article>
-          )} */}
+          <ColorPicker
+            colors={qrColors}
+            onChange={onUpdateQRColors}
+            showReset={true}
+            showContrastWarning={true}
+          />
+        </div>
 
-          <button
-            className={`
-              py-2.5 
-              hover:enabled:translate-x-1 
-              hover:enabled:-translate-y-1 
-              flex items-center 
-              justify-center 
-              gap-2 
-              border 
-              disabled:border-none 
-              border-qrmory-purple-800
-              hover:enabled:border-qrmory-purple-400
-              ${
-                textValue.length === 0
-                  ? "bg-stone-300 text-stone-600"
-                  : qrChanged
-                    ? "bg-qrmory-purple-800 text-white"
-                    : "bg-white text-qrmory-purple-800 hover:enabled:bg-qrmory-purple-400 hover:enabled:text-white"
-              }
-              w-48 
-              max-w-full 
-              text-xs 
-              lg:text-sm
-              rounded 
-              uppercase 
-              font-semibold 
-              transition-all 
-              duration-300
-            `}
-            onClick={handleGenerateQR}
-            disabled={textValue.length === 0 || !qrChanged}
-            title={
-              textValue.length === 0
-                ? "Please enter content first"
-                : !qrChanged
-                  ? "QR code is already up to date"
-                  : "Generate QR code with current content"
-            }
-          >
-            <span>Generate QR</span>
-            <IconRocket />
-          </button>
-        </section>
-        {isDynamic && (
-          <section className={`mt-4`}>
-            <p className={`text-sm`}>
-              Your Dynamic Code will be:{" "}
-              <span className={`font-bold`}>
-                https://qrmory.com/{qrShortCode}
-              </span>
-            </p>
-            <p className={`text-sm`}>Save to secure this code.</p>
-          </section>
-        )}
+        {/* Action Buttons */}
+        <QRActionButtons
+          user={user}
+          qrState={qrState}
+          loadingStates={loadingStates}
+          quotaStatus={quotaStatus}
+          quotaInfo={quotaInfo}
+          onMakeDynamic={handleMakeDynamic}
+          onSaveQR={handleSaveQR}
+          onGenerateQR={onGenerateQR}
+        />
+
+        {/* Status Indicators */}
+        <QRStatusIndicators
+          qrState={qrState}
+          user={user}
+          quotaStatus={quotaStatus}
+          quotaInfo={quotaInfo}
+        />
       </div>
     </article>
   );

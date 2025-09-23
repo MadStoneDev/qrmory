@@ -1,12 +1,44 @@
-﻿import { useState } from "react";
+﻿import { useState, useEffect } from "react";
 import { QRControlType } from "@/types/qr-controls";
 
-export default function QRWifi({ setText, setChanged }: QRControlType) {
+interface WifiSaveData {
+  controlType: string;
+  ssid: string;
+  password: string;
+  encryption: string;
+  hidden: boolean;
+}
+
+export default function QRWifi({
+  setText,
+  setChanged,
+  setSaveData,
+  initialData,
+}: QRControlType) {
   // States
-  const [ssid, setSsid] = useState("");
-  const [password, setPassword] = useState("");
-  const [encryption, setEncryption] = useState("WPA");
-  const [hidden, setHidden] = useState(false);
+  const [ssid, setSsid] = useState(initialData?.ssid || "");
+  const [password, setPassword] = useState(initialData?.password || "");
+  const [encryption, setEncryption] = useState(
+    initialData?.encryption || "WPA",
+  );
+  const [hidden, setHidden] = useState(initialData?.hidden || false);
+  const [isInitialized, setIsInitialized] = useState(false);
+
+  // Initialize from saved data if available
+  useEffect(() => {
+    if (initialData && !isInitialized) {
+      setSsid(initialData.ssid || "");
+      setPassword(initialData.password || "");
+      setEncryption(initialData.encryption || "WPA");
+      setHidden(initialData.hidden || false);
+      setIsInitialized(true);
+
+      // If we have initial data with SSID, update the parent
+      if (initialData.ssid) {
+        setTimeout(updateParentValue, 0);
+      }
+    }
+  }, [initialData, isInitialized]);
 
   // Update the parent component with the WiFi string
   const updateParentValue = () => {
@@ -14,8 +46,25 @@ export default function QRWifi({ setText, setChanged }: QRControlType) {
     const wifiString = `WIFI:T:${encryption};S:${ssid};P:${password}${
       hidden ? ";H:true" : ""
     };`;
+
     setText(wifiString);
     setChanged(true);
+
+    // Update save data if ssid exists
+    if (setSaveData) {
+      if (ssid) {
+        const saveData: WifiSaveData = {
+          controlType: "wifi",
+          ssid,
+          password,
+          encryption,
+          hidden,
+        };
+        setSaveData(saveData);
+      } else {
+        setSaveData(null);
+      }
+    }
   };
 
   // Handle SSID change

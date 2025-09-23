@@ -44,7 +44,7 @@ export default function SelectSwitch({
 
   return (
     <article
-      className={`m-2 p-1 relative grid max-w-xs bg-stone-200 ${className}`}
+      className={`m-2 p-1 relative grid max-w-xs bg-neutral-200 ${className}`}
       style={{
         gridTemplateColumns: `repeat(${options.length}, minmax(0, 1fr))`,
       }}
