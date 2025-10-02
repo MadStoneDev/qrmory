@@ -1,6 +1,6 @@
-﻿import { useState, useEffect } from "react";
+﻿"use client";
 
-import { User } from "@supabase/supabase-js";
+import { useState, useEffect } from "react";
 import { Database } from "../../database.types";
 import { type Environments, initializePaddle } from "@paddle/paddle-js";
 

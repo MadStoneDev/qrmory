@@ -53,7 +53,7 @@ export default function FAQSection() {
     {
       id: "faq-8",
       question: "What QR code types do you support?",
-      answer:git 
+      answer:
         "QRmory supports 16 different QR code types including Website, vCard, WiFi, Location, Multi-link (link-in-bio style), Calendar events, and more. Premium features like Audio and Image Gallery QR codes are available on paid plans.",
     },
     {
