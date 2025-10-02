@@ -5,14 +5,20 @@
   EventName,
   SubscriptionCreatedEvent,
   SubscriptionUpdatedEvent,
+  TransactionCompletedEvent,
 } from "@paddle/paddle-node-sdk";
-import { createClient } from "@/utils/supabase/server";
+import { supabaseAdmin } from "@/utils/supabase/admin";
 
 export class ProcessWebhook {
   async processEvent(eventData: EventEntity) {
     console.log(`Processing webhook event: ${eventData.eventType}`);
 
     switch (eventData.eventType) {
+      case EventName.TransactionCompleted:
+        await this.handleTransactionCompleted(
+          eventData as TransactionCompletedEvent,
+        );
+        break;
       case EventName.SubscriptionCreated:
       case EventName.SubscriptionUpdated:
         await this.updateSubscriptionData(eventData);
@@ -24,13 +30,101 @@ export class ProcessWebhook {
     }
   }
 
+  private async handleTransactionCompleted(
+    eventData: TransactionCompletedEvent,
+  ) {
+    const subscriptionId = eventData.data.subscriptionId;
+
+    if (!subscriptionId) {
+      console.log(
+        "No subscription ID in transaction - likely a one-time purchase",
+      );
+      return;
+    }
+
+    // Extract subscription details from the transaction
+    const customerId = eventData.data.customerId;
+    const priceId = eventData.data.items[0]?.price?.id;
+
+    if (!customerId || !priceId) {
+      console.error("Missing customer_id or price_id in transaction");
+      return;
+    }
+
+    // Find the user by Paddle customer ID
+    const { data: profile } = await supabaseAdmin
+      .from("profiles")
+      .select("id")
+      .eq("paddle_customer_id", customerId)
+      .single();
+
+    if (!profile) {
+      console.error(`No user found for Paddle customer ID: ${customerId}`);
+      return;
+    }
+
+    // Get subscription package details
+    const { data: subscriptionPackage } = await supabaseAdmin
+      .from("subscription_packages")
+      .select("level, quota_amount, name")
+      .eq("paddle_price_id", priceId)
+      .eq("is_active", true)
+      .single();
+
+    if (!subscriptionPackage) {
+      console.error(`No subscription package found for price ID: ${priceId}`);
+      return;
+    }
+
+    // Create/update subscription
+    const subscriptionData = {
+      user_id: profile.id,
+      paddle_subscription_id: subscriptionId,
+      paddle_price_id: priceId,
+      status: "active",
+      current_period_end:
+        eventData.data.billingPeriod?.endsAt || new Date().toISOString(),
+      plan_name: subscriptionPackage.name,
+      updated_at: new Date().toISOString(),
+    };
+
+    const { error: subscriptionError } = await supabaseAdmin
+      .from("subscriptions")
+      .upsert(subscriptionData, {
+        onConflict: "user_id",
+      });
+
+    if (subscriptionError) {
+      console.error("Error upserting subscription:", subscriptionError);
+      throw subscriptionError;
+    }
+
+    // Update profile
+    const { error: profileError } = await supabaseAdmin
+      .from("profiles")
+      .update({
+        subscription_level: subscriptionPackage.level,
+        dynamic_qr_quota: subscriptionPackage.quota_amount,
+        subscription_status: "active",
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", profile.id);
+
+    if (profileError) {
+      console.error("Error updating profile:", profileError);
+      throw profileError;
+    }
+
+    console.log(
+      `✅ Successfully processed transaction for user ${profile.id}, level: ${subscriptionPackage.level}`,
+    );
+  }
+
   private async updateSubscriptionData(
     eventData: SubscriptionCreatedEvent | SubscriptionUpdatedEvent,
   ) {
-    const supabase = await createClient();
-
     // First, find the user by their Paddle customer ID
-    const { data: profile } = await supabase
+    const { data: profile } = await supabaseAdmin
       .from("profiles")
       .select("id, subscription_level")
       .eq("paddle_customer_id", eventData.data.customerId)
@@ -50,7 +144,7 @@ export class ProcessWebhook {
       return;
     }
 
-    const { data: subscriptionPackage } = await supabase
+    const { data: subscriptionPackage } = await supabaseAdmin
       .from("subscription_packages")
       .select("level, quota_amount, name")
       .eq("paddle_price_id", priceId)
@@ -69,7 +163,7 @@ export class ProcessWebhook {
       updated_at: new Date().toISOString(),
     };
 
-    const { error: subscriptionError } = await supabase
+    const { error: subscriptionError } = await supabaseAdmin
       .from("subscriptions")
       .upsert(subscriptionData, {
         onConflict: "user_id",
@@ -92,7 +186,7 @@ export class ProcessWebhook {
       profileUpdate.dynamic_qr_quota = subscriptionPackage.quota_amount;
     }
 
-    const { error: profileError } = await supabase
+    const { error: profileError } = await supabaseAdmin
       .from("profiles")
       .update(profileUpdate)
       .eq("id", profile.id);
@@ -108,10 +202,8 @@ export class ProcessWebhook {
   private async updateCustomerData(
     eventData: CustomerCreatedEvent | CustomerUpdatedEvent,
   ) {
-    const supabase = await createClient();
-
     // Find user by email and update their Paddle customer ID
-    const { data: authData } = await supabase.auth.admin.listUsers();
+    const { data: authData } = await supabaseAdmin.auth.admin.listUsers();
     const user = authData.users.find((u) => u.email === eventData.data.email);
 
     if (!user) {
@@ -119,7 +211,7 @@ export class ProcessWebhook {
       return;
     }
 
-    const { error } = await supabase
+    const { error } = await supabaseAdmin
       .from("profiles")
       .update({
         paddle_customer_id: eventData.data.id,
