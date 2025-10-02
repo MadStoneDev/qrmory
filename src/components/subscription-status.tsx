@@ -292,13 +292,13 @@ export default function SubscriptionStatus({
             )}
 
             {!subscription && profile?.subscription_status && (
-              <p className="text-qrmory-purple-200 text-sm">
+              <p className="text-white/70 text-sm">
                 Account status: {profile.subscription_status}
               </p>
             )}
 
             {currentPackage.description && (
-              <p className="text-qrmory-purple-200 text-sm mt-1">
+              <p className="text-white/70 text-sm mt-1">
                 {currentPackage.description}
               </p>
             )}

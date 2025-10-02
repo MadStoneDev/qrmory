@@ -3,18 +3,20 @@ import { createClient } from "@/utils/supabase/server";
 import { getSubscriptionLevelName } from "@/lib/subscription-config";
 import Link from "next/link";
 import {
-  IconUser,
   IconMail,
   IconCalendar,
   IconCreditCard,
-  IconSettings,
   IconQrcode,
-  IconEye,
+  IconChevronRight,
+  IconAlertCircle,
 } from "@tabler/icons-react";
 import {
   getUser,
   getUserProfile,
   getSubscription,
+  getUsedQuota,
+  getTotalQuota,
+  getLeftoverQuota,
 } from "@/utils/supabase/queries";
 
 export const metadata = {
@@ -25,24 +27,37 @@ export const metadata = {
 
 async function getUserData() {
   const supabase = await createClient();
+  const user = await getUser(supabase);
 
-  const [user, profile, subscription, { count: qrCount }] = await Promise.all([
-    getUser(supabase),
+  if (!user) return null;
+
+  const [
+    profile,
+    subscription,
+    usedQuota,
+    totalQuota,
+    leftoverQuota,
+    { count: totalQRCount },
+  ] = await Promise.all([
     getUserProfile(supabase),
     getSubscription(supabase),
+    getUsedQuota(supabase),
+    getTotalQuota(supabase),
+    getLeftoverQuota(supabase),
     supabase
       .from("qr_codes")
       .select("*", { count: "exact", head: true })
-      .eq("user_id", (await getUser(supabase))?.id || ""),
+      .eq("user_id", user.id),
   ]);
-
-  if (!user) return null;
 
   return {
     user,
     profile,
-    mainSubscription: subscription,
-    totalQRCodes: qrCount || 0,
+    subscription,
+    usedQuota,
+    totalQuota,
+    leftoverQuota,
+    totalQRCount: totalQRCount || 0,
   };
 }
 
@@ -57,7 +72,7 @@ export default async function AccountInfo() {
           You need to be logged in to view your account information.
         </p>
         <Link
-          href={"/login"}
+          href="/login"
           className="inline-block bg-qrmory-purple-800 text-white px-4 py-2 rounded-lg hover:bg-qrmory-purple-700 transition-colors"
         >
           Log In
@@ -66,45 +81,143 @@ export default async function AccountInfo() {
     );
   }
 
-  const { user, profile, mainSubscription, totalQRCodes } = userData;
+  const {
+    user,
+    profile,
+    subscription,
+    usedQuota,
+    totalQuota,
+    leftoverQuota,
+    totalQRCount,
+  } = userData;
   const subscriptionLevel = profile?.subscription_level || 0;
-  const totalQuota = profile?.dynamic_qr_quota || 3;
+  const usagePercentage =
+    totalQuota > 0 ? Math.round((usedQuota / totalQuota) * 100) : 0;
+  const isNearLimit = leftoverQuota <= 2 && leftoverQuota > 0;
+  const isAtLimit = leftoverQuota <= 0;
 
   return (
     <div className="flex flex-col w-full space-y-6">
-      <h1 className="mb-4 text-xl font-bold">Account Information</h1>
+      <h1 className="mb-4 text-xl font-bold">Account</h1>
 
-      {/* Account Overview Card */}
-      <div className="bg-white rounded-lg shadow-sm border p-6">
-        <div className="flex items-center gap-3 mb-6">
-          <div className="w-12 h-12 bg-qrmory-purple-100 rounded-full flex items-center justify-center">
-            <IconUser className="text-qrmory-purple-800" size={24} />
-          </div>
-          <div>
-            <h2 className="text-lg font-semibold">Account Details</h2>
-            <p className="text-sm text-neutral-600">
-              Manage your account information
-            </p>
+      {/* Quota Warning */}
+      {(isNearLimit || isAtLimit) && (
+        <div
+          className={`rounded-lg border p-4 ${
+            isAtLimit
+              ? "bg-red-50 border-red-200"
+              : "bg-amber-50 border-amber-200"
+          }`}
+        >
+          <div className="flex items-start gap-3">
+            <IconAlertCircle
+              className={isAtLimit ? "text-red-600" : "text-amber-600"}
+              size={20}
+            />
+            <div className="flex-1">
+              <p
+                className={`font-medium ${
+                  isAtLimit ? "text-red-900" : "text-amber-900"
+                }`}
+              >
+                {isAtLimit
+                  ? "Dynamic QR quota reached"
+                  : "Running low on dynamic QR codes"}
+              </p>
+              <p
+                className={`text-sm mt-1 ${
+                  isAtLimit ? "text-red-700" : "text-amber-700"
+                }`}
+              >
+                {isAtLimit
+                  ? "You've used all your dynamic QR codes. Upgrade to create more."
+                  : `Only ${leftoverQuota} dynamic QR code${
+                      leftoverQuota === 1 ? "" : "s"
+                    } remaining.`}
+              </p>
+              <Link
+                href="/dashboard/subscription"
+                className={`inline-block mt-2 text-sm font-medium underline ${
+                  isAtLimit ? "text-red-800" : "text-amber-800"
+                }`}
+              >
+                Upgrade plan →
+              </Link>
+            </div>
           </div>
         </div>
+      )}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-4">
-            <div className="flex items-center gap-3">
-              <IconMail className="text-neutral-400" size={18} />
-              <div>
-                <p className="text-sm font-medium text-neutral-700">Email</p>
-                <p className="text-neutral-800">{user.email}</p>
+      {/* Usage Overview */}
+      <div className="bg-white rounded-lg shadow-sm border p-6">
+        <h2 className="text-lg font-semibold mb-6">Usage Overview</h2>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div>
+            <p className="text-sm text-neutral-500 mb-1">Plan</p>
+            <p className="text-2xl font-bold text-neutral-900">
+              {getSubscriptionLevelName(subscriptionLevel)}
+            </p>
+            {subscription && (
+              <p className="text-xs text-neutral-500 mt-1">
+                Renews{" "}
+                {new Date(subscription.current_period_end).toLocaleDateString()}
+              </p>
+            )}
+          </div>
+
+          <div>
+            <p className="text-sm text-neutral-500 mb-1">Dynamic QR Codes</p>
+            <p className="text-2xl font-bold text-neutral-900">
+              {usedQuota} / {totalQuota}
+            </p>
+            <div className="mt-2">
+              <div className="w-full bg-neutral-200 rounded-full h-2">
+                <div
+                  className={`h-2 rounded-full transition-all ${
+                    isAtLimit
+                      ? "bg-red-600"
+                      : isNearLimit
+                        ? "bg-amber-500"
+                        : "bg-qrmory-purple-800"
+                  }`}
+                  style={{ width: `${Math.min(usagePercentage, 100)}%` }}
+                />
               </div>
             </div>
+          </div>
 
+          <div>
+            <p className="text-sm text-neutral-500 mb-1">Total QR Codes</p>
+            <p className="text-2xl font-bold text-neutral-900">
+              {totalQRCount}
+            </p>
+            <p className="text-xs text-neutral-500 mt-1">All types</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Account Details */}
+      <div className="bg-white rounded-lg shadow-sm border p-6">
+        <h2 className="text-lg font-semibold mb-4">Account Details</h2>
+
+        <div className="space-y-4">
+          <div className="flex items-center justify-between py-2 border-b">
             <div className="flex items-center gap-3">
-              <IconCalendar className="text-neutral-400" size={18} />
+              <IconMail className="text-neutral-400" size={20} />
               <div>
-                <p className="text-sm font-medium text-neutral-700">
-                  Member Since
-                </p>
-                <p className="text-neutral-800">
+                <p className="text-sm text-neutral-500">Email</p>
+                <p className="text-neutral-900">{user.email}</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between py-2">
+            <div className="flex items-center gap-3">
+              <IconCalendar className="text-neutral-400" size={20} />
+              <div>
+                <p className="text-sm text-neutral-500">Member Since</p>
+                <p className="text-neutral-900">
                   {new Date(user.created_at).toLocaleDateString("en-US", {
                     year: "numeric",
                     month: "long",
@@ -114,113 +227,49 @@ export default async function AccountInfo() {
               </div>
             </div>
           </div>
-
-          <div className="space-y-4">
-            <div className="flex items-center gap-3">
-              <IconCreditCard className="text-neutral-400" size={18} />
-              <div>
-                <p className="text-sm font-medium text-neutral-700">
-                  Subscription
-                </p>
-                <p className="text-neutral-800">
-                  {getSubscriptionLevelName(subscriptionLevel)}
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-3">
-              <IconQrcode className="text-neutral-400" size={18} />
-              <div>
-                <p className="text-sm font-medium text-neutral-700">
-                  QR Codes Created
-                </p>
-                <p className="text-neutral-800">{totalQRCodes} total</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Quick Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-4 border border-blue-200">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-blue-800">Quota Usage</p>
-              <p className="text-2xl font-bold text-blue-900">
-                {totalQuota > 0
-                  ? Math.round((totalQRCodes / totalQuota) * 100)
-                  : 0}
-                %
-              </p>
-            </div>
-            <IconQrcode className="text-blue-600" size={28} />
-          </div>
-        </div>
-
-        <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-lg p-4 border border-green-200">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-green-800">
-                Active Subscriptions
-              </p>
-              <p className="text-2xl font-bold text-green-900">
-                {mainSubscription ? 1 : 0}
-              </p>
-            </div>
-            <IconCreditCard className="text-green-600" size={28} />
-          </div>
-        </div>
-
-        <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg p-4 border border-purple-200">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-purple-800">
-                Account Status
-              </p>
-              <p className="text-lg font-bold text-purple-900">
-                {profile?.subscription_status === "active" ? "Active" : "Free"}
-              </p>
-            </div>
-            <IconSettings className="text-purple-600" size={28} />
-          </div>
         </div>
       </div>
 
       {/* Quick Actions */}
       <div className="bg-white rounded-lg shadow-sm border p-6">
-        <h3 className="text-lg font-semibold mb-4">Quick Actions</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <h2 className="text-lg font-semibold mb-4">Manage</h2>
+        <div className="space-y-2">
           <Link
-            href={"/dashboard/subscription"}
-            className="flex items-center justify-center gap-2 p-3 bg-qrmory-purple-50 border border-qrmory-purple-200 rounded-lg hover:bg-qrmory-purple-100 transition-colors"
+            href="/dashboard/subscription"
+            className="flex items-center justify-between p-3 border rounded-lg hover:bg-neutral-50 transition-colors group"
           >
-            <IconCreditCard size={18} />
-            <span className="text-sm font-medium">Manage Subscription</span>
+            <div className="flex items-center gap-3">
+              <IconCreditCard size={20} className="text-neutral-600" />
+              <div>
+                <p className="font-medium">Subscription</p>
+                <p className="text-xs text-neutral-500">
+                  Manage billing and plan
+                </p>
+              </div>
+            </div>
+            <IconChevronRight
+              size={20}
+              className="text-neutral-400 group-hover:text-neutral-600"
+            />
           </Link>
 
           <Link
-            href={"/dashboard/quota"}
-            className="flex items-center justify-center gap-2 p-3 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors"
+            href="/dashboard/my-codes"
+            className="flex items-center justify-between p-3 border rounded-lg hover:bg-neutral-50 transition-colors group"
           >
-            <IconQrcode size={18} />
-            <span className="text-sm font-medium">View Quota</span>
-          </Link>
-
-          <Link
-            href={"/dashboard/analytics"}
-            className="flex items-center justify-center gap-2 p-3 bg-green-50 border border-green-200 rounded-lg hover:bg-green-100 transition-colors"
-          >
-            <IconEye size={18} />
-            <span className="text-sm font-medium">View Analytics</span>
-          </Link>
-
-          <Link
-            href={"/qr-codes"}
-            className="flex items-center justify-center gap-2 p-3 bg-orange-50 border border-orange-200 rounded-lg hover:bg-orange-100 transition-colors"
-          >
-            <IconQrcode size={18} />
-            <span className="text-sm font-medium">My QR Codes</span>
+            <div className="flex items-center gap-3">
+              <IconQrcode size={20} className="text-neutral-600" />
+              <div>
+                <p className="font-medium">My QR Codes</p>
+                <p className="text-xs text-neutral-500">
+                  View and manage your codes
+                </p>
+              </div>
+            </div>
+            <IconChevronRight
+              size={20}
+              className="text-neutral-400 group-hover:text-neutral-600"
+            />
           </Link>
         </div>
       </div>
