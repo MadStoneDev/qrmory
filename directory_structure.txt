@@ -1,0 +1,296 @@
+|   .env.local
+|   .gitignore
+|   components.json
+|   database.types.ts
+|   directory_structure.txt
+|   next-env.d.ts
+|   next.config.js
+|   package-lock.json
+|   package.json
+|   postcss.config.js
+|   README.md
+|   tailwind.config.js
+|   tailwind.config.ts
+|   tsconfig.json
+|   
+               
++---public
+|       next.svg
+|       QRmory Full Logo.svg
+|       sitemap.xml
+|       vercel.svg
+|       
++---src
+|   |   middleware.ts
+|   |   
+|   +---app
+|   |   |   favicon.ico
+|   |   |   globals.css
+|   |   |   layout.tsx
+|   |   |   not-found.tsx
+|   |   |   
+|   |   +---(auth)
+|   |   |   |   layout.tsx
+|   |   |   |   
+|   |   |   +---auth
+|   |   |   |   +---check-email
+|   |   |   |   |       page.tsx
+|   |   |   |   |       
+|   |   |   |   \---confirm
+|   |   |   |           route.ts
+|   |   |   |           
+|   |   |   \---login
+|   |   |           actions.ts
+|   |   |           page.tsx
+|   |   |           
+|   |   +---(help)
+|   |   |   |   layout.tsx
+|   |   |   |   
+|   |   |   +---cookie-policy
+|   |   |   |       page.tsx
+|   |   |   |       
+|   |   |   +---help
+|   |   |   |   |   page.tsx
+|   |   |   |   |   
+|   |   |   |   \---contact
+|   |   |   |           page.tsx
+|   |   |   |           
+|   |   |   +---privacy-policy
+|   |   |   |       page.tsx
+|   |   |   |       
+|   |   |   \---terms-and-conditions
+|   |   |           page.tsx
+|   |   |           
+|   |   +---(private)
+|   |   |   |   layout.tsx
+|   |   |   |   
+|   |   |   \---dashboard
+|   |   |       |   page.tsx
+|   |   |       |   
+|   |   |       +---account
+|   |   |       |       page.tsx
+|   |   |       |       
+|   |   |       +---analytics
+|   |   |       |       page.tsx
+|   |   |       |       
+|   |   |       +---create
+|   |   |       |       page.tsx
+|   |   |       |       
+|   |   |       +---my-codes
+|   |   |       |       page.tsx
+|   |   |       |       
+|   |   |       +---quota
+|   |   |       |       page.tsx
+|   |   |       |       
+|   |   |       +---settings
+|   |   |       |       page.tsx
+|   |   |       |       
+|   |   |       \---subscription
+|   |   |               page.tsx
+|   |   |               
+|   |   +---(public)
+|   |   |   |   layout.tsx
+|   |   |   |   page.tsx
+|   |   |   |   
+|   |   |   +---about
+|   |   |   |       page.tsx
+|   |   |   |       
+|   |   |   +---audio
+|   |   |   |   \---[code]
+|   |   |   |           page.tsx
+|   |   |   |           
+|   |   |   +---checkout
+|   |   |   |       page.tsx
+|   |   |   |       
+|   |   |   +---coupon
+|   |   |   |   \---[code]
+|   |   |   |           page.tsx
+|   |   |   |           
+|   |   |   +---gallery
+|   |   |   |   \---[code]
+|   |   |   |           page.tsx
+|   |   |   |           
+|   |   |   +---links
+|   |   |   |   \---[code]
+|   |   |   |           page.tsx
+|   |   |   |           
+|   |   |   +---poll
+|   |   |   |   \---[code]
+|   |   |   |           page.tsx
+|   |   |   |           
+|   |   |   +---pricing
+|   |   |   |       page.tsx
+|   |   |   |       
+|   |   |   \---vcard
+|   |   |       \---[code]
+|   |   |               page.tsx
+|   |   |               
+|   |   +---api
+|   |   |   +---check-shortcode
+|   |   |   |       route.ts
+|   |   |   |       
+|   |   |   +---error-reports
+|   |   |   |       route.ts
+|   |   |   |       
+|   |   |   +---generate-shortcode
+|   |   |   |       route.ts
+|   |   |   |       
+|   |   |   +---location-search
+|   |   |   |       route.ts
+|   |   |   |       
+|   |   |   +---log-shortcode-collision
+|   |   |   |       route.ts
+|   |   |   |       
+|   |   |   +---paddle
+|   |   |   |   +---create-checkout
+|   |   |   |   |       route.ts
+|   |   |   |   |       
+|   |   |   |   \---create-portal
+|   |   |   |           route.ts
+|   |   |   |           
+|   |   |   +---rate-limit-status
+|   |   |   |       route.ts
+|   |   |   |       
+|   |   |   +---release-shortcode
+|   |   |   |       route.ts
+|   |   |   |       
+|   |   |   +---reserve-shortcode
+|   |   |   |       route.ts
+|   |   |   |       
+|   |   |   +---track-scan
+|   |   |   |       route.ts
+|   |   |   |       
+|   |   |   \---webhooks
+|   |   |       \---paddle
+|   |   |               route.ts
+|   |   |               
+|   |   \---[code]
+|   |           page.tsx
+|   |           
+|   +---components
+|   |   |   auth-text.tsx
+|   |   |   checkout-component.tsx
+|   |   |   colour-picker.tsx
+|   |   |   error-boundary.tsx
+|   |   |   full-logo.tsx
+|   |   |   home-hero-section.tsx
+|   |   |   home-info-section.tsx
+|   |   |   login-block.tsx
+|   |   |   logo.tsx
+|   |   |   main-navigation.tsx
+|   |   |   my-code-item.tsx
+|   |   |   my-codes-list.tsx
+|   |   |   otp-input.tsx
+|   |   |   private-navigation.tsx
+|   |   |   qr-audio.tsx
+|   |   |   qr-calendar.tsx
+|   |   |   qr-coupon.tsx
+|   |   |   qr-email.tsx
+|   |   |   qr-facebook.tsx
+|   |   |   qr-image-gallery.tsx
+|   |   |   qr-instagram.tsx
+|   |   |   qr-location.tsx
+|   |   |   qr-multilink.tsx
+|   |   |   qr-poll.tsx
+|   |   |   qr-sms.tsx
+|   |   |   qr-text.tsx
+|   |   |   qr-twitter.tsx
+|   |   |   qr-vcard.tsx
+|   |   |   qr-website.tsx
+|   |   |   qr-wifi.tsx
+|   |   |   qr-youtube.tsx
+|   |   |   quota-notification.tsx
+|   |   |   quota-notifications.tsx
+|   |   |   SelectSwitch.tsx
+|   |   |   settings-component.tsx
+|   |   |   subscription-plans.tsx
+|   |   |   subscription-status.tsx
+|   |   |   success-notification.tsx
+|   |   |   
+|   |   +---providers
+|   |   |       LogRocketProvider.tsx
+|   |   |       
+|   |   +---qr-create
+|   |   |       qr-creator.tsx
+|   |   |       qr-preview.tsx
+|   |   |       qr-settings.tsx
+|   |   |       
+|   |   +---sections
+|   |   |       faq-section.tsx
+|   |   |       main-footer.tsx
+|   |   |       
+|   |   \---ui
+|   |           accordion.tsx
+|   |           button.tsx
+|   |           contact-form.tsx
+|   |           dialog.tsx
+|   |           input.tsx
+|   |           label.tsx
+|   |           popover.tsx
+|   |           QRActionButtons.tsx
+|   |           QRStatusIndicators.tsx
+|   |           QRTypeSelector.tsx
+|   |           separator.tsx
+|   |           skeleton.tsx
+|   |           sonner.tsx
+|   |           
+|   +---data
+|   |   \---defaults
+|   |           quotas.ts
+|   |           suggested-titles.ts
+|   |           
+|   +---hooks
+|   |       useErrorReporting.ts
+|   |       useRateLimit.ts
+|   |       useShortcodeManager.ts
+|   |       
+|   +---lib
+|   |       constants.ts
+|   |       default-settings.ts
+|   |       error-reporter.ts
+|   |       error-utils.ts
+|   |       file-upload-limits.ts
+|   |       paddle-config.tsx
+|   |       qr-control-object.tsx
+|   |       rate-limiter.ts
+|   |       subscription-config.ts
+|   |       utils.ts
+|   |       
+|   +---types
+|   |       qr-controls.ts
+|   |       qr-types.ts
+|   |       
+|   \---utils
+|       |   colour-utils.tsx
+|       |   general.ts
+|       |   qr-recreator.ts
+|       |   qr-save.ts
+|       |   quota-validation.ts
+|       |   shortcode-manager.ts
+|       |   
+|       +---paddle
+|       |       data-helpers.ts
+|       |       get-paddle-instance.ts
+|       |       parse-money.ts
+|       |       process-webhook.ts
+|       |       
+|       \---supabase
+|               admin.ts
+|               client.ts
+|               middleware.ts
+|               queries.ts
+|               server.ts
+|               
+\---supabase
+    |   .gitignore
+    |   config.toml
+    |   seed.sql
+    |   
+    \---.temp
+            cli-latest
+            gotrue-version
+            postgres-version
+            project-ref
+            rest-version
+            storage-version
+            

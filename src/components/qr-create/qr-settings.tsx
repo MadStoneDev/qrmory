@@ -1,4 +1,4 @@
-﻿// components/qr-settings.tsx
+﻿// src/components/qr-create/qr-settings.tsx
 "use client";
 
 import React, { useState, useCallback, useMemo, useEffect } from "react";

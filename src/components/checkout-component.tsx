@@ -1,25 +1,27 @@
-﻿// app/dashboard/checkout/page.tsx
-"use client";
+﻿import { useState, useEffect } from "react";
 
-import { useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
-import { initializePaddle, type Environments } from "@paddle/paddle-js";
+import { User } from "@supabase/supabase-js";
+import { Database } from "../../database.types";
+import { type Environments, initializePaddle } from "@paddle/paddle-js";
 
-export default function CheckoutPage() {
-  const searchParams = useSearchParams();
+type Profile = Database["public"]["Tables"]["profiles"]["Row"];
+
+export default function CheckoutComponent({
+  profile,
+  paddleCustomerId,
+  transactionId,
+}: {
+  profile: Profile;
+  paddleCustomerId: string;
+  transactionId: string | null;
+}) {
+  // States
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const transactionId = searchParams.get("_ptxn");
-
   useEffect(() => {
-    console.log("Checkout page loaded with transaction:", transactionId);
-
     // Check required environment variables
-    if (
-      !process.env.NEXT_PUBLIC_PADDLE_CLIENT_TOKEN ||
-      !process.env.NEXT_PUBLIC_PADDLE_ENV
-    ) {
+    if (!process.env.NEXT_PUBLIC_PADDLE_CLIENT_TOKEN) {
       setError("Paddle checkout not configured. Please contact support.");
       setLoading(false);
       return;
@@ -38,6 +40,7 @@ export default function CheckoutPage() {
     initializePaddle({
       token: process.env.NEXT_PUBLIC_PADDLE_CLIENT_TOKEN,
       environment: process.env.NEXT_PUBLIC_PADDLE_ENV as Environments,
+      pwCustomer: { id: paddleCustomerId },
       checkout: {
         settings: {
           displayMode: "overlay",

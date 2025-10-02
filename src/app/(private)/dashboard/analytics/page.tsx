@@ -1,4 +1,4 @@
-﻿// app/analytics/page.tsx
+﻿// src/app/(private)/dashboard/analytics/page.tsx
 import { createClient } from "@/utils/supabase/server";
 import {
   IconEye,
@@ -9,144 +9,16 @@ import {
   IconQrcode,
 } from "@tabler/icons-react";
 import Link from "next/link";
+import { getUserAnalytics } from "@/utils/supabase/queries";
 
 export const metadata = {
   title: "Analytics | QRmory",
   description: "View detailed analytics for your QR codes.",
 };
 
-async function getAnalyticsData() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) return null;
-
-  // Get all user's QR codes
-  const { data: qrCodes } = await supabase
-    .from("qr_codes")
-    .select("id, title, created_at, type")
-    .eq("user_id", user.id);
-
-  if (!qrCodes?.length) {
-    return { qrCodes: [], analytics: null };
-  }
-
-  const qrCodeIds = qrCodes.map((qr) => qr.id);
-
-  // Get analytics data
-  const [
-    { data: totalScans },
-    { data: recentScans },
-    { data: countryStats },
-    { data: deviceStats },
-    { data: browserStats },
-    { data: dailyScans },
-  ] = await Promise.all([
-    // Total scans
-    supabase
-      .from("qr_code_analytics")
-      .select("id", { count: "exact" })
-      .in("qr_code_id", qrCodeIds),
-
-    // Recent scans (last 30 days)
-    supabase
-      .from("qr_code_analytics")
-      .select("*")
-      .in("qr_code_id", qrCodeIds)
-      .gte(
-        "scanned_at",
-        new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
-      )
-      .order("scanned_at", { ascending: false })
-      .limit(100),
-
-    // Country breakdown
-    supabase
-      .from("qr_code_analytics")
-      .select("country")
-      .in("qr_code_id", qrCodeIds)
-      .gte(
-        "scanned_at",
-        new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
-      ),
-
-    // Device type breakdown
-    supabase
-      .from("qr_code_analytics")
-      .select("device_type")
-      .in("qr_code_id", qrCodeIds)
-      .gte(
-        "scanned_at",
-        new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
-      ),
-
-    // Browser breakdown
-    supabase
-      .from("qr_code_analytics")
-      .select("browser")
-      .in("qr_code_id", qrCodeIds)
-      .gte(
-        "scanned_at",
-        new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
-      ),
-
-    // Daily scans for last 7 days
-    supabase
-      .from("qr_code_analytics")
-      .select("scanned_at")
-      .in("qr_code_id", qrCodeIds)
-      .gte(
-        "scanned_at",
-        new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-      )
-      .order("scanned_at", { ascending: true }),
-  ]);
-
-  // Process the data
-  const countryBreakdown =
-    countryStats?.reduce((acc: any, scan: any) => {
-      acc[scan.country] = (acc[scan.country] || 0) + 1;
-      return acc;
-    }, {}) || {};
-
-  const deviceBreakdown =
-    deviceStats?.reduce((acc: any, scan: any) => {
-      acc[scan.device_type] = (acc[scan.device_type] || 0) + 1;
-      return acc;
-    }, {}) || {};
-
-  const browserBreakdown =
-    browserStats?.reduce((acc: any, scan: any) => {
-      const browser = scan.browser || "Unknown";
-      acc[browser] = (acc[browser] || 0) + 1;
-      return acc;
-    }, {}) || {};
-
-  // Daily scans for chart
-  const dailyBreakdown =
-    dailyScans?.reduce((acc: any, scan: any) => {
-      const date = new Date(scan.scanned_at).toDateString();
-      acc[date] = (acc[date] || 0) + 1;
-      return acc;
-    }, {}) || {};
-
-  return {
-    qrCodes,
-    analytics: {
-      totalScans: totalScans?.length || 0,
-      recentScans: recentScans || [],
-      countryBreakdown,
-      deviceBreakdown,
-      browserBreakdown,
-      dailyBreakdown,
-    },
-  };
-}
-
 export default async function AnalyticsPage() {
-  const data = await getAnalyticsData();
+  const supabase = await createClient();
+  const data = await getUserAnalytics(supabase);
 
   if (!data) {
     return (
@@ -156,7 +28,7 @@ export default async function AnalyticsPage() {
           You need to be logged in to view analytics.
         </p>
         <Link
-          href={`/login`}
+          href="/login"
           className="inline-block bg-qrmory-purple-800 text-white px-4 py-2 rounded-lg hover:bg-qrmory-purple-700 transition-colors"
         >
           Log In
@@ -178,7 +50,7 @@ export default async function AnalyticsPage() {
             Create your first QR code to start seeing analytics data.
           </p>
           <Link
-            href={`/create`}
+            href="/create"
             className="inline-block bg-qrmory-purple-800 text-white px-4 py-2 rounded-lg hover:bg-qrmory-purple-700 transition-colors"
           >
             Create QR Code

@@ -3,12 +3,17 @@ import React from "react";
 import MainNavigation from "@/components/main-navigation";
 import PrivateNavigation from "@/components/private-navigation";
 import { Toaster } from "@/components/ui/sonner";
+import { createClient } from "@/utils/supabase/server";
+import { ensureUserProfile } from "@/utils/supabase/queries";
 
-export default function PrivateLayout({
+export default async function PrivateLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const supabase = await createClient();
+  await ensureUserProfile(supabase);
+
   return (
     <div className={`flex flex-col h-dvh max-h-dvh overflow-hidden`}>
       <MainNavigation

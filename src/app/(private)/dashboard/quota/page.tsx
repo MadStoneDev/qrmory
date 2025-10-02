@@ -1,85 +1,32 @@
-// app/account/quota/page.tsx
+// app/(private)/dashboard/quota/page.tsx
 import { createClient } from "@/utils/supabase/server";
 import { getSubscriptionLevelName } from "@/lib/subscription-config";
 import Link from "next/link";
-import { Database } from "../../../../../database.types";
+import {
+  getUserProfile,
+  getUsedQuota,
+  getTotalQuota,
+  getLeftoverQuota,
+  getSubscriptionPackages,
+} from "@/utils/supabase/queries";
 
 export const metadata = {
   title: "QR Code Quota | QRmory",
   description: "View your QR code quota and usage statistics.",
 };
 
-type Profile = Database["public"]["Tables"]["profiles"]["Row"];
-type Subscription = Database["public"]["Tables"]["subscriptions"]["Row"];
-type SubscriptionPackage =
-  Database["public"]["Tables"]["subscription_packages"]["Row"];
-
-interface UserData {
-  profile: Profile | null;
-  dynamicQRCount: number;
-  currentPackage: SubscriptionPackage | null;
-}
-
-async function fetchUserData(): Promise<UserData> {
+export default async function QuotaPage() {
   const supabase = await createClient();
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    return {
-      profile: null,
-      dynamicQRCount: 0,
-      currentPackage: null,
-    };
-  }
-
-  // Fetch profile data
-  const { data: profile, error: profileError } = await supabase
-    .from("profiles")
-    .select("*")
-    .eq("id", user.id)
-    .single();
-
-  if (profileError) {
-    console.error("Error fetching profile:", profileError);
-    return {
-      profile: null,
-      dynamicQRCount: 0,
-      currentPackage: null,
-    };
-  }
-
-  // Fetch user's QR code usage
-  const { count: dynamicQRCount, error: countError } = await supabase
-    .from("qr_codes")
-    .select("id", { count: "exact" })
-    .eq("user_id", user.id)
-    .eq("type", "dynamic");
-
-  if (countError) {
-    console.error("Error counting QR codes:", countError);
-  }
-
-  // Get current subscription package
-  const currentLevel = profile.subscription_level || 0;
-  const { data: currentPackage } = await supabase
-    .from("subscription_packages")
-    .select("*")
-    .eq("level", currentLevel)
-    .eq("is_active", true)
-    .single();
-
-  return {
-    profile: profile as Profile,
-    dynamicQRCount: dynamicQRCount || 0,
-    currentPackage: currentPackage as SubscriptionPackage | null,
-  };
-}
-
-export default async function QuotaPage() {
-  const { profile, dynamicQRCount, currentPackage } = await fetchUserData();
+  // Fetch all data in parallel using helper functions
+  const [profile, usedQuota, totalQuota, leftoverQuota, packages] =
+    await Promise.all([
+      getUserProfile(supabase),
+      getUsedQuota(supabase),
+      getTotalQuota(supabase),
+      getLeftoverQuota(supabase),
+      getSubscriptionPackages(supabase),
+    ]);
 
   if (!profile) {
     return (
@@ -88,47 +35,29 @@ export default async function QuotaPage() {
         <p className="text-neutral-600 mb-4">
           You need to be logged in to view your quota.
         </p>
-        <a
-          href="/login"
+
+        <Link
+          href={"/login"}
           className="inline-block bg-qrmory-purple-800 text-white px-4 py-2 rounded-lg"
         >
           Log In
-        </a>
+        </Link>
       </div>
     );
   }
 
-  // Get the current subscription level (as a number)
   const currentLevel = profile.subscription_level || 0;
-
-  // Use currentPackage or fallback
-  const packageToDisplay = currentPackage || {
-    id: "fallback-free",
-    name: "Free",
-    description: "Basic plan with limited features",
-    level: 0,
-    price_in_cents: 0,
-    quota_amount: 3,
-    features: ["3 Dynamic QR codes", "Unlimited Static QR codes"],
-    paddle_price_id: null,
-    is_active: true,
-  };
-
-  // Calculate total available quota
-  const planQuota =
-    profile.dynamic_qr_quota || packageToDisplay.quota_amount || 3;
-  const totalQuota = planQuota;
+  const currentPackage = packages.find((pkg) => pkg.level === currentLevel);
 
   // Calculate usage percentage
-  const usagePercentage = Math.min(
-    100,
-    Math.round((dynamicQRCount / totalQuota) * 100),
-  );
+  const usagePercentage =
+    totalQuota > 0
+      ? Math.min(100, Math.round((usedQuota / totalQuota) * 100))
+      : 0;
 
   // Determine quota status
-  const quotaRemaining = totalQuota - dynamicQRCount;
-  const isLow = quotaRemaining <= 2;
-  const isOut = quotaRemaining <= 0;
+  const isLow = leftoverQuota <= 2 && leftoverQuota > 0;
+  const isOut = leftoverQuota <= 0;
 
   return (
     <section className="flex flex-col w-full">
@@ -163,7 +92,7 @@ export default async function QuotaPage() {
               Dynamic QR Codes Usage
             </p>
             <p className="text-sm text-neutral-600">
-              {dynamicQRCount} / {totalQuota}
+              {usedQuota} / {totalQuota}
             </p>
           </div>
           <div className="w-full bg-neutral-200 rounded-full h-2.5">
@@ -196,7 +125,7 @@ export default async function QuotaPage() {
           <div className="bg-neutral-50 p-4 rounded-md">
             <p className="text-sm font-medium text-neutral-700">Plan Quota</p>
             <p className="text-2xl font-bold text-qrmory-purple-800">
-              {planQuota}
+              {totalQuota}
             </p>
             <p className="text-xs text-neutral-500">
               Dynamic QR codes from your subscription
@@ -214,7 +143,7 @@ export default async function QuotaPage() {
                     : "text-green-600"
               }`}
             >
-              {quotaRemaining}
+              {leftoverQuota}
             </p>
             <p className="text-xs text-neutral-500">
               Available for new QR codes

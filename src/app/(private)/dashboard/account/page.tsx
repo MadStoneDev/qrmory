@@ -1,4 +1,4 @@
-﻿// app/account/page.tsx
+﻿// src/app/(private)/dashboard/account/page.tsx
 import { createClient } from "@/utils/supabase/server";
 import { getSubscriptionLevelName } from "@/lib/subscription-config";
 import Link from "next/link";
@@ -11,6 +11,11 @@ import {
   IconQrcode,
   IconEye,
 } from "@tabler/icons-react";
+import {
+  getUser,
+  getUserProfile,
+  getSubscription,
+} from "@/utils/supabase/queries";
 
 export const metadata = {
   title: "Account Info | QRmory",
@@ -20,37 +25,23 @@ export const metadata = {
 
 async function getUserData() {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+
+  const [user, profile, subscription, { count: qrCount }] = await Promise.all([
+    getUser(supabase),
+    getUserProfile(supabase),
+    getSubscription(supabase),
+    supabase
+      .from("qr_codes")
+      .select("*", { count: "exact", head: true })
+      .eq("user_id", (await getUser(supabase))?.id || ""),
+  ]);
 
   if (!user) return null;
-
-  // Get profile and subscription data
-  const [{ data: profile }, { data: mainSub }, { count: qrCount }] =
-    await Promise.all([
-      supabase.from("profiles").select("*").eq("id", user.id).single(),
-      supabase
-        .from("subscriptions")
-        .select("*")
-        .eq("user_id", user.id)
-        .eq("status", "active")
-        .single(),
-      supabase
-        .from("subscriptions")
-        .select("*")
-        .eq("user_id", user.id)
-        .eq("status", "active"),
-      supabase
-        .from("qr_codes")
-        .select("id", { count: "exact" })
-        .eq("user_id", user.id),
-    ]);
 
   return {
     user,
     profile,
-    mainSubscription: mainSub,
+    mainSubscription: subscription,
     totalQRCodes: qrCount || 0,
   };
 }
@@ -66,7 +57,7 @@ export default async function AccountInfo() {
           You need to be logged in to view your account information.
         </p>
         <Link
-          href="/login"
+          href={"/login"}
           className="inline-block bg-qrmory-purple-800 text-white px-4 py-2 rounded-lg hover:bg-qrmory-purple-700 transition-colors"
         >
           Log In
@@ -157,7 +148,10 @@ export default async function AccountInfo() {
             <div>
               <p className="text-sm font-medium text-blue-800">Quota Usage</p>
               <p className="text-2xl font-bold text-blue-900">
-                {Math.round((totalQRCodes / totalQuota) * 100)}%
+                {totalQuota > 0
+                  ? Math.round((totalQRCodes / totalQuota) * 100)
+                  : 0}
+                %
               </p>
             </div>
             <IconQrcode className="text-blue-600" size={28} />
@@ -198,7 +192,7 @@ export default async function AccountInfo() {
         <h3 className="text-lg font-semibold mb-4">Quick Actions</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <Link
-            href={`/dashboard/subscription`}
+            href={"/dashboard/subscription"}
             className="flex items-center justify-center gap-2 p-3 bg-qrmory-purple-50 border border-qrmory-purple-200 rounded-lg hover:bg-qrmory-purple-100 transition-colors"
           >
             <IconCreditCard size={18} />
@@ -206,7 +200,7 @@ export default async function AccountInfo() {
           </Link>
 
           <Link
-            href={`/dashboard/quota`}
+            href={"/dashboard/quota"}
             className="flex items-center justify-center gap-2 p-3 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors"
           >
             <IconQrcode size={18} />
@@ -214,7 +208,7 @@ export default async function AccountInfo() {
           </Link>
 
           <Link
-            href={`/dashboard/analytics`}
+            href={"/dashboard/analytics"}
             className="flex items-center justify-center gap-2 p-3 bg-green-50 border border-green-200 rounded-lg hover:bg-green-100 transition-colors"
           >
             <IconEye size={18} />
@@ -222,7 +216,7 @@ export default async function AccountInfo() {
           </Link>
 
           <Link
-            href={`/qr-codes`}
+            href={"/qr-codes"}
             className="flex items-center justify-center gap-2 p-3 bg-orange-50 border border-orange-200 rounded-lg hover:bg-orange-100 transition-colors"
           >
             <IconQrcode size={18} />

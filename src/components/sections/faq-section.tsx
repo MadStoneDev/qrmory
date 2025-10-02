@@ -18,8 +18,7 @@ export default function FAQSection() {
       id: "faq-2",
       question: "How many QR codes can I create for free?",
       answer:
-        "Free users can create unlimited static QR codes and up to 3 dynamic QR codes. Our dynamic QR codes include" +
-        " analytics, the ability to update content, and advanced customisation options.",
+        "Free users can create unlimited static QR codes and up to 3 dynamic QR codes. Our dynamic QR codes include analytics, the ability to update content, and advanced customization options.",
     },
     {
       id: "faq-3",
@@ -29,30 +28,39 @@ export default function FAQSection() {
     },
     {
       id: "faq-4",
-      question: "Can I customise the appearance of my QR codes?",
+      question: "Can I customize the appearance of my QR codes?",
       answer:
-        "Yes! QRmory offers extensive customisation options including colors and logos. You can match your QR codes" +
-        " to your brand identity while maintaining optimal scanability.",
+        "Yes! QRmory offers extensive customization options including colors and contrast warnings to ensure scanability. You can match your QR codes to your brand identity while maintaining optimal performance.",
     },
     {
       id: "faq-5",
       question: "Do QR codes expire?",
       answer:
-        "Static QR codes never expire and will work forever. Dynamic QR codes remain active as long as your" +
-        " subscription is active.",
+        "Static QR codes never expire and will work forever. Dynamic QR codes remain active as long as your subscription is active.",
     },
     {
       id: "faq-6",
       question: "What analytics do I get with dynamic QR codes?",
       answer:
-        "Dynamic QR codes provide comprehensive analytics including scan count, location data, device types, time" +
-        " patterns, and referrer information. This helps you understand your audience and optimise your campaigns.",
+        "Dynamic QR codes provide comprehensive analytics including scan count, location data, device types, time patterns, and referrer information. This helps you understand your audience and optimize your campaigns.",
     },
     {
       id: "faq-7",
       question: "What happens if I exceed my quota?",
       answer:
-        "If your needs outgrow your dynamic QR code limit, you can upgrade to a tier that better suits your needs.",
+        "If you try to create more dynamic QR codes than your plan allows, you'll be prompted to upgrade to a higher tier. Your existing QR codes will continue working normally.",
+    },
+    {
+      id: "faq-8",
+      question: "What QR code types do you support?",
+      answer:git 
+        "QRmory supports 16 different QR code types including Website, vCard, WiFi, Location, Multi-link (link-in-bio style), Calendar events, and more. Premium features like Audio and Image Gallery QR codes are available on paid plans.",
+    },
+    {
+      id: "faq-9",
+      question: "How does billing work?",
+      answer:
+        "We use Paddle for secure payment processing. You can manage your subscription, update payment methods, and view invoices through your account dashboard. All subscriptions are billed monthly or annually depending on your chosen plan.",
     },
   ];
 

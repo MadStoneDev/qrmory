@@ -22,19 +22,6 @@ export async function handleAuth(formData: FormData): Promise<AuthResponse> {
   }
 
   try {
-    // Remove RateLimiter for now
-    // const { success: rateLimiter } = await authRateLimiter.limit(
-    //   email.toLowerCase(),
-    // );
-    //
-    // if (!rateLimiter) {
-    //   return {
-    //     error:
-    //       "Woah! You're faster than post-credit scenes in Marvel movies. Try again in a bit, please?",
-    //     success: false,
-    //   };
-    // }
-
     const supabase = await createClient();
 
     const { error: authError } = await supabase.auth.signInWithOtp({
@@ -70,7 +57,8 @@ export async function handleAuth(formData: FormData): Promise<AuthResponse> {
       };
     }
 
-    revalidatePath("/");
+    // Redirect to dashboard
+    revalidatePath("/dashboard");
 
     return {
       error: null,

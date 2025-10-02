@@ -1,4 +1,5 @@
-﻿"use client";
+﻿// src/components/qr-create/qr-preview.tsx
+"use client";
 
 import React, {
   useRef,
