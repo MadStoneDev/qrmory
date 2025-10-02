@@ -1,4 +1,4 @@
-﻿// app/dashboard/checkout/page.tsx
+﻿// src/app/checkout/page.tsx
 import { redirect } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
 import CheckoutComponent from "@/components/checkout-component";

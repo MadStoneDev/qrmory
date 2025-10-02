@@ -125,12 +125,6 @@ export default function CheckoutComponent({
             </p>
           </>
         )}
-
-        {transactionId && (
-          <p className="text-sm text-gray-500 mt-4">
-            Transaction: {transactionId.substring(0, 20)}...
-          </p>
-        )}
       </div>
     </div>
   );
