@@ -3,7 +3,9 @@
   CustomerUpdatedEvent,
   EventEntity,
   EventName,
+  SubscriptionCanceledEvent,
   SubscriptionCreatedEvent,
+  SubscriptionPausedEvent,
   SubscriptionUpdatedEvent,
   TransactionCompletedEvent,
 } from "@paddle/paddle-node-sdk";
@@ -27,7 +29,45 @@ export class ProcessWebhook {
       case EventName.CustomerUpdated:
         await this.updateCustomerData(eventData);
         break;
+      case EventName.SubscriptionCanceled:
+      case EventName.SubscriptionPaused:
+        await this.handleSubscriptionEnded(eventData);
+        break;
     }
+  }
+
+  private async handleSubscriptionEnded(
+    eventData: SubscriptionCanceledEvent | SubscriptionPausedEvent,
+  ) {
+    const customerId = eventData.data.customerId;
+
+    const { data: profile } = await supabaseAdmin
+      .from("profiles")
+      .select("id")
+      .eq("paddle_customer_id", customerId)
+      .single();
+
+    if (!profile) return;
+
+    // Update subscription status
+    await supabaseAdmin
+      .from("subscriptions")
+      .update({
+        status: eventData.data.status,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("user_id", profile.id);
+
+    // Downgrade profile to free tier
+    await supabaseAdmin
+      .from("profiles")
+      .update({
+        subscription_level: 0,
+        dynamic_qr_quota: 3,
+        subscription_status: eventData.data.status,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", profile.id);
   }
 
   private async handleTransactionCompleted(
@@ -80,6 +120,7 @@ export class ProcessWebhook {
     const subscriptionData = {
       user_id: profile.id,
       paddle_subscription_id: subscriptionId,
+      paddle_checkout_id: eventData.data.id,
       paddle_price_id: priceId,
       status: "active",
       current_period_end:
