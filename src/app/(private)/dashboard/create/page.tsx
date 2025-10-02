@@ -35,16 +35,20 @@ export default async function Create() {
   const quotaInfo = {
     currentCount: usedQuota,
     maxQuota: totalQuota,
-    subscriptionLevel: profile?.subscription_level || "free",
+    subscriptionLevel: profile?.subscription_level || 0,
     subscriptionStatus: profile?.subscription_status || "inactive",
   };
+
+  const userData = user
+    ? { ...user, subscription_level: profile?.subscription_level || 0 }
+    : null;
 
   return (
     <section className="flex flex-col overflow-y-auto">
       <h1 className="mb-4 text-xl font-bold">Create</h1>
       <QRCreator
         withHeading={false}
-        user={user}
+        user={userData}
         userSettings={settings}
         quotaInfo={quotaInfo}
       />
