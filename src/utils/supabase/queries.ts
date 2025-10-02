@@ -1,5 +1,8 @@
 ﻿import { cache } from "react";
 import { User, SupabaseClient } from "@supabase/supabase-js";
+import { Database } from "../../../database.types";
+
+type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 
 export const getUser = cache(
   async (supabase: SupabaseClient): Promise<User | null> => {
@@ -74,19 +77,11 @@ export const getSubscription = cache(async (supabase: SupabaseClient) => {
 });
 
 export const getTotalQuota = cache(async (supabase: SupabaseClient) => {
-  const user: User | null = await getUser(supabase);
+  const profile: Profile | null = await getUserProfile(supabase);
 
-  if (!user) return 0;
+  if (!profile) return 3;
 
-  const { data: quota, error } = await supabase
-    .from("user_settings")
-    .select("dynamic_qr_quota")
-    .eq("user_id", user.id)
-    .single();
-
-  if (!quota || error) return 0;
-
-  return quota.dynamic_qr_quota ?? 0;
+  return profile.dynamic_qr_quota ?? 3;
 });
 
 export const getUsedQuota = cache(async (supabase: SupabaseClient) => {
