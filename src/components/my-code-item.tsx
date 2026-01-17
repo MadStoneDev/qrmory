@@ -15,6 +15,8 @@ import {
   IconDownload,
   IconChevronDown,
   IconChevronUp,
+  IconToggleLeft,
+  IconToggleRight,
 } from "@tabler/icons-react";
 
 // Import all QR control components
@@ -63,7 +65,7 @@ export default function MyCodeItem({
   qr_value: initialQrValue = "",
   shortcode,
   created_at,
-  is_active,
+  is_active: initialIsActive,
   settings,
   user,
   subscriptionLevel = 0,
@@ -71,6 +73,8 @@ export default function MyCodeItem({
   const { SVG } = useQRCode();
   const [isEditing, setIsEditing] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
+  const [isActive, setIsActive] = useState(initialIsActive);
+  const [isTogglingActive, setIsTogglingActive] = useState(false);
 
   // Use state variables to track current values
   const [currentTitle, setCurrentTitle] = useState(initialTitle);
@@ -178,6 +182,54 @@ export default function MyCodeItem({
       });
     } finally {
       setSaving(false);
+    }
+  };
+
+  // Toggle active status
+  const toggleActiveStatus = async () => {
+    if (type !== "dynamic") {
+      toast("Only dynamic QR codes can be toggled", {
+        style: {
+          backgroundColor: "rgb(254, 226, 226)",
+          color: "rgb(153, 27, 27)",
+        },
+      });
+      return;
+    }
+
+    setIsTogglingActive(true);
+
+    try {
+      const supabase = createClient();
+      const newStatus = !isActive;
+
+      const { error } = await supabase
+        .from("qr_codes")
+        .update({
+          is_active: newStatus,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", id);
+
+      if (error) throw error;
+
+      setIsActive(newStatus);
+      toast(newStatus ? "QR code activated" : "QR code deactivated", {
+        description: newStatus
+          ? "This QR code is now active and scannable."
+          : "This QR code will no longer work when scanned.",
+      });
+    } catch (error) {
+      console.error("Error toggling QR code status:", error);
+      toast("Error updating status", {
+        description: "Something went wrong. Please try again later.",
+        style: {
+          backgroundColor: "rgb(254, 226, 226)",
+          color: "rgb(153, 27, 27)",
+        },
+      });
+    } finally {
+      setIsTogglingActive(false);
     }
   };
 
@@ -457,7 +509,23 @@ export default function MyCodeItem({
   };
 
   return (
-    <article className="border rounded-lg shadow-sm bg-white overflow-hidden mb-6">
+    <article className={`border rounded-lg shadow-sm bg-white overflow-hidden mb-6 ${!isActive ? "opacity-60" : ""}`}>
+      {/* Inactive banner */}
+      {!isActive && type === "dynamic" && (
+        <div className="bg-amber-50 border-b border-amber-200 px-4 py-2 flex items-center justify-between">
+          <span className="text-amber-700 text-sm font-medium">
+            This QR code is inactive and will not work when scanned
+          </span>
+          <button
+            onClick={toggleActiveStatus}
+            disabled={isTogglingActive}
+            className="text-xs bg-amber-600 text-white px-3 py-1 rounded hover:bg-amber-700 disabled:opacity-50"
+          >
+            {isTogglingActive ? "Activating..." : "Reactivate"}
+          </button>
+        </div>
+      )}
+
       {/* QR Code Header */}
       <div
         className={`py-3 px-4 flex flex-row items-center gap-4 w-full border-b border-neutral-200/70`}
@@ -470,7 +538,7 @@ export default function MyCodeItem({
             text={displayValue}
             options={{
               errorCorrectionLevel: settings.qrErrorCorrectionLevel,
-              color: { dark: "#1E073E", light: "#FFFFFF00" },
+              color: { dark: isActive ? "#1E073E" : "#9CA3AF", light: "#FFFFFF00" },
               margin: 1,
               width: 64,
             }}
@@ -494,8 +562,13 @@ export default function MyCodeItem({
                 {currentTitle}
               </h2>
               <h3 className="font-sans text-xs md:text-sm text-neutral-500">
-                {type === "dynamic" ? "Dynamic" : "Static"} • Created:{" "}
-                {new Date(created_at).toLocaleDateString()}
+                {type === "dynamic" ? "Dynamic" : "Static"}
+                {type === "dynamic" && (
+                  <span className={`ml-2 px-1.5 py-0.5 rounded text-xs ${isActive ? "bg-green-100 text-green-700" : "bg-neutral-200 text-neutral-600"}`}>
+                    {isActive ? "Active" : "Inactive"}
+                  </span>
+                )}
+                {" "}• Created: {new Date(created_at).toLocaleDateString()}
               </h3>
               {type === "dynamic" && shortcode && (
                 <div className="text-xs text-neutral-500">
@@ -512,7 +585,27 @@ export default function MyCodeItem({
           )}
         </div>
 
-        <div className="flex space-x-2">
+        <div className="flex items-center space-x-2">
+          {/* Active/Inactive Toggle */}
+          {type === "dynamic" && !isEditing && (
+            <button
+              onClick={toggleActiveStatus}
+              disabled={isTogglingActive}
+              className={`p-2 rounded transition-colors ${
+                isActive
+                  ? "text-green-600 hover:bg-green-50"
+                  : "text-neutral-400 hover:bg-neutral-100"
+              } ${isTogglingActive ? "opacity-50 cursor-not-allowed" : ""}`}
+              title={isActive ? "Deactivate QR code" : "Activate QR code"}
+            >
+              {isActive ? (
+                <IconToggleRight size={24} />
+              ) : (
+                <IconToggleLeft size={24} />
+              )}
+            </button>
+          )}
+
           {type === "dynamic" && (
             <button
               onClick={toggleEdit}

@@ -3,6 +3,12 @@ import { useState, useEffect, useRef } from "react";
 import { QRControlType } from "@/types/qr-controls";
 import { createClient } from "@/utils/supabase/client";
 import { toast } from "sonner";
+import {
+  getFileSizeLimit,
+  canUploadFileType,
+  formatFileSize,
+  FILE_UPLOAD_LIMITS,
+} from "@/lib/file-upload-limits";
 
 interface AudioSaveData {
   controlType: string;
@@ -52,11 +58,11 @@ export default function QRAudio({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
 
-  // File size limit: 10MB for all paid users
-  const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+  // Get tier-based file size limit from centralized config
+  const MAX_FILE_SIZE = getFileSizeLimit("audio", subscriptionLevel);
 
-  // Check if user can upload audio
-  const canUpload = user && subscriptionLevel > 0;
+  // Check if user can upload audio (tier must support audio)
+  const canUpload = user && canUploadFileType("audio", subscriptionLevel);
 
   // Initialize from saved data
   useEffect(() => {
@@ -176,15 +182,6 @@ export default function QRAudio({
     } finally {
       setIsUploading(false);
     }
-  };
-
-  // Format file size
-  const formatFileSize = (bytes: number) => {
-    if (bytes === 0) return "0 Bytes";
-    const k = 1024;
-    const sizes = ["Bytes", "KB", "MB"];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
   };
 
   // Format duration

@@ -10,6 +10,11 @@
   TransactionCompletedEvent,
 } from "@paddle/paddle-node-sdk";
 import { supabaseAdmin } from "@/utils/supabase/admin";
+import {
+  sendSubscriptionCanceledEmail,
+  sendCodesDeactivatedEmail,
+  sendSubscriptionConfirmedEmail,
+} from "@/lib/email/send-email";
 
 export class ProcessWebhook {
   async processEvent(eventData: EventEntity) {
@@ -40,6 +45,7 @@ export class ProcessWebhook {
     eventData: SubscriptionCanceledEvent | SubscriptionPausedEvent,
   ) {
     const customerId = eventData.data.customerId;
+    const FREE_TIER_QUOTA = 3;
 
     const { data: profile } = await supabaseAdmin
       .from("profiles")
@@ -48,6 +54,10 @@ export class ProcessWebhook {
       .single();
 
     if (!profile) return;
+
+    // Get user email for notifications
+    const { data: authData } = await supabaseAdmin.auth.admin.getUserById(profile.id);
+    const userEmail = authData?.user?.email;
 
     // Update subscription status
     await supabaseAdmin
@@ -63,11 +73,81 @@ export class ProcessWebhook {
       .from("profiles")
       .update({
         subscription_level: 0,
-        dynamic_qr_quota: 3,
+        dynamic_qr_quota: FREE_TIER_QUOTA,
         subscription_status: eventData.data.status,
         updated_at: new Date().toISOString(),
       })
       .eq("id", profile.id);
+
+    // Get all user's dynamic QR codes, ordered by created_at (oldest first)
+    const { data: dynamicCodes } = await supabaseAdmin
+      .from("qr_codes")
+      .select("id, title, shortcode, created_at, is_active")
+      .eq("user_id", profile.id)
+      .eq("type", "dynamic")
+      .order("created_at", { ascending: true });
+
+    if (!dynamicCodes || dynamicCodes.length <= FREE_TIER_QUOTA) {
+      // User has fewer codes than free tier allows, send cancellation email only
+      if (userEmail) {
+        await sendSubscriptionCanceledEmail(userEmail, {
+          codesDeactivated: 0,
+          codesRemaining: dynamicCodes?.length || 0,
+        });
+      }
+      return;
+    }
+
+    // Deactivate excess codes (oldest first, keeping the newest ones active)
+    const codesToDeactivate = dynamicCodes.slice(0, dynamicCodes.length - FREE_TIER_QUOTA);
+    const codesToKeepActive = dynamicCodes.slice(-FREE_TIER_QUOTA);
+
+    // Deactivate the oldest excess codes
+    const deactivatedIds = codesToDeactivate.map(code => code.id);
+
+    if (deactivatedIds.length > 0) {
+      const { error: deactivateError } = await supabaseAdmin
+        .from("qr_codes")
+        .update({
+          is_active: false,
+          updated_at: new Date().toISOString(),
+        })
+        .in("id", deactivatedIds);
+
+      if (deactivateError) {
+        console.error("Error deactivating QR codes:", deactivateError);
+      } else {
+        console.log(`✅ Deactivated ${deactivatedIds.length} dynamic QR codes for user ${profile.id}`);
+      }
+    }
+
+    // Ensure the newest codes within quota remain active
+    const activeIds = codesToKeepActive.map(code => code.id);
+    if (activeIds.length > 0) {
+      await supabaseAdmin
+        .from("qr_codes")
+        .update({
+          is_active: true,
+          updated_at: new Date().toISOString(),
+        })
+        .in("id", activeIds);
+    }
+
+    // Send email notification about deactivated codes
+    if (userEmail) {
+      await sendCodesDeactivatedEmail(userEmail, {
+        deactivatedCodes: codesToDeactivate.map(code => ({
+          title: code.title,
+          shortcode: code.shortcode,
+        })),
+        activeCodes: codesToKeepActive.map(code => ({
+          title: code.title,
+          shortcode: code.shortcode,
+        })),
+        totalDeactivated: codesToDeactivate.length,
+        freeQuota: FREE_TIER_QUOTA,
+      });
+    }
   }
 
   private async handleTransactionCompleted(
@@ -102,6 +182,10 @@ export class ProcessWebhook {
       console.error(`No user found for Paddle customer ID: ${customerId}`);
       return;
     }
+
+    // Get user email for notifications
+    const { data: authData } = await supabaseAdmin.auth.admin.getUserById(profile.id);
+    const userEmail = authData?.user?.email;
 
     // Get subscription package details
     const { data: subscriptionPackage } = await supabaseAdmin
@@ -154,6 +238,49 @@ export class ProcessWebhook {
     if (profileError) {
       console.error("Error updating profile:", profileError);
       throw profileError;
+    }
+
+    // Reactivate all user's dynamic QR codes (within new quota)
+    const { data: dynamicCodes } = await supabaseAdmin
+      .from("qr_codes")
+      .select("id")
+      .eq("user_id", profile.id)
+      .eq("type", "dynamic")
+      .order("created_at", { ascending: false })
+      .limit(subscriptionPackage.quota_amount);
+
+    if (dynamicCodes && dynamicCodes.length > 0) {
+      const codesToReactivate = dynamicCodes.map(code => code.id);
+
+      const { error: reactivateError } = await supabaseAdmin
+        .from("qr_codes")
+        .update({
+          is_active: true,
+          updated_at: new Date().toISOString(),
+        })
+        .in("id", codesToReactivate);
+
+      if (reactivateError) {
+        console.error("Error reactivating QR codes:", reactivateError);
+      } else {
+        console.log(`✅ Reactivated ${codesToReactivate.length} dynamic QR codes for user ${profile.id}`);
+      }
+    }
+
+    // Send subscription confirmed email
+    if (userEmail) {
+      const storageQuotas: Record<number, string> = {
+        0: "50MB",
+        1: "500MB",
+        2: "2GB",
+        3: "10GB",
+      };
+
+      await sendSubscriptionConfirmedEmail(userEmail, {
+        planName: subscriptionPackage.name,
+        dynamicQrQuota: subscriptionPackage.quota_amount,
+        storageQuota: storageQuotas[subscriptionPackage.level] || "50MB",
+      });
     }
 
     console.log(

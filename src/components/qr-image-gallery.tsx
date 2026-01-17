@@ -3,6 +3,12 @@ import { useState, useEffect, useRef } from "react";
 import { QRControlType } from "@/types/qr-controls";
 import { createClient } from "@/utils/supabase/client";
 import { toast } from "sonner";
+import {
+  getFileSizeLimit,
+  getFileCountLimit,
+  canUploadFileType,
+  formatFileSize,
+} from "@/lib/file-upload-limits";
 
 interface ImageItem {
   id: string;
@@ -56,25 +62,12 @@ export default function QRImageGallery({
   const [totalSize, setTotalSize] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // File size limits based on subscription level
-  const MAX_FILE_SIZE =
-    {
-      0: 0, // Free: No image uploads
-      1: 2 * 1024 * 1024, // Explorer: 2MB per image
-      2: 2 * 1024 * 1024, // Creator: 2MB per image
-      3: 2 * 1024 * 1024, // Champion: 2MB per image
-    }[subscriptionLevel] || 0;
+  // Get tier-based limits from centralized config
+  const MAX_FILE_SIZE = getFileSizeLimit("image", subscriptionLevel);
+  const MAX_IMAGES = getFileCountLimit("image_gallery", subscriptionLevel);
 
-  const MAX_IMAGES =
-    {
-      0: 0, // Free: No image uploads
-      1: 10, // Explorer: 10 images
-      2: 10, // Creator: 10 images
-      3: 10, // Champion: 10 images
-    }[subscriptionLevel] || 0;
-
-  // Check if user can upload images
-  const canUpload = user && subscriptionLevel > 0 && MAX_FILE_SIZE > 0;
+  // Check if user can upload images (tier must support images)
+  const canUpload = user && canUploadFileType("image", subscriptionLevel) && MAX_IMAGES > 0;
 
   // Initialize from saved data
   useEffect(() => {
@@ -295,15 +288,6 @@ export default function QRImageGallery({
       ];
       setImages(newImages);
     }
-  };
-
-  // Format file size
-  const formatFileSize = (bytes: number) => {
-    if (bytes === 0) return "0 Bytes";
-    const k = 1024;
-    const sizes = ["Bytes", "KB", "MB"];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
   };
 
   // Generate encoded data for gallery
