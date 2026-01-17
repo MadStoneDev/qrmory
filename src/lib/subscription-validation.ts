@@ -122,6 +122,8 @@ export function getSubscriptionFeatures(level: number) {
       videoUpload: false,
       analytics: false,
       customBranding: false,
+      brandedRedirect: true, // Shows QRmory branding on redirect
+      instantRedirect: false,
       prioritySupport: false,
     },
     1: {
@@ -132,6 +134,8 @@ export function getSubscriptionFeatures(level: number) {
       videoUpload: false,
       analytics: true,
       customBranding: false,
+      brandedRedirect: true, // Shows QRmory branding on redirect
+      instantRedirect: false,
       prioritySupport: false,
     },
     2: {
@@ -142,6 +146,8 @@ export function getSubscriptionFeatures(level: number) {
       videoUpload: true,
       analytics: true,
       customBranding: true,
+      brandedRedirect: false, // No QRmory branding
+      instantRedirect: true, // Instant redirect, no delay
       prioritySupport: false,
     },
     3: {
@@ -152,11 +158,20 @@ export function getSubscriptionFeatures(level: number) {
       videoUpload: true,
       analytics: true,
       customBranding: true,
+      brandedRedirect: false, // No QRmory branding
+      instantRedirect: true, // Instant redirect, no delay
       prioritySupport: true,
     },
   };
 
   return features[level as keyof typeof features] || features[0];
+}
+
+/**
+ * Check if a subscription level shows branded redirect page
+ */
+export function showsBrandedRedirect(level: number): boolean {
+  return level < 2; // Free (0) and Explorer (1) show branding
 }
 
 /**
