@@ -172,22 +172,33 @@ export default function SubscriptionPlans({
                     </ul>
                   )}
 
-                  <button
-                    onClick={() => handleSubscriptionChange(pkg.level)}
-                    disabled={pkg.level === currentLevel || loading !== null}
-                    className={`w-full py-3 px-4 rounded-md flex items-center justify-center font-medium transition-all duration-200 ${getButtonStyle(
-                      pkg,
-                    )}`}
-                  >
-                    {loading === pkg.level ? (
-                      <>
-                        <IconLoader2 size={18} className="animate-spin mr-2" />
-                        Processing...
-                      </>
-                    ) : (
-                      getButtonText(pkg)
-                    )}
-                  </button>
+                  {profile === null ? (
+                    <a
+                      href="/login"
+                      className={`w-full py-3 px-4 rounded-md flex items-center justify-center font-medium transition-all duration-200 ${getButtonStyle(
+                        pkg,
+                      )}`}
+                    >
+                      {getButtonText(pkg)}
+                    </a>
+                  ) : (
+                    <button
+                      onClick={() => handleSubscriptionChange(pkg.level)}
+                      disabled={pkg.level === currentLevel || loading !== null}
+                      className={`w-full py-3 px-4 rounded-md flex items-center justify-center font-medium transition-all duration-200 ${getButtonStyle(
+                        pkg,
+                      )}`}
+                    >
+                      {loading === pkg.level ? (
+                        <>
+                          <IconLoader2 size={18} className="animate-spin mr-2" />
+                          Processing...
+                        </>
+                      ) : (
+                        getButtonText(pkg)
+                      )}
+                    </button>
+                  )}
                 </div>
               </div>
             ))}
@@ -201,6 +212,25 @@ export default function SubscriptionPlans({
           specified number of dynamic QR codes.
         </p>
       </div>
+
+      {/* CTA for non-logged-in users */}
+      {profile === null && (
+        <div className="bg-qrmory-purple-800 rounded-xl p-8 text-center text-white">
+          <h3 className="text-2xl font-bold mb-3">
+            Ready to get started?
+          </h3>
+          <p className="text-qrmory-purple-200 mb-6 max-w-xl mx-auto">
+            Create your free account today and start generating dynamic QR codes.
+            No credit card required. Upgrade anytime.
+          </p>
+          <a
+            href="/login"
+            className="inline-block px-8 py-3 bg-white text-qrmory-purple-800 rounded-lg font-semibold hover:bg-qrmory-purple-50 transition-colors duration-300"
+          >
+            Create a Free Account
+          </a>
+        </div>
+      )}
     </div>
   );
 }

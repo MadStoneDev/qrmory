@@ -1,6 +1,6 @@
-﻿"use client";
+"use client";
 
-import { useState } from "react";
+import { useState, memo } from "react";
 import { useQRCode } from "next-qrcode";
 import { recreateQRValue } from "@/utils/qr-recreator";
 import { createClient } from "@/utils/supabase/client";
@@ -17,6 +17,8 @@ import {
   IconChevronUp,
   IconToggleLeft,
   IconToggleRight,
+  IconCircleCheck,
+  IconCircleX,
 } from "@tabler/icons-react";
 
 // Import all QR control components
@@ -39,17 +41,27 @@ import QRImageGallery from "@/components/qr-image-gallery";
 import QRAudio from "@/components/qr-audio";
 import Link from "next/link";
 
+interface QRCodeContent {
+  controlType?: string;
+  [key: string]: unknown;
+}
+
+interface User {
+  id: string;
+  email?: string;
+}
+
 interface MyCodeItemProps {
   id: string;
   title: string;
   type: string;
-  content: any;
+  content: QRCodeContent;
   qr_value: string;
   shortcode?: string;
   created_at: string;
   is_active: boolean;
   settings: UserSettings;
-  user?: any;
+  user?: User;
   subscriptionLevel?: number;
 }
 
@@ -57,7 +69,7 @@ interface QRSizes {
   [key: string]: number;
 }
 
-export default function MyCodeItem({
+function MyCodeItem({
   id,
   title: initialTitle = "No Title",
   type = "static",
@@ -564,8 +576,26 @@ export default function MyCodeItem({
               <h3 className="font-sans text-xs md:text-sm text-neutral-500">
                 {type === "dynamic" ? "Dynamic" : "Static"}
                 {type === "dynamic" && (
-                  <span className={`ml-2 px-1.5 py-0.5 rounded text-xs ${isActive ? "bg-green-100 text-green-700" : "bg-neutral-200 text-neutral-600"}`}>
-                    {isActive ? "Active" : "Inactive"}
+                  <span
+                    className={`ml-2 px-2 py-0.5 rounded text-xs inline-flex items-center gap-1 ${
+                      isActive
+                        ? "bg-green-100 text-green-700"
+                        : "bg-neutral-200 text-neutral-600"
+                    }`}
+                    role="status"
+                    aria-live="polite"
+                  >
+                    {isActive ? (
+                      <>
+                        <IconCircleCheck size={12} aria-hidden="true" />
+                        <span>Active</span>
+                      </>
+                    ) : (
+                      <>
+                        <IconCircleX size={12} aria-hidden="true" />
+                        <span>Inactive</span>
+                      </>
+                    )}
                   </span>
                 )}
                 {" "}• Created: {new Date(created_at).toLocaleDateString()}
@@ -705,3 +735,16 @@ export default function MyCodeItem({
     </article>
   );
 }
+
+// Memoize to prevent unnecessary re-renders when parent list re-renders
+export default memo(MyCodeItem, (prevProps, nextProps) => {
+  // Only re-render if these props change
+  return (
+    prevProps.id === nextProps.id &&
+    prevProps.title === nextProps.title &&
+    prevProps.is_active === nextProps.is_active &&
+    prevProps.qr_value === nextProps.qr_value &&
+    prevProps.content === nextProps.content &&
+    prevProps.settings === nextProps.settings
+  );
+});

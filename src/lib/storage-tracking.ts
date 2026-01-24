@@ -2,6 +2,7 @@
 import { SupabaseClient } from "@supabase/supabase-js";
 import { Database } from "../../database.types";
 import { getStorageQuota, formatFileSize } from "./file-upload-limits";
+import { getUserR2StorageUsage, listUserFiles } from "./r2-storage";
 
 export interface StorageUsage {
   totalUsed: number;
@@ -24,6 +25,8 @@ export interface StorageBreakdown {
 
 /**
  * Get the total storage used by a user from Supabase storage buckets
+ * Note: This only counts Supabase storage (images/audio).
+ * For combined storage including R2 (video/pdf), use getCombinedStorageUsage.
  */
 export async function getUserStorageUsage(
   supabase: SupabaseClient<Database>,
@@ -90,6 +93,61 @@ export async function getUserStorageUsage(
 }
 
 /**
+ * Get combined storage usage from both Supabase and R2
+ * This includes images, audio (Supabase) and video, PDF (R2)
+ */
+export async function getCombinedStorageUsage(
+  supabase: SupabaseClient<Database>,
+  userId: string,
+  subscriptionLevel: number
+): Promise<StorageUsage> {
+  const totalQuota = getStorageQuota(subscriptionLevel);
+
+  try {
+    // Get Supabase storage usage
+    const supabaseUsage = await getUserStorageUsage(supabase, userId, subscriptionLevel);
+
+    // Get R2 storage usage (video + pdf)
+    let r2Usage = 0;
+    try {
+      r2Usage = await getUserR2StorageUsage(userId);
+    } catch (e) {
+      // R2 might not be configured yet, ignore error
+      console.warn("R2 storage not available:", e);
+    }
+
+    const totalUsed = supabaseUsage.totalUsed + r2Usage;
+    const percentUsed = totalQuota > 0 ? Math.round((totalUsed / totalQuota) * 100) : 0;
+    const remaining = Math.max(0, totalQuota - totalUsed);
+
+    return {
+      totalUsed,
+      totalQuota,
+      percentUsed,
+      remaining,
+      formattedUsed: formatFileSize(totalUsed),
+      formattedQuota: formatFileSize(totalQuota),
+      formattedRemaining: formatFileSize(remaining),
+      isNearLimit: percentUsed >= 80,
+      isAtLimit: percentUsed >= 100,
+    };
+  } catch (error) {
+    console.error("Error calculating combined storage usage:", error);
+    return {
+      totalUsed: 0,
+      totalQuota,
+      percentUsed: 0,
+      remaining: totalQuota,
+      formattedUsed: "0 Bytes",
+      formattedQuota: formatFileSize(totalQuota),
+      formattedRemaining: formatFileSize(totalQuota),
+      isNearLimit: false,
+      isAtLimit: false,
+    };
+  }
+}
+
+/**
  * Get a breakdown of storage usage by file type
  */
 export async function getStorageBreakdown(
@@ -104,7 +162,7 @@ export async function getStorageBreakdown(
   };
 
   try {
-    // Get images
+    // Get images from Supabase
     const { data: imageFiles } = await supabase.storage
       .from("qr-images")
       .list(userId, { limit: 1000 });
@@ -117,7 +175,7 @@ export async function getStorageBreakdown(
       }
     }
 
-    // Get audio
+    // Get audio from Supabase
     const { data: audioFiles } = await supabase.storage
       .from("qr-audio")
       .list(userId, { limit: 1000 });
@@ -128,6 +186,23 @@ export async function getStorageBreakdown(
           breakdown.audio += file.metadata?.size || 0;
         }
       }
+    }
+
+    // Get video from R2
+    try {
+      const videoFiles = await listUserFiles(userId, "video");
+      for (const file of videoFiles) {
+        breakdown.video += file.size;
+      }
+
+      // Get PDFs from R2 (counted as "other")
+      const pdfFiles = await listUserFiles(userId, "pdf");
+      for (const file of pdfFiles) {
+        breakdown.other += file.size;
+      }
+    } catch (e) {
+      // R2 might not be configured yet
+      console.warn("R2 storage not available for breakdown:", e);
     }
 
     return breakdown;

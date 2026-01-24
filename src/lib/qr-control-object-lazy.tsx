@@ -1,31 +1,7 @@
-﻿import { QRControlsObject } from "@/types/qr-controls";
+"use client";
 
-import QRFacebook from "@/components/qr-facebook";
-import QRInstagram from "@/components/qr-instagram";
-import QRText from "@/components/qr-text";
-import QRTwitter from "@/components/qr-twitter";
-import QRWebsite from "@/components/qr-website";
-import QRYoutube from "@/components/qr-youtube";
-import QRWifi from "@/components/qr-wifi";
-import QRVCard from "@/components/qr-vcard";
-import QRCoupon from "@/components/qr-coupon";
-import QRLocation from "@/components/qr-location";
-import QRSMS from "@/components/qr-sms";
-import QREmail from "@/components/qr-email";
-import QRCalendar from "@/components/qr-calendar";
-import QRMultiLink from "@/components/qr-multilink";
-import QRPoll from "@/components/qr-poll";
-import QRImageGallery from "@/components/qr-image-gallery";
-import QRAudio from "@/components/qr-audio";
-import QRPhone from "@/components/qr-phone";
-import QRWhatsApp from "@/components/qr-whatsapp";
-import QRLinkedIn from "@/components/qr-linkedin";
-import QRTikTok from "@/components/qr-tiktok";
-import QRTelegram from "@/components/qr-telegram";
-import QRDiscord from "@/components/qr-discord";
-import QRAppStore from "@/components/qr-appstore";
-import QRVideo from "@/components/qr-video";
-import QRPDF from "@/components/qr-pdf";
+import dynamic from "next/dynamic";
+import { QRControlsObject } from "@/types/qr-controls";
 import {
   IconBrandFacebookFilled,
   IconBrandInstagram,
@@ -55,7 +31,96 @@ import {
   IconWorld,
 } from "@tabler/icons-react";
 
-export const qrControls: QRControlsObject = {
+// Loading fallback component
+const LoadingFallback = () => (
+  <div className="animate-pulse space-y-3 p-4">
+    <div className="h-4 bg-neutral-200 rounded w-1/3"></div>
+    <div className="h-10 bg-neutral-200 rounded"></div>
+    <div className="h-10 bg-neutral-200 rounded"></div>
+  </div>
+);
+
+// Dynamically import QR type components with code splitting
+const QRWebsite = dynamic(() => import("@/components/qr-website"), {
+  loading: LoadingFallback,
+});
+const QRFacebook = dynamic(() => import("@/components/qr-facebook"), {
+  loading: LoadingFallback,
+});
+const QRInstagram = dynamic(() => import("@/components/qr-instagram"), {
+  loading: LoadingFallback,
+});
+const QRTwitter = dynamic(() => import("@/components/qr-twitter"), {
+  loading: LoadingFallback,
+});
+const QRYoutube = dynamic(() => import("@/components/qr-youtube"), {
+  loading: LoadingFallback,
+});
+const QRVCard = dynamic(() => import("@/components/qr-vcard"), {
+  loading: LoadingFallback,
+});
+const QRCoupon = dynamic(() => import("@/components/qr-coupon"), {
+  loading: LoadingFallback,
+});
+const QRLocation = dynamic(() => import("@/components/qr-location"), {
+  loading: LoadingFallback,
+});
+const QRWifi = dynamic(() => import("@/components/qr-wifi"), {
+  loading: LoadingFallback,
+});
+const QRText = dynamic(() => import("@/components/qr-text"), {
+  loading: LoadingFallback,
+});
+const QRSMS = dynamic(() => import("@/components/qr-sms"), {
+  loading: LoadingFallback,
+});
+const QREmail = dynamic(() => import("@/components/qr-email"), {
+  loading: LoadingFallback,
+});
+const QRCalendar = dynamic(() => import("@/components/qr-calendar"), {
+  loading: LoadingFallback,
+});
+const QRMultiLink = dynamic(() => import("@/components/qr-multilink"), {
+  loading: LoadingFallback,
+});
+const QRPoll = dynamic(() => import("@/components/qr-poll"), {
+  loading: LoadingFallback,
+});
+const QRImageGallery = dynamic(() => import("@/components/qr-image-gallery"), {
+  loading: LoadingFallback,
+});
+const QRAudio = dynamic(() => import("@/components/qr-audio"), {
+  loading: LoadingFallback,
+});
+const QRPhone = dynamic(() => import("@/components/qr-phone"), {
+  loading: LoadingFallback,
+});
+const QRWhatsApp = dynamic(() => import("@/components/qr-whatsapp"), {
+  loading: LoadingFallback,
+});
+const QRLinkedIn = dynamic(() => import("@/components/qr-linkedin"), {
+  loading: LoadingFallback,
+});
+const QRTikTok = dynamic(() => import("@/components/qr-tiktok"), {
+  loading: LoadingFallback,
+});
+const QRTelegram = dynamic(() => import("@/components/qr-telegram"), {
+  loading: LoadingFallback,
+});
+const QRDiscord = dynamic(() => import("@/components/qr-discord"), {
+  loading: LoadingFallback,
+});
+const QRAppStore = dynamic(() => import("@/components/qr-appstore"), {
+  loading: LoadingFallback,
+});
+const QRVideo = dynamic(() => import("@/components/qr-video"), {
+  loading: LoadingFallback,
+});
+const QRPDF = dynamic(() => import("@/components/qr-pdf"), {
+  loading: LoadingFallback,
+});
+
+export const qrControlsLazy: QRControlsObject = {
   website: {
     title: "Website",
     description: "Link to a page or site",

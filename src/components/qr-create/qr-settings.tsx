@@ -6,7 +6,7 @@ import { toast } from "sonner";
 
 import { createClient } from "@/utils/supabase/client";
 import { UserSettings } from "@/lib/default-settings";
-import { qrControls } from "@/lib/qr-control-object";
+import { qrControlsLazy as qrControls } from "@/lib/qr-control-object-lazy";
 
 import { useShortcodeManager } from "@/hooks/useShortcodeManager";
 

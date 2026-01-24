@@ -14,6 +14,7 @@ import {
   sendSubscriptionCanceledEmail,
   sendCodesDeactivatedEmail,
   sendSubscriptionConfirmedEmail,
+  sendSubscriptionDowngradedEmail,
 } from "@/lib/email/send-email";
 
 export class ProcessWebhook {
@@ -291,10 +292,10 @@ export class ProcessWebhook {
   private async updateSubscriptionData(
     eventData: SubscriptionCreatedEvent | SubscriptionUpdatedEvent,
   ) {
-    // First, find the user by their Paddle customer ID
+    // First, find the user by their Paddle customer ID (include current quota for comparison)
     const { data: profile } = await supabaseAdmin
       .from("profiles")
-      .select("id, subscription_level")
+      .select("id, subscription_level, dynamic_qr_quota")
       .eq("paddle_customer_id", eventData.data.customerId)
       .single();
 
@@ -304,6 +305,10 @@ export class ProcessWebhook {
       );
       return;
     }
+
+    // Get user email for notifications
+    const { data: authData } = await supabaseAdmin.auth.admin.getUserById(profile.id);
+    const userEmail = authData?.user?.email;
 
     // Get the subscription package details from the price ID
     const priceId = eventData.data.items[0]?.price?.id;
@@ -343,7 +348,7 @@ export class ProcessWebhook {
     }
 
     // Update user profile with subscription details
-    const profileUpdate: any = {
+    const profileUpdate: Record<string, unknown> = {
       subscription_status: eventData.data.status,
       updated_at: new Date().toISOString(),
     };
@@ -364,7 +369,89 @@ export class ProcessWebhook {
       throw profileError;
     }
 
+    // Check if this is a downgrade (quota reduced)
+    const oldQuota = profile.dynamic_qr_quota || 0;
+    const newQuota = subscriptionPackage?.quota_amount || oldQuota;
+    const isDowngrade = newQuota < oldQuota;
+
+    if (isDowngrade && subscriptionPackage) {
+      console.log(`Downgrade detected for user ${profile.id}: ${oldQuota} -> ${newQuota} quota`);
+
+      // Get all user's active dynamic QR codes, ordered by created_at (oldest first)
+      const { data: dynamicCodes } = await supabaseAdmin
+        .from("qr_codes")
+        .select("id, title, shortcode, created_at, is_active")
+        .eq("user_id", profile.id)
+        .eq("type", "dynamic")
+        .eq("is_active", true)
+        .order("created_at", { ascending: true });
+
+      if (dynamicCodes && dynamicCodes.length > newQuota) {
+        // Calculate how many codes need to be deactivated
+        const excessCount = dynamicCodes.length - newQuota;
+        const codesToDeactivate = dynamicCodes.slice(0, excessCount);
+        const codesToKeepActive = dynamicCodes.slice(excessCount);
+
+        // Deactivate the oldest excess codes
+        const deactivatedIds = codesToDeactivate.map(code => code.id);
+
+        if (deactivatedIds.length > 0) {
+          const { error: deactivateError } = await supabaseAdmin
+            .from("qr_codes")
+            .update({
+              is_active: false,
+              updated_at: new Date().toISOString(),
+            })
+            .in("id", deactivatedIds);
+
+          if (deactivateError) {
+            console.error("Error deactivating QR codes on downgrade:", deactivateError);
+          } else {
+            console.log(`✅ Deactivated ${deactivatedIds.length} dynamic QR codes for user ${profile.id} (downgrade)`);
+          }
+
+          // Send downgrade notification email
+          if (userEmail) {
+            await sendSubscriptionDowngradedEmail(userEmail, {
+              oldPlanName: this.getPlanNameFromLevel(profile.subscription_level ?? 0),
+              newPlanName: subscriptionPackage.name,
+              oldQuota: oldQuota,
+              newQuota: newQuota,
+              deactivatedCodes: codesToDeactivate.map(code => ({
+                title: code.title,
+                shortcode: code.shortcode,
+              })),
+              activeCodes: codesToKeepActive.map(code => ({
+                title: code.title,
+                shortcode: code.shortcode,
+              })),
+            });
+          }
+        }
+      } else if (userEmail) {
+        // Downgrade but no codes need deactivation (user is under new limit)
+        await sendSubscriptionDowngradedEmail(userEmail, {
+          oldPlanName: this.getPlanNameFromLevel(profile.subscription_level ?? 0),
+          newPlanName: subscriptionPackage.name,
+          oldQuota: oldQuota,
+          newQuota: newQuota,
+          deactivatedCodes: [],
+          activeCodes: [],
+        });
+      }
+    }
+
     console.log(`Successfully updated subscription for user ${profile.id}`);
+  }
+
+  private getPlanNameFromLevel(level: number): string {
+    const planNames: Record<number, string> = {
+      0: "Free",
+      1: "Explorer",
+      2: "Creator",
+      3: "Champion",
+    };
+    return planNames[level] || "Unknown";
   }
 
   private async updateCustomerData(

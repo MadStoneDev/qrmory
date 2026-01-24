@@ -35,6 +35,15 @@ interface PaymentFailedData {
   nextRetryDate?: string;
 }
 
+interface SubscriptionDowngradedData {
+  oldPlanName: string;
+  newPlanName: string;
+  oldQuota: number;
+  newQuota: number;
+  deactivatedCodes: Array<{ title: string; shortcode: string | null }>;
+  activeCodes: Array<{ title: string; shortcode: string | null }>;
+}
+
 export async function sendSubscriptionCanceledEmail(
   email: string,
   data: SubscriptionCanceledData
@@ -375,6 +384,109 @@ export async function sendPaymentFailedEmail(
     return true;
   } catch (error) {
     console.error("Error sending payment failed email:", error);
+    return false;
+  }
+}
+
+export async function sendSubscriptionDowngradedEmail(
+  email: string,
+  data: SubscriptionDowngradedData
+): Promise<boolean> {
+  try {
+    const hasDeactivatedCodes = data.deactivatedCodes.length > 0;
+
+    const deactivatedList = data.deactivatedCodes
+      .map(code => `<li><strong>${code.title}</strong>${code.shortcode ? ` (qrmory.com/${code.shortcode})` : ""}</li>`)
+      .join("");
+
+    const activeList = data.activeCodes
+      .map(code => `<li><strong>${code.title}</strong>${code.shortcode ? ` (qrmory.com/${code.shortcode})` : ""}</li>`)
+      .join("");
+
+    const { error } = await resend.emails.send({
+      from: FROM_EMAIL,
+      to: email,
+      subject: hasDeactivatedCodes
+        ? `Plan changed: ${data.deactivatedCodes.length} QR codes have been deactivated`
+        : `Your plan has been changed to ${data.newPlanName}`,
+      html: `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+  <div style="text-align: center; margin-bottom: 30px;">
+    <h1 style="color: #1E073E; margin: 0;">QRmory</h1>
+  </div>
+
+  <h2 style="color: #1E073E;">Your subscription has been updated</h2>
+
+  <p>Your QRmory subscription has been changed from <strong>${data.oldPlanName}</strong> to <strong>${data.newPlanName}</strong>.</p>
+
+  <div style="background-color: #f8f9fa; border-radius: 8px; padding: 20px; margin: 20px 0;">
+    <h3 style="margin-top: 0; color: #1E073E;">What's changed?</h3>
+    <ul style="margin: 0; padding-left: 20px;">
+      <li>Previous quota: <strong>${data.oldQuota}</strong> dynamic QR codes</li>
+      <li>New quota: <strong>${data.newQuota}</strong> dynamic QR codes</li>
+    </ul>
+  </div>
+
+  ${hasDeactivatedCodes ? `
+  <div style="background-color: #fff3f3; border: 1px solid #ffcdd2; border-radius: 8px; padding: 20px; margin: 20px 0;">
+    <h3 style="margin-top: 0; color: #dc3545;">Deactivated Codes (${data.deactivatedCodes.length})</h3>
+    <p style="font-size: 14px; color: #666;">These codes will no longer work when scanned:</p>
+    <ul style="margin: 0; padding-left: 20px;">
+      ${deactivatedList}
+    </ul>
+  </div>
+
+  <div style="background-color: #e8f5e9; border: 1px solid #c8e6c9; border-radius: 8px; padding: 20px; margin: 20px 0;">
+    <h3 style="margin-top: 0; color: #2e7d32;">Still Active Codes (${data.activeCodes.length})</h3>
+    <p style="font-size: 14px; color: #666;">Your newest codes remain active:</p>
+    <ul style="margin: 0; padding-left: 20px;">
+      ${activeList}
+    </ul>
+  </div>
+
+  <div style="background-color: #e3f2fd; border: 1px solid #90caf9; border-radius: 8px; padding: 20px; margin: 20px 0;">
+    <h3 style="margin-top: 0; color: #1565c0;">Want your codes back?</h3>
+    <p style="margin-bottom: 0;">Upgrade your plan and all your deactivated codes will be automatically restored!</p>
+  </div>
+  ` : `
+  <div style="background-color: #e8f5e9; border: 1px solid #c8e6c9; border-radius: 8px; padding: 20px; margin: 20px 0;">
+    <h3 style="margin-top: 0; color: #2e7d32;">Good news!</h3>
+    <p style="margin-bottom: 0;">All your existing QR codes remain active since you're within your new quota limit.</p>
+  </div>
+  `}
+
+  <div style="text-align: center; margin: 30px 0;">
+    <a href="https://qrmory.com/dashboard/subscription" style="background-color: #1E073E; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; font-weight: bold;">${hasDeactivatedCodes ? "Restore My Codes" : "View My Subscription"}</a>
+  </div>
+
+  <p style="color: #666; font-size: 14px;">
+    Questions? Contact us at <a href="mailto:${SUPPORT_EMAIL}">${SUPPORT_EMAIL}</a>
+  </p>
+
+  <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
+
+  <p style="color: #999; font-size: 12px; text-align: center;">
+    © ${new Date().getFullYear()} QRmory. All rights reserved.
+  </p>
+</body>
+</html>
+      `,
+    });
+
+    if (error) {
+      console.error("Error sending subscription downgraded email:", error);
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.error("Error sending subscription downgraded email:", error);
     return false;
   }
 }

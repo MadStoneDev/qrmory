@@ -142,30 +142,20 @@ export default function AboutPage() {
 
           <div className={`border-t-1 border-neutral-300`} />
 
-          <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="text-center">
-              <div className="text-3xl font-bold text-qrmory-purple-800">
-                50K+
-              </div>
-              <div className="text-sm text-neutral-600 font-medium">
-                QR Codes Generated
-              </div>
-            </div>
-            <div className="text-center">
-              <div className="text-3xl font-bold text-qrmory-purple-800">
-                10K+
-              </div>
-              <div className="text-sm text-neutral-600 font-medium">
-                Happy Users
-              </div>
-            </div>
-            <div className="text-center">
-              <div className="text-3xl font-bold text-qrmory-purple-800">
-                99.9%
-              </div>
-              <div className="text-sm text-neutral-600 font-medium">Uptime</div>
-            </div>
-          </div>
+          {/*
+            Stats Section - Uncomment when ready to show real stats
+
+            To enable:
+            1. Add import at top: import StatsDisplay from "@/components/stats-display";
+            2. Uncomment the line below:
+
+            <StatsDisplay className="mt-12" />
+
+            The StatsDisplay component automatically:
+            - Fetches real counts from the database
+            - Formats numbers: 7→"5+", 23→"20+", 156→"100+", 1234→"1k+", 56789→"50k+"
+            - Shows: QR Codes Generated, Active Users, QR Code Types (26+)
+          */}
 
           <div className="mt-12 text-center">
             <h3 className="text-xl font-bold text-qrmory-purple-800 mb-4">

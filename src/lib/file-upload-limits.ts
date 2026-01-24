@@ -28,6 +28,12 @@ export const FILE_UPLOAD_LIMITS = {
       2: 100 * 1024 * 1024, // Creator: 100MB per video
       3: 500 * 1024 * 1024, // Champion: 500MB per video
     },
+    pdf: {
+      0: 0, // Free: No PDF uploads
+      1: 10 * 1024 * 1024, // Explorer: 10MB per PDF
+      2: 25 * 1024 * 1024, // Creator: 25MB per PDF
+      3: 50 * 1024 * 1024, // Champion: 50MB per PDF
+    },
   },
 
   // Number of files per QR code
@@ -51,6 +57,7 @@ export const FILE_UPLOAD_LIMITS = {
     image: ["image/jpeg", "image/png", "image/webp", "image/gif"],
     audio: ["audio/mpeg", "audio/wav", "audio/mp4", "audio/aac"],
     video: ["video/mp4", "video/webm", "video/quicktime"],
+    pdf: ["application/pdf"],
   },
 
   // File expiration (to manage storage costs)
@@ -71,7 +78,7 @@ export function getStorageQuota(subscriptionLevel: number): number {
 }
 
 export function getFileSizeLimit(
-  fileType: "image" | "audio" | "video",
+  fileType: "image" | "audio" | "video" | "pdf",
   subscriptionLevel: number,
 ): number {
   return (
@@ -93,7 +100,7 @@ export function getFileCountLimit(
 }
 
 export function canUploadFileType(
-  fileType: "image" | "audio" | "video",
+  fileType: "image" | "audio" | "video" | "pdf",
   subscriptionLevel: number,
 ): boolean {
   return getFileSizeLimit(fileType, subscriptionLevel) > 0;
