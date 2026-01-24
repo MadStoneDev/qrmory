@@ -490,3 +490,143 @@ export async function sendSubscriptionDowngradedEmail(
     return false;
   }
 }
+
+// Contact Form Emails
+
+interface ContactFormData {
+  name: string;
+  email: string;
+  message: string;
+}
+
+export async function sendContactFormThankYouEmail(
+  data: ContactFormData
+): Promise<boolean> {
+  try {
+    const { error } = await resend.emails.send({
+      from: FROM_EMAIL,
+      replyTo: "no-reply@qrmory.com",
+      to: data.email,
+      subject: "Thanks for getting in touch!",
+      html: `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+  <div style="text-align: center; margin-bottom: 30px;">
+    <h1 style="color: #1E073E; margin: 0;">QRmory</h1>
+  </div>
+
+  <h2 style="color: #1E073E;">Thanks for reaching out, ${data.name}!</h2>
+
+  <p>We've received your message and appreciate you taking the time to contact us.</p>
+
+  <div style="background-color: #f8f9fa; border-radius: 8px; padding: 20px; margin: 20px 0;">
+    <h3 style="margin-top: 0; color: #1E073E;">What happens next?</h3>
+    <p style="margin-bottom: 0;">Our team will review your message and get back to you as soon as possible, typically within 1-2 business days.</p>
+  </div>
+
+  <div style="background-color: #f0ebf8; border-radius: 8px; padding: 20px; margin: 20px 0;">
+    <h4 style="margin-top: 0; color: #666;">Your message:</h4>
+    <p style="margin-bottom: 0; white-space: pre-wrap; color: #333;">${data.message}</p>
+  </div>
+
+  <p>In the meantime, feel free to explore our features:</p>
+
+  <div style="text-align: center; margin: 30px 0;">
+    <a href="https://qrmory.com" style="background-color: #1E073E; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; font-weight: bold;">Visit QRmory</a>
+  </div>
+
+  <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
+
+  <p style="color: #999; font-size: 12px; text-align: center;">
+    © ${new Date().getFullYear()} QRmory. All rights reserved.<br>
+    This is an automated response. Please do not reply to this email.
+  </p>
+</body>
+</html>
+      `,
+    });
+
+    if (error) {
+      console.error("Error sending contact thank you email:", error);
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.error("Error sending contact thank you email:", error);
+    return false;
+  }
+}
+
+export async function sendContactFormNotificationEmail(
+  data: ContactFormData
+): Promise<boolean> {
+  try {
+    const { error } = await resend.emails.send({
+      from: FROM_EMAIL,
+      replyTo: data.email,
+      to: "hello@qrmory.com",
+      subject: `New contact form message from ${data.name}`,
+      html: `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+  <div style="text-align: center; margin-bottom: 30px;">
+    <h1 style="color: #1E073E; margin: 0;">QRmory</h1>
+    <p style="color: #666; margin: 5px 0 0 0;">New Contact Form Submission</p>
+  </div>
+
+  <div style="background-color: #f8f9fa; border-radius: 8px; padding: 20px; margin: 20px 0;">
+    <h3 style="margin-top: 0; color: #1E073E;">Contact Details</h3>
+    <table style="width: 100%; border-collapse: collapse;">
+      <tr>
+        <td style="padding: 8px 0; color: #666; width: 100px;"><strong>Name:</strong></td>
+        <td style="padding: 8px 0;">${data.name}</td>
+      </tr>
+      <tr>
+        <td style="padding: 8px 0; color: #666;"><strong>Email:</strong></td>
+        <td style="padding: 8px 0;"><a href="mailto:${data.email}">${data.email}</a></td>
+      </tr>
+    </table>
+  </div>
+
+  <div style="background-color: #fff; border: 1px solid #e0e0e0; border-radius: 8px; padding: 20px; margin: 20px 0;">
+    <h3 style="margin-top: 0; color: #1E073E;">Message</h3>
+    <p style="margin-bottom: 0; white-space: pre-wrap;">${data.message}</p>
+  </div>
+
+  <div style="text-align: center; margin: 30px 0;">
+    <a href="mailto:${data.email}" style="background-color: #1E073E; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; font-weight: bold;">Reply to ${data.name}</a>
+  </div>
+
+  <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
+
+  <p style="color: #999; font-size: 12px; text-align: center;">
+    Sent from QRmory Contact Form<br>
+    ${new Date().toLocaleString("en-AU", { timeZone: "Australia/Sydney" })} AEST
+  </p>
+</body>
+</html>
+      `,
+    });
+
+    if (error) {
+      console.error("Error sending contact notification email:", error);
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.error("Error sending contact notification email:", error);
+    return false;
+  }
+}
