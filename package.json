@@ -35,7 +35,8 @@
     "classnames": "^2.5.1",
     "clsx": "^2.1.1",
     "d3-svg-to-png": "^0.3.1",
-    "lodash": "^4.17.21",
+    "jszip": "^3.10.1",
+    "lodash": "^4.17.23",
     "lodash.throttle": "^4.1.1",
     "logrocket": "^10.1.0",
     "lucide-react": "^0.439.0",
@@ -63,5 +64,8 @@
     "supabase": "^2.72.8",
     "tailwindcss": "^3.4.10",
     "typescript": "^5"
+  },
+  "overrides": {
+    "tar": "^7.5.4"
   }
 }

@@ -5,8 +5,14 @@
       "Bash(/c/Program Files/nodejs/npm.cmd install resend --prefix \"G:/Development-Sandbox/_Rumblebuffin/qrmory\")",
       "Bash(/c/Program Files/nodejs/npm.cmd run build --prefix \"G:/Development-Sandbox/_Rumblebuffin/qrmory\")",
       "Bash(/c/Program Files/nodejs/npm.cmd run lint --prefix \"G:/Development-Sandbox/_Rumblebuffin/qrmory\")",
+<<<<<<< HEAD
       "Bash(cd:*)",
       "Bash(find:*)"
+=======
+      "Bash(git checkout:*)",
+      "Bash(/c/Program Files/nodejs/npm.cmd install jszip)",
+      "Bash(/c/Program Files/nodejs/npm.cmd run build)"
+>>>>>>> 0d1cce5e2dc02505be87757eca369d7e782d1a06
     ]
   }
 }
