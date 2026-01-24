@@ -4,7 +4,10 @@
       "Bash(npm install:*)",
       "Bash(/c/Program Files/nodejs/npm.cmd install resend --prefix \"G:/Development-Sandbox/_Rumblebuffin/qrmory\")",
       "Bash(/c/Program Files/nodejs/npm.cmd run build --prefix \"G:/Development-Sandbox/_Rumblebuffin/qrmory\")",
-      "Bash(/c/Program Files/nodejs/npm.cmd run lint --prefix \"G:/Development-Sandbox/_Rumblebuffin/qrmory\")"
+      "Bash(/c/Program Files/nodejs/npm.cmd run lint --prefix \"G:/Development-Sandbox/_Rumblebuffin/qrmory\")",
+      "Bash(git checkout:*)",
+      "Bash(/c/Program Files/nodejs/npm.cmd install jszip)",
+      "Bash(/c/Program Files/nodejs/npm.cmd run build)"
     ]
   }
 }
