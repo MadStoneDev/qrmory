@@ -270,7 +270,7 @@ export const businessVerticals: Record<string, BusinessVertical> = {
       {
         title: "Local Recommendations",
         description:
-          "Share your favorite restaurants, beaches, hikes, and hidden gems like a local.",
+          "Share your favourite restaurants, beaches, hikes, and hidden gems like a local.",
         icon: "IconMapPin",
       },
       {
@@ -999,7 +999,7 @@ export const businessVerticals: Record<string, BusinessVertical> = {
     ],
     recommendedPlan: "champion",
     recommendedPlanReason:
-      "Warehouses have hundreds of locations. Champion's 250 codes and analytics help optimize operations.",
+      "Warehouses have hundreds of locations. Champion's 250 codes and analytics help optimise operations.",
     photoSuggestions: {
       hero: "PHOTO: Modern warehouse interior, tall racks, forklift, worker scanning QR code on rack.",
       useCases:

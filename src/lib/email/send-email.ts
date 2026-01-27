@@ -67,7 +67,7 @@ export async function sendSubscriptionCanceledEmail(
 
   <h2 style="color: #1E073E;">Your subscription has ended</h2>
 
-  <p>We're sorry to see you go! Your QRmory subscription has been canceled.</p>
+  <p>We're sorry to see you go! Your QRmory subscription has been cancelled.</p>
 
   <div style="background-color: #f8f9fa; border-radius: 8px; padding: 20px; margin: 20px 0;">
     <h3 style="margin-top: 0; color: #1E073E;">What happens now?</h3>
@@ -351,7 +351,7 @@ export async function sendPaymentFailedEmail(
     <h3 style="margin-top: 0; color: #dc3545;">What happens next?</h3>
     <ul style="margin: 0; padding-left: 20px;">
       <li>We'll automatically retry the payment${data.nextRetryDate ? ` on ${data.nextRetryDate}` : " soon"}</li>
-      <li>If payment continues to fail, your subscription will be canceled</li>
+      <li>If payment continues to fail, your subscription will be cancelled</li>
       <li>Your dynamic QR codes may be deactivated</li>
     </ul>
   </div>

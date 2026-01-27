@@ -411,7 +411,7 @@ export default function QRImageGallery({
         Gallery Description (optional):
         <textarea
           className="control-input w-full"
-          placeholder="A collection of my favorite photos..."
+          placeholder="A collection of my favourite photos..."
           value={galleryDescription}
           onChange={(e) => setGalleryDescription(e.target.value)}
           rows={2}

@@ -34,7 +34,7 @@ export default function SuccessNotification({
     }
 
     if (searchParams.canceled === "true") {
-      toast("Payment canceled", {
+      toast("Payment cancelled", {
         description: "No worries! You can upgrade your subscription anytime.",
         icon: <IconX size={16} />,
         style: {

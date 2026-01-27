@@ -305,7 +305,7 @@ export default function QRPoll({
         <input
           type="text"
           className="control-input w-full"
-          placeholder="What's your favorite programming language?"
+          placeholder="What's your favourite programming language?"
           value={question}
           onChange={(e) => setQuestion(e.target.value)}
           maxLength={200}

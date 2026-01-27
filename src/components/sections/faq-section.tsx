@@ -28,7 +28,7 @@ export default function FAQSection() {
     },
     {
       id: "faq-4",
-      question: "Can I customize the appearance of my QR codes?",
+      question: "Can I customise the appearance of my QR codes?",
       answer:
         "Yes! QRmory offers extensive customization options including colors and contrast warnings to ensure scanability. You can match your QR codes to your brand identity while maintaining optimal performance.",
     },
@@ -42,7 +42,7 @@ export default function FAQSection() {
       id: "faq-6",
       question: "What analytics do I get with dynamic QR codes?",
       answer:
-        "Dynamic QR codes provide comprehensive analytics including scan count, location data, device types, time patterns, and referrer information. This helps you understand your audience and optimize your campaigns.",
+        "Dynamic QR codes provide comprehensive analytics including scan count, location data, device types, time patterns, and referrer information. This helps you understand your audience and optimise your campaigns.",
     },
     {
       id: "faq-7",

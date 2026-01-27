@@ -54,7 +54,7 @@ const StatusBadge = ({ status }: { status: string }) => {
         return {
           colour: "bg-red-100 text-red-800 border-red-200",
           icon: null,
-          text: "Canceled",
+          text: "Cancelled",
         };
       case "trialing":
       case "trial":
@@ -157,9 +157,9 @@ export default function SubscriptionStatus({
       subscription.status === "canceled" ||
       subscription.status === "cancelled"
     ) {
-      toast("Subscription canceled", {
+      toast("Subscription cancelled", {
         description:
-          "This subscription has been canceled and cannot be managed.",
+          "This subscription has been cancelled and cannot be managed.",
         style: {
           backgroundColor: "rgb(254, 242, 242)",
           color: "rgb(153, 27, 27)",

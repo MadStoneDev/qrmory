@@ -140,9 +140,9 @@ const iconMap: Record<string, React.ReactNode> = {
 };
 
 const planDetails = {
-  explorer: { name: "Explorer", price: "$9", codes: 10 },
-  creator: { name: "Creator", price: "$29", codes: 50 },
-  champion: { name: "Champion", price: "$79", codes: 250 },
+  explorer: { name: "Explorer", price: "$5.99", codes: 10 },
+  creator: { name: "Creator", price: "$12.99", codes: 50 },
+  champion: { name: "Champion", price: "$39.99", codes: 250 },
 };
 
 interface BusinessLandingPageProps {
@@ -166,8 +166,7 @@ export default function BusinessLandingPage({
                 QRmory for {vertical.name}
               </p>
               <h1 className="text-4xl lg:text-5xl font-bold font-serif mb-6">
-                {vertical.tagline}
-              </h1>
+                {vertical.tagline}              </h1>
               <p className="text-xl text-qrmory-purple-100 mb-8">
                 {vertical.heroDescription}
               </p>
@@ -287,7 +286,7 @@ export default function BusinessLandingPage({
                 icon: <IconChartBar size={32} />,
                 title: "Track Scans",
                 description:
-                  "See which codes get scanned most. Understand customer behavior with analytics.",
+                  "See which codes get scanned most. Understand customer behaviour with analytics.",
               },
               {
                 icon: <IconDownload size={32} />,

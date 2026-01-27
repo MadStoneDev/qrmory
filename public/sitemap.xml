@@ -43,5 +43,101 @@
   <priority>0.80</priority>
 </url>
 
+<!-- Business Vertical Landing Pages -->
+<url>
+  <loc>https://qrmory.com/for/restaurants</loc>
+  <lastmod>2025-01-27T00:00:00+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://qrmory.com/for/cafes</loc>
+  <lastmod>2025-01-27T00:00:00+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://qrmory.com/for/food-trucks</loc>
+  <lastmod>2025-01-27T00:00:00+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://qrmory.com/for/hotels</loc>
+  <lastmod>2025-01-27T00:00:00+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://qrmory.com/for/vacation-rentals</loc>
+  <lastmod>2025-01-27T00:00:00+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://qrmory.com/for/tour-operators</loc>
+  <lastmod>2025-01-27T00:00:00+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://qrmory.com/for/museums-galleries</loc>
+  <lastmod>2025-01-27T00:00:00+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://qrmory.com/for/tourist-attractions</loc>
+  <lastmod>2025-01-27T00:00:00+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://qrmory.com/for/retail-stores</loc>
+  <lastmod>2025-01-27T00:00:00+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://qrmory.com/for/gyms-fitness</loc>
+  <lastmod>2025-01-27T00:00:00+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://qrmory.com/for/laundromats</loc>
+  <lastmod>2025-01-27T00:00:00+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://qrmory.com/for/dental-offices</loc>
+  <lastmod>2025-01-27T00:00:00+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://qrmory.com/for/real-estate</loc>
+  <lastmod>2025-01-27T00:00:00+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://qrmory.com/for/wedding-venues</loc>
+  <lastmod>2025-01-27T00:00:00+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://qrmory.com/for/wedding-expos</loc>
+  <lastmod>2025-01-27T00:00:00+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://qrmory.com/for/concert-venues</loc>
+  <lastmod>2025-01-27T00:00:00+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://qrmory.com/for/libraries</loc>
+  <lastmod>2025-01-27T00:00:00+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://qrmory.com/for/warehouses</loc>
+  <lastmod>2025-01-27T00:00:00+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://qrmory.com/for/parking-facilities</loc>
+  <lastmod>2025-01-27T00:00:00+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
 
 </urlset>
