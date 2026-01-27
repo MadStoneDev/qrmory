@@ -144,7 +144,7 @@ function MyCodeItem({
     setIsEditing(!isEditing);
     if (!isEditing) setIsExpanded(true);
 
-    // Reset changes when canceling edit
+    // Reset changes when cancelling edit
     if (isEditing) {
       setEditedTitle(currentTitle);
       setEditedContent(currentContent);

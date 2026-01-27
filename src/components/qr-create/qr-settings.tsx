@@ -39,10 +39,11 @@ interface Props {
 }
 
 // Define which QR types require paid subscriptions
-const PREMIUM_QR_TYPES = ["imageGallery", "audio"];
+const PREMIUM_QR_TYPES = ["imageGallery", "audio", "video"];
 const SUBSCRIPTION_REQUIRED_TYPES = {
   imageGallery: 1, // Requires Explorer or higher
   audio: 1, // Requires Explorer or higher
+  video: 1, // Requires Explorer or higher
 };
 
 export default function QRSettingsRefactored({

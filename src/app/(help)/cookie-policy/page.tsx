@@ -34,14 +34,14 @@ const CookiePolicy = () => {
         <p>
           A cookie is a small piece of data that a website stores on your device
           when you visit. It typically contains information about the website
-          itself, a unique identifier that allows the site to recognize your web
+          itself, a unique identifier that allows the site to recognise your web
           browser when you return, additional data that serves the cookie’s
           purpose, and the lifespan of the cookie itself.{" "}
         </p>
         <p>
           Cookies are used to enable certain features (e.g. logging in), track
           site usage (e.g. analytics), store your user settings (e.g. time zone,
-          notification preferences), and to personalize your content (e.g.
+          notification preferences), and to personalise your content (e.g.
           advertising, language).{" "}
         </p>
         <p>

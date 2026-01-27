@@ -146,7 +146,7 @@ const PrivacyPolicy = () => {
         <ul>
           <li>to provide you with our platform's core features and services</li>
           <li>
-            to enable you to customize or personalize your experience of our
+            to enable you to customise or personalise your experience of our
             website
           </li>
           <li>to contact and communicate with you</li>

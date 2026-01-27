@@ -128,7 +128,7 @@ export default function BusinessIndexPage() {
             <p className="text-lg text-neutral-600 mb-8">
               QRmory works for any business that wants to connect physical
               spaces with digital experiences. Start with our flexible plans and
-              customize for your needs.
+              customise for your needs.
             </p>
             <div className="flex flex-wrap justify-center gap-4">
               <Link

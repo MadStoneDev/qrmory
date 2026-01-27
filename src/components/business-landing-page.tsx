@@ -166,7 +166,8 @@ export default function BusinessLandingPage({
                 QRmory for {vertical.name}
               </p>
               <h1 className="text-4xl lg:text-5xl font-bold font-serif mb-6">
-                {vertical.tagline}              </h1>
+                {vertical.tagline}
+              </h1>
               <p className="text-xl text-qrmory-purple-100 mb-8">
                 {vertical.heroDescription}
               </p>
@@ -204,21 +205,14 @@ export default function BusinessLandingPage({
               </div>
             </div>
 
-            {/* Hero Image Placeholder */}
+            {/* Hero Image */}
             <div className="relative">
-              <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 border border-white/20">
-                {/*
-                  PHOTO SUGGESTION:
-                  {vertical.photoSuggestions.hero}
-                */}
-                <div className="aspect-video bg-qrmory-purple-700/50 rounded-lg flex items-center justify-center">
-                  <div className="text-center p-4">
-                    <IconQrcode size={64} className="mx-auto mb-4 opacity-50" />
-                    <p className="text-sm text-qrmory-purple-200 max-w-xs">
-                      {vertical.photoSuggestions.hero}
-                    </p>
-                  </div>
-                </div>
+              <div className="aspect-video bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20 overflow-hidden">
+                  <img
+                    src={vertical.photoSuggestions.hero.src}
+                    alt={vertical.photoSuggestions.hero.alt}
+                    className="w-full h-full object-cover"
+                  />
               </div>
             </div>
           </div>
@@ -439,12 +433,8 @@ export default function BusinessLandingPage({
       {/* CTA Section */}
       <section className="py-20 px-6 bg-neutral-50">
         <div className="max-w-4xl mx-auto text-center">
-          {/*
-            PHOTO SUGGESTION:
-            {vertical.photoSuggestions.cta}
-          */}
           <h2 className="text-3xl font-bold text-qrmory-purple-800 font-serif mb-4">
-            Ready to Transform Your {vertical.name.replace(/s$/, "")}?
+            Ready to Transform Your {vertical.name.replace(/ies$/, "y").replace(/s$/, "")}?
           </h2>
           <p className="text-lg text-neutral-600 mb-8">
             Join thousands of businesses using QRmory to connect with customers.

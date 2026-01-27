@@ -236,34 +236,6 @@ export const qrControls: QRControlsObject = {
       />
     ),
   },
-  imageGallery: {
-    title: "Image Gallery",
-    description: "Share multiple photos",
-    icon: <IconPhoto size={24} strokeWidth={1.5} />,
-    component: (setText, setChanged, setSaveData, user, subscriptionLevel) => (
-      <QRImageGallery
-        setText={setText}
-        setChanged={setChanged}
-        setSaveData={setSaveData}
-        user={user}
-        subscriptionLevel={subscriptionLevel || 0}
-      />
-    ),
-  },
-  audio: {
-    title: "Audio",
-    description: "Share audio files",
-    icon: <IconVolume size={24} strokeWidth={1.5} />,
-    component: (setText, setChanged, setSaveData, user, subscriptionLevel) => (
-      <QRAudio
-        setText={setText}
-        setChanged={setChanged}
-        setSaveData={setSaveData}
-        user={user}
-        subscriptionLevel={subscriptionLevel || 0}
-      />
-    ),
-  },
   phone: {
     title: "Phone",
     description: "Quick dial phone number",
@@ -345,6 +317,34 @@ export const qrControls: QRControlsObject = {
         setText={setText}
         setChanged={setChanged}
         setSaveData={setSaveData}
+      />
+    ),
+  },
+  imageGallery: {
+    title: "Image Gallery",
+    description: "Share multiple photos",
+    icon: <IconPhoto size={24} strokeWidth={1.5} />,
+    component: (setText, setChanged, setSaveData, user, subscriptionLevel) => (
+      <QRImageGallery
+        setText={setText}
+        setChanged={setChanged}
+        setSaveData={setSaveData}
+        user={user}
+        subscriptionLevel={subscriptionLevel || 0}
+      />
+    ),
+  },
+  audio: {
+    title: "Audio",
+    description: "Share audio files",
+    icon: <IconVolume size={24} strokeWidth={1.5} />,
+    component: (setText, setChanged, setSaveData, user, subscriptionLevel) => (
+      <QRAudio
+        setText={setText}
+        setChanged={setChanged}
+        setSaveData={setSaveData}
+        user={user}
+        subscriptionLevel={subscriptionLevel || 0}
       />
     ),
   },

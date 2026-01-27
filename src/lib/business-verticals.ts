@@ -19,9 +19,18 @@ export interface BusinessVertical {
   recommendedPlan: "explorer" | "creator" | "champion";
   recommendedPlanReason: string;
   photoSuggestions: {
-    hero: string;
-    useCases?: string;
-    cta?: string;
+    hero: {
+      src: string;
+      alt: string;
+    };
+    useCases?: {
+      src: string;
+      alt: string;
+    };
+    cta?: {
+      src: string;
+      alt: string;
+    };
   };
   stats?: {
     label: string;
@@ -33,7 +42,7 @@ export const businessVerticals: Record<string, BusinessVertical> = {
   restaurants: {
     slug: "restaurants",
     name: "Restaurants",
-    tagline: "Modernize Your Dining Experience",
+    tagline: "Modernise Your Dining Experience",
     description: "Digital menus, table ordering, and instant feedback collection",
     heroDescription:
       "Transform your restaurant with QR codes on every table. Let diners view menus, place orders, and share feedback - all from their phones.",
@@ -73,10 +82,18 @@ export const businessVerticals: Record<string, BusinessVertical> = {
     recommendedPlanReason:
       "Most restaurants have 15-40 tables. Creator gives you 50 dynamic QR codes with analytics to track which tables are most active.",
     photoSuggestions: {
-      hero: "PHOTO: Modern restaurant interior with QR code tent cards on tables. Warm lighting, contemporary decor. Customers scanning codes with phones.",
-      useCases:
-        "PHOTO: Close-up of a phone displaying a beautiful digital menu with food photos.",
-      cta: "PHOTO: Happy restaurant owner/manager holding tablet showing analytics dashboard.",
+      hero: {
+        src: "/verticals/restaurants-hero.jpg",
+        alt: "Modern restaurant interior with QR code tent cards on tables. Warm lighting, contemporary decor. Customers scanning codes with phones.",
+      },
+      useCases: {
+        src: "/verticals/restaurants-usecases.jpg",
+        alt: "Close-up of a phone displaying a beautiful digital menu with food photos.",
+      },
+      cta: {
+        src: "/verticals/restaurants-cta.jpg",
+        alt: "Happy restaurant owner/manager holding tablet showing analytics dashboard.",
+      },
     },
     stats: [
       { label: "Faster table turnover", value: "23%" },
@@ -127,9 +144,18 @@ export const businessVerticals: Record<string, BusinessVertical> = {
     recommendedPlanReason:
       "Most cafes need 5-15 QR codes. Explorer gives you 10 dynamic codes with enough flexibility to grow.",
     photoSuggestions: {
-      hero: "PHOTO: Cozy cafe interior with exposed brick, customers working on laptops. QR code displays on tables and counter.",
-      useCases: "PHOTO: Barista preparing latte art, QR code menu visible on counter.",
-      cta: "PHOTO: Group of friends at cafe table, one scanning QR code with phone.",
+      hero: {
+        src: "/verticals/cafes-hero.jpg",
+        alt: "Cosy cafe interior with exposed brick, customers working on laptops. QR code displays on tables and counter.",
+      },
+      useCases: {
+        src: "/verticals/cafes-usecases.jpg",
+        alt: "Barista preparing latte art, QR code menu visible on counter.",
+      },
+      cta: {
+        src: "/verticals/cafes-cta.jpg",
+        alt: "Group of friends at cafe table, one scanning QR code with phone.",
+      },
     },
     stats: [
       { label: "Loyalty sign-ups increase", value: "40%" },
@@ -180,10 +206,18 @@ export const businessVerticals: Record<string, BusinessVertical> = {
     recommendedPlanReason:
       "Food trucks typically need just 3-5 QR codes. Explorer gives you room to grow with 10 dynamic codes.",
     photoSuggestions: {
-      hero: "PHOTO: Colorful food truck at outdoor event, customers lined up, QR code displayed on service window.",
-      useCases:
-        "PHOTO: Close-up of food truck menu board with QR code, street food being served.",
-      cta: "PHOTO: Food truck owner smiling, handing food to customer.",
+      hero: {
+        src: "/verticals/food-trucks-hero.jpg",
+        alt: "Colourful food truck at outdoor event, customers lined up, QR code displayed on service window.",
+      },
+      useCases: {
+        src: "/verticals/food-trucks-usecases.jpg",
+        alt: "Close-up of food truck menu board with QR code, street food being served.",
+      },
+      cta: {
+        src: "/verticals/food-trucks-cta.jpg",
+        alt: "Food truck owner smiling, handing food to customer.",
+      },
     },
     stats: [
       { label: "Line wait time reduced", value: "35%" },
@@ -235,10 +269,18 @@ export const businessVerticals: Record<string, BusinessVertical> = {
     recommendedPlanReason:
       "Hotels typically need 50-200+ room codes plus common areas. Champion gives you 250 dynamic QR codes with priority support.",
     photoSuggestions: {
-      hero: "PHOTO: Luxurious hotel room with modern decor, QR code tent card on nightstand, city view through window.",
-      useCases:
-        "PHOTO: Hotel guest scanning QR code in elegant lobby, concierge desk in background.",
-      cta: "PHOTO: Hotel staff member with tablet, smiling at camera, lobby setting.",
+      hero: {
+        src: "/verticals/hotels-hero.jpg",
+        alt: "Luxurious hotel room with modern decor, QR code tent card on nightstand, city view through window.",
+      },
+      useCases: {
+        src: "/verticals/hotels-usecases.jpg",
+        alt: "Hotel guest scanning QR code in elegant lobby, concierge desk in background.",
+      },
+      cta: {
+        src: "/verticals/hotels-cta.jpg",
+        alt: "Hotel staff member with tablet, smiling at camera, lobby setting.",
+      },
     },
     stats: [
       { label: "Front desk calls reduced", value: "45%" },
@@ -289,10 +331,18 @@ export const businessVerticals: Record<string, BusinessVertical> = {
     recommendedPlanReason:
       "Most vacation rental hosts have 1-5 properties. Explorer's 10 codes give you flexibility for multiple info points per property.",
     photoSuggestions: {
-      hero: "PHOTO: Beautiful vacation rental living room, welcome basket with QR code card, beach/mountain view through window.",
-      useCases:
-        "PHOTO: Guest arriving at vacation home, scanning QR code on welcome sign.",
-      cta: "PHOTO: Happy family on vacation rental patio, enjoying sunset.",
+      hero: {
+        src: "/verticals/vacation-rentals-hero.jpg",
+        alt: "Beautiful vacation rental living room, welcome basket with QR code card, beach/mountain view through window.",
+      },
+      useCases: {
+        src: "/verticals/vacation-rentals-usecases.jpg",
+        alt: "Guest arriving at vacation home, scanning QR code on welcome sign.",
+      },
+      cta: {
+        src: "/verticals/vacation-rentals-cta.jpg",
+        alt: "Happy family on vacation rental patio, enjoying sunset.",
+      },
     },
     stats: [
       { label: "Guest questions reduced", value: "70%" },
@@ -344,10 +394,18 @@ export const businessVerticals: Record<string, BusinessVertical> = {
     recommendedPlanReason:
       "Tours typically have 10-30 stops or points of interest. Creator gives you 50 dynamic codes plus audio upload support.",
     photoSuggestions: {
-      hero: "PHOTO: Tour group at scenic viewpoint, guide pointing at landmark, tourists scanning QR code on information plaque.",
-      useCases:
-        "PHOTO: Tourist with headphones listening to audio guide, historic building in background.",
-      cta: "PHOTO: Enthusiastic tour guide with small group, beautiful destination setting.",
+      hero: {
+        src: "/verticals/tour-operators-hero.jpg",
+        alt: "Tour group at scenic viewpoint, guide pointing at landmark, tourists scanning QR code on information plaque.",
+      },
+      useCases: {
+        src: "/verticals/tour-operators-usecases.jpg",
+        alt: "Tourist with headphones listening to audio guide, historic building in background.",
+      },
+      cta: {
+        src: "/verticals/tour-operators-cta.jpg",
+        alt: "Enthusiastic tour guide with small group, beautiful destination setting.",
+      },
     },
     stats: [
       { label: "Guide workload reduced", value: "40%" },
@@ -399,10 +457,18 @@ export const businessVerticals: Record<string, BusinessVertical> = {
     recommendedPlanReason:
       "Museums often have 100+ exhibits. Champion gives you 250 dynamic codes, audio uploads, and the storage you need.",
     photoSuggestions: {
-      hero: "PHOTO: Elegant museum gallery with visitors, someone scanning QR code next to painting, beautiful artwork on walls.",
-      useCases:
-        "PHOTO: Close-up of museum placard with QR code, blurred sculpture in background.",
-      cta: "PHOTO: Diverse group of visitors engaged with exhibit, modern museum interior.",
+      hero: {
+        src: "/verticals/museums-galleries-hero.jpg",
+        alt: "Elegant museum gallery with visitors, someone scanning QR code next to painting, beautiful artwork on walls.",
+      },
+      useCases: {
+        src: "/verticals/museums-galleries-usecases.jpg",
+        alt: "Close-up of museum placard with QR code, blurred sculpture in background.",
+      },
+      cta: {
+        src: "/verticals/museums-galleries-cta.jpg",
+        alt: "Diverse group of visitors engaged with exhibit, modern museum interior.",
+      },
     },
     stats: [
       { label: "Visitor engagement up", value: "65%" },
@@ -454,10 +520,18 @@ export const businessVerticals: Record<string, BusinessVertical> = {
     recommendedPlanReason:
       "Large attractions need codes at dozens of locations. Champion's 250 codes and priority support keep you covered.",
     photoSuggestions: {
-      hero: "PHOTO: Iconic tourist destination (landmark, theme park, historic site), visitors enjoying, QR codes visible on signs.",
-      useCases:
-        "PHOTO: Family reading information from phone after scanning QR code at attraction.",
-      cta: "PHOTO: Sunset at famous landmark, tourists taking photos.",
+      hero: {
+        src: "/verticals/tourist-attractions-hero.jpg",
+        alt: "Iconic tourist destination (landmark, theme park, historic site), visitors enjoying, QR codes visible on signs.",
+      },
+      useCases: {
+        src: "/verticals/tourist-attractions-usecases.jpg",
+        alt: "Family reading information from phone after scanning QR code at attraction.",
+      },
+      cta: {
+        src: "/verticals/tourist-attractions-cta.jpg",
+        alt: "Sunset at famous landmark, tourists taking photos.",
+      },
     },
     stats: [
       { label: "Visitor satisfaction up", value: "30%" },
@@ -509,10 +583,18 @@ export const businessVerticals: Record<string, BusinessVertical> = {
     recommendedPlanReason:
       "Most retail stores need 20-50 QR codes for displays and sections. Creator covers this with room to grow.",
     photoSuggestions: {
-      hero: "PHOTO: Modern retail store interior, clean displays, customer scanning QR code on product display.",
-      useCases:
-        "PHOTO: Close-up of product shelf with QR code, customer's hand holding phone.",
-      cta: "PHOTO: Smiling retail employee helping customer, bright store environment.",
+      hero: {
+        src: "/verticals/retail-stores-hero.jpg",
+        alt: "Modern retail store interior, clean displays, customer scanning QR code on product display.",
+      },
+      useCases: {
+        src: "/verticals/retail-stores-usecases.jpg",
+        alt: "Close-up of product shelf with QR code, customer's hand holding phone.",
+      },
+      cta: {
+        src: "/verticals/retail-stores-cta.jpg",
+        alt: "Smiling retail employee helping customer, bright store environment.",
+      },
     },
     stats: [
       { label: "Conversion rate up", value: "18%" },
@@ -564,10 +646,18 @@ export const businessVerticals: Record<string, BusinessVertical> = {
     recommendedPlanReason:
       "Gyms typically have 30-60 pieces of equipment. Creator's 50 codes and video support are perfect.",
     photoSuggestions: {
-      hero: "PHOTO: Modern gym floor with equipment, member scanning QR code on exercise machine, bright motivating environment.",
-      useCases:
-        "PHOTO: Person watching tutorial video on phone while at gym equipment.",
-      cta: "PHOTO: Fit, friendly personal trainer helping member, positive atmosphere.",
+      hero: {
+        src: "/verticals/gyms-fitness-hero.jpg",
+        alt: "Modern gym floor with equipment, member scanning QR code on exercise machine, bright motivating environment.",
+      },
+      useCases: {
+        src: "/verticals/gyms-fitness-usecases.jpg",
+        alt: "Person watching tutorial video on phone while at gym equipment.",
+      },
+      cta: {
+        src: "/verticals/gyms-fitness-cta.jpg",
+        alt: "Fit, friendly personal trainer helping member, positive atmosphere.",
+      },
     },
     stats: [
       { label: "Member retention up", value: "22%" },
@@ -619,10 +709,18 @@ export const businessVerticals: Record<string, BusinessVertical> = {
     recommendedPlanReason:
       "Most laundromats have 10-20 machines. Explorer's 10 codes get you started, upgrade as needed.",
     photoSuggestions: {
-      hero: "PHOTO: Clean, modern laundromat interior, rows of machines, QR codes visible on each unit, customer using phone.",
-      useCases:
-        "PHOTO: Person scanning QR code on washing machine, phone showing payment screen.",
-      cta: "PHOTO: Bright, welcoming laundromat with seating area, happy customer.",
+      hero: {
+        src: "/verticals/laundromats-hero.jpg",
+        alt: "Clean, modern laundromat interior, rows of machines, QR codes visible on each unit, customer using phone.",
+      },
+      useCases: {
+        src: "/verticals/laundromats-usecases.jpg",
+        alt: "Person scanning QR code on washing machine, phone showing payment screen.",
+      },
+      cta: {
+        src: "/verticals/laundromats-cta.jpg",
+        alt: "Bright, welcoming laundromat with seating area, happy customer.",
+      },
     },
     stats: [
       { label: "Payment speed up", value: "40%" },
@@ -673,10 +771,18 @@ export const businessVerticals: Record<string, BusinessVertical> = {
     recommendedPlanReason:
       "Most dental offices have 3-8 treatment rooms. Explorer's 10 codes cover rooms plus waiting area.",
     photoSuggestions: {
-      hero: "PHOTO: Modern dental office waiting room, clean and calming, QR code on reception desk and waiting area.",
-      useCases:
-        "PHOTO: Patient in dental chair, QR code visible on equipment or counter.",
-      cta: "PHOTO: Friendly dental team, professional but welcoming atmosphere.",
+      hero: {
+        src: "/verticals/dental-offices-hero.jpg",
+        alt: "Modern dental office waiting room, clean and calming, QR code on reception desk and waiting area.",
+      },
+      useCases: {
+        src: "/verticals/dental-offices-usecases.jpg",
+        alt: "Patient in dental chair, QR code visible on equipment or counter.",
+      },
+      cta: {
+        src: "/verticals/dental-offices-cta.jpg",
+        alt: "Friendly dental team, professional but welcoming atmosphere.",
+      },
     },
     stats: [
       { label: "Check-in time reduced", value: "65%" },
@@ -728,10 +834,18 @@ export const businessVerticals: Record<string, BusinessVertical> = {
     recommendedPlanReason:
       "Active agents have 10-40 listings at a time. Creator's 50 codes give you flexibility for all your properties.",
     photoSuggestions: {
-      hero: "PHOTO: Beautiful home exterior with for-sale sign, QR code visible on sign rider, curb appeal.",
-      useCases:
-        "PHOTO: Buyer scanning QR code on property sign, beautiful house in background.",
-      cta: "PHOTO: Professional real estate agent, confident pose, nice home or office setting.",
+      hero: {
+        src: "/verticals/real-estate-hero.jpg",
+        alt: "Beautiful home exterior with for-sale sign, QR code visible on sign rider, curb appeal.",
+      },
+      useCases: {
+        src: "/verticals/real-estate-usecases.jpg",
+        alt: "Buyer scanning QR code on property sign, beautiful house in background.",
+      },
+      cta: {
+        src: "/verticals/real-estate-cta.jpg",
+        alt: "Professional real estate agent, confident pose, nice home or office setting.",
+      },
     },
     stats: [
       { label: "Lead capture up", value: "45%" },
@@ -743,7 +857,7 @@ export const businessVerticals: Record<string, BusinessVertical> = {
   "wedding-venues": {
     slug: "wedding-venues",
     name: "Wedding Venues",
-    tagline: "Perfect Days, Perfectly Organized",
+    tagline: "Perfect Days, Perfectly Organised",
     description: "Event details, schedules, and guest information",
     heroDescription:
       "Give every guest instant access to the day's schedule, venue map, and special moments. QR codes make weddings run smoother.",
@@ -782,10 +896,18 @@ export const businessVerticals: Record<string, BusinessVertical> = {
     recommendedPlanReason:
       "Large weddings have 15-30 tables plus common areas. Creator's 50 codes and branding options are perfect.",
     photoSuggestions: {
-      hero: "PHOTO: Elegant wedding reception setup, beautiful table settings, QR code cards on tables, romantic lighting.",
-      useCases:
-        "PHOTO: Wedding guest scanning QR code at table, champagne glasses, celebration atmosphere.",
-      cta: "PHOTO: Happy couple at wedding venue, venue's beautiful features visible.",
+      hero: {
+        src: "/verticals/wedding-venues-hero.jpg",
+        alt: "Elegant wedding reception setup, beautiful table settings, QR code cards on tables, romantic lighting.",
+      },
+      useCases: {
+        src: "/verticals/wedding-venues-usecases.jpg",
+        alt: "Wedding guest scanning QR code at table, champagne glasses, celebration atmosphere.",
+      },
+      cta: {
+        src: "/verticals/wedding-venues-cta.jpg",
+        alt: "Happy couple at wedding venue, venue's beautiful features visible.",
+      },
     },
     stats: [
       { label: "Guest questions reduced", value: "60%" },
@@ -836,10 +958,18 @@ export const businessVerticals: Record<string, BusinessVertical> = {
     recommendedPlanReason:
       "Each booth needs 2-5 QR codes. Explorer's 10 codes cover portfolio, booking, offers, and more.",
     photoSuggestions: {
-      hero: "PHOTO: Busy wedding expo floor, vendor booths, couples browsing, QR codes on displays.",
-      useCases:
-        "PHOTO: Engaged couple scanning QR code at vendor booth, viewing portfolio on phone.",
-      cta: "PHOTO: Wedding vendor at expo booth, professional setup, talking to couple.",
+      hero: {
+        src: "/verticals/wedding-expos-hero.jpg",
+        alt: "Busy wedding expo floor, vendor booths, couples browsing, QR codes on displays.",
+      },
+      useCases: {
+        src: "/verticals/wedding-expos-usecases.jpg",
+        alt: "Engaged couple scanning QR code at vendor booth, viewing portfolio on phone.",
+      },
+      cta: {
+        src: "/verticals/wedding-expos-cta.jpg",
+        alt: "Wedding vendor at expo booth, professional setup, talking to couple.",
+      },
     },
     stats: [
       { label: "Lead capture up", value: "70%" },
@@ -891,10 +1021,18 @@ export const businessVerticals: Record<string, BusinessVertical> = {
     recommendedPlanReason:
       "Venues have dozens of sections and areas. Champion's 250 codes and priority support handle any venue size.",
     photoSuggestions: {
-      hero: "PHOTO: Concert in progress, crowd holding phones, stage lights, QR code visible on seat or barrier.",
-      useCases:
-        "PHOTO: Fan scanning QR code at merchandise stand, concert t-shirts visible.",
-      cta: "PHOTO: Excited concert crowd, artist on stage, amazing atmosphere.",
+      hero: {
+        src: "/verticals/concert-venues-hero.jpg",
+        alt: "Concert in progress, crowd holding phones, stage lights, QR code visible on seat or barrier.",
+      },
+      useCases: {
+        src: "/verticals/concert-venues-usecases.jpg",
+        alt: "Fan scanning QR code at merchandise stand, concert t-shirts visible.",
+      },
+      cta: {
+        src: "/verticals/concert-venues-cta.jpg",
+        alt: "Excited concert crowd, artist on stage, amazing atmosphere.",
+      },
     },
     stats: [
       { label: "Merch sales up", value: "40%" },
@@ -946,10 +1084,18 @@ export const businessVerticals: Record<string, BusinessVertical> = {
     recommendedPlanReason:
       "Libraries have many sections and rooms. Creator's 50 codes cover shelves, rooms, and display areas.",
     photoSuggestions: {
-      hero: "PHOTO: Beautiful library interior, bookshelves, natural light, QR codes visible on shelf ends or displays.",
-      useCases:
-        "PHOTO: Library patron scanning QR code on bookshelf, discovering new books.",
-      cta: "PHOTO: Diverse group using library, studying, reading, welcoming atmosphere.",
+      hero: {
+        src: "/verticals/libraries-hero.jpg",
+        alt: "Beautiful library interior, bookshelves, natural light, QR codes visible on shelf ends or displays.",
+      },
+      useCases: {
+        src: "/verticals/libraries-usecases.jpg",
+        alt: "Library patron scanning QR code on bookshelf, discovering new books.",
+      },
+      cta: {
+        src: "/verticals/libraries-cta.jpg",
+        alt: "Diverse group using library, studying, reading, welcoming atmosphere.",
+      },
     },
     stats: [
       { label: "Digital resource access up", value: "55%" },
@@ -1001,10 +1147,18 @@ export const businessVerticals: Record<string, BusinessVertical> = {
     recommendedPlanReason:
       "Warehouses have hundreds of locations. Champion's 250 codes and analytics help optimise operations.",
     photoSuggestions: {
-      hero: "PHOTO: Modern warehouse interior, tall racks, forklift, worker scanning QR code on rack.",
-      useCases:
-        "PHOTO: Warehouse worker with handheld scanner, QR codes on boxes and shelves.",
-      cta: "PHOTO: Organized warehouse team, safety vests, professional environment.",
+      hero: {
+        src: "/verticals/warehouses-hero.jpg",
+        alt: "Modern warehouse interior, tall racks, forklift, worker scanning QR code on rack.",
+      },
+      useCases: {
+        src: "/verticals/warehouses-usecases.jpg",
+        alt: "Warehouse worker with handheld scanner, QR codes on boxes and shelves.",
+      },
+      cta: {
+        src: "/verticals/warehouses-cta.jpg",
+        alt: "Organised warehouse team, safety vests, professional environment.",
+      },
     },
     stats: [
       { label: "Pick accuracy up", value: "35%" },
@@ -1056,10 +1210,18 @@ export const businessVerticals: Record<string, BusinessVertical> = {
     recommendedPlanReason:
       "Parking facilities have 100+ spots. Champion's 250 codes cover every spot with room for growth.",
     photoSuggestions: {
-      hero: "PHOTO: Modern parking garage, clean and well-lit, QR codes visible on pillars or spot markers.",
-      useCases:
-        "PHOTO: Driver scanning QR code on parking meter/sign, car in background.",
-      cta: "PHOTO: EV charging in parking garage, modern and sustainable feel.",
+      hero: {
+        src: "/verticals/parking-facilities-hero.jpg",
+        alt: "Modern parking garage, clean and well-lit, QR codes visible on pillars or spot markers.",
+      },
+      useCases: {
+        src: "/verticals/parking-facilities-usecases.jpg",
+        alt: "Driver scanning QR code on parking meter/sign, car in background.",
+      },
+      cta: {
+        src: "/verticals/parking-facilities-cta.jpg",
+        alt: "EV charging in parking garage, modern and sustainable feel.",
+      },
     },
     stats: [
       { label: "Payment time reduced", value: "60%" },

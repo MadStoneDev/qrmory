@@ -124,7 +124,7 @@ export function ColorPicker({
 
   return (
     <div className={`space-y-3 ${className}`}>
-      {/* Foreground Color */}
+      {/* Foreground Colour */}
       <div className="flex items-center justify-between">
         <label className="text-xs text-neutral-600">
           Foreground (QR Pattern):
@@ -135,7 +135,7 @@ export function ColorPicker({
             value={colors.foreground}
             onChange={(e) => handleColorChange("foreground", e.target.value)}
             className="w-8 h-8 rounded border border-neutral-300 cursor-pointer"
-            title="Choose foreground color"
+            title="Choose foreground colour"
           />
           <input
             type="text"
@@ -160,7 +160,7 @@ export function ColorPicker({
         </div>
       </div>
 
-      {/* Background Color */}
+      {/* Background Colour */}
       <div className="flex items-center justify-between">
         <label className="text-xs text-neutral-600">Background:</label>
         <div className="flex items-center gap-2">
@@ -169,7 +169,7 @@ export function ColorPicker({
             value={colors.background}
             onChange={(e) => handleColorChange("background", e.target.value)}
             className="w-8 h-8 rounded border border-neutral-300 cursor-pointer"
-            title="Choose background color"
+            title="Choose background colour"
           />
           <input
             type="text"
@@ -202,16 +202,16 @@ export function ColorPicker({
           }}
           className="w-full text-xs text-neutral-600 hover:text-neutral-800 underline"
         >
-          Reset to default colors
+          Reset to default colours
         </button>
       )}
 
-      {/* Color Contrast Warning */}
+      {/* Colour Contrast Warning */}
       {shouldShowContrastWarning && (
         <div className="p-2 bg-yellow-50 border border-yellow-200 rounded text-xs">
           <p className="text-yellow-800">
             ⚠️ Low contrast detected. QR codes may be difficult to scan with
-            these colors.
+            these colours.
           </p>
         </div>
       )}
