@@ -11,7 +11,11 @@ import {
   IconAlertCircle,
   IconCheck,
   IconQrcode,
+  IconFileTypeCsv,
+  IconList,
 } from "@tabler/icons-react";
+import BatchCSVImporter from "@/components/batch-csv-importer";
+import { MappedQRCode } from "@/lib/csv-parser";
 import JSZip from "jszip";
 
 interface BatchPattern {
@@ -67,10 +71,13 @@ function QRCodeForDownload({
   );
 }
 
+type TabMode = "pattern" | "csv";
+
 export default function BatchQRGenerator({
   suggestedPatterns = [],
   onComplete,
 }: BatchQRGeneratorProps) {
+  const [activeTab, setActiveTab] = useState<TabMode>("pattern");
   const [batchConfig, setBatchConfig] = useState<BatchPattern>({
     pattern: suggestedPatterns[0]?.pattern || "Item {n}",
     valuePattern: suggestedPatterns[0]?.valuePattern || "https://example.com/{n}",
@@ -81,7 +88,7 @@ export default function BatchQRGenerator({
   const [isGenerating, setIsGenerating] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
   const [createdCodes, setCreatedCodes] = useState<CreatedCode[]>([]);
-  const [errors, setErrors] = useState<Array<{ name: string; error: string }>>([]);
+  const [errors, setErrors] = useState<Array<{ name: string; error: string; rowIndex?: number }>>([]);
   const [renderingForDownload, setRenderingForDownload] = useState(false);
   const downloadContainerRef = useRef<HTMLDivElement>(null);
 
@@ -279,6 +286,86 @@ export default function BatchQRGenerator({
     setErrors([]);
   }, []);
 
+  // Handle CSV import
+  const handleCSVImport = useCallback(async (codes: MappedQRCode[]) => {
+    if (codes.length === 0) {
+      toast("No codes to import", {
+        description: "Please select valid QR codes to import.",
+        style: {
+          backgroundColor: "rgb(254, 226, 226)",
+          color: "rgb(153, 27, 27)",
+        },
+      });
+      return;
+    }
+
+    setIsGenerating(true);
+    setErrors([]);
+
+    try {
+      const response = await fetch("/api/batch-generate-qr/csv", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ codes }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        if (data.upgradeRequired) {
+          toast("Upgrade Required", {
+            description: data.error,
+            style: {
+              backgroundColor: "rgb(254, 226, 226)",
+              color: "rgb(153, 27, 27)",
+            },
+            action: {
+              label: "Upgrade",
+              onClick: () => {
+                window.location.href = "/dashboard/subscription";
+              },
+            },
+          });
+        } else {
+          toast("Import Failed", {
+            description: data.error,
+            style: {
+              backgroundColor: "rgb(254, 226, 226)",
+              color: "rgb(153, 27, 27)",
+            },
+          });
+        }
+        return;
+      }
+
+      setCreatedCodes(data.codes);
+      if (data.errors) {
+        setErrors(data.errors);
+      }
+
+      toast("CSV Import Complete", {
+        description: `Successfully created ${data.created} of ${data.total} QR codes.`,
+      });
+
+      if (onComplete) {
+        onComplete(data.codes);
+      }
+    } catch (error) {
+      console.error("CSV import error:", error);
+      toast("Import Failed", {
+        description: "An unexpected error occurred. Please try again.",
+        style: {
+          backgroundColor: "rgb(254, 226, 226)",
+          color: "rgb(153, 27, 27)",
+        },
+      });
+    } finally {
+      setIsGenerating(false);
+    }
+  }, [onComplete]);
+
   // Show results view if codes have been created
   if (createdCodes.length > 0) {
     return (
@@ -390,161 +477,213 @@ export default function BatchQRGenerator({
 
   return (
     <div className="space-y-6">
-      {/* Suggested patterns */}
-      {suggestedPatterns.length > 0 && (
-        <div>
-          <label className="block text-sm font-medium text-neutral-700 mb-2">
-            Quick Templates
-          </label>
-          <div className="flex flex-wrap gap-2">
-            {suggestedPatterns.map((sp, index) => (
-              <button
-                key={index}
-                onClick={() => handlePatternSelect(index)}
-                className={`px-3 py-1.5 text-sm rounded-full border transition-colors ${
-                  batchConfig.pattern === sp.pattern
-                    ? "bg-qrmory-purple-100 border-qrmory-purple-300 text-qrmory-purple-800"
-                    : "bg-white border-neutral-200 text-neutral-600 hover:border-qrmory-purple-200"
-                }`}
-              >
-                {sp.label}
-              </button>
-            ))}
-          </div>
+      {/* Tab selector */}
+      <div className="flex border-b border-neutral-200">
+        <button
+          onClick={() => setActiveTab("pattern")}
+          className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+            activeTab === "pattern"
+              ? "border-qrmory-purple-600 text-qrmory-purple-700"
+              : "border-transparent text-neutral-500 hover:text-neutral-700"
+          }`}
+        >
+          <IconList size={18} />
+          Pattern Generator
+        </button>
+        <button
+          onClick={() => setActiveTab("csv")}
+          className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+            activeTab === "csv"
+              ? "border-qrmory-purple-600 text-qrmory-purple-700"
+              : "border-transparent text-neutral-500 hover:text-neutral-700"
+          }`}
+        >
+          <IconFileTypeCsv size={18} />
+          CSV/Excel Import
+        </button>
+      </div>
+
+      {/* CSV Import Tab */}
+      {activeTab === "csv" && (
+        <div className="space-y-4">
+          {isGenerating ? (
+            <div className="flex flex-col items-center justify-center py-12">
+              <IconLoader2 className="w-10 h-10 text-qrmory-purple-600 animate-spin mb-4" />
+              <p className="text-neutral-600 font-medium">Creating QR codes...</p>
+              <p className="text-sm text-neutral-500">This may take a moment</p>
+            </div>
+          ) : (
+            <BatchCSVImporter
+              onImport={handleCSVImport}
+              maxRows={100}
+            />
+          )}
+          <p className="text-xs text-neutral-500 text-center">
+            CSV import requires Explorer plan or higher
+          </p>
         </div>
       )}
 
-      {/* Pattern configuration */}
-      <div className="grid md:grid-cols-2 gap-4">
-        <div>
-          <label className="block text-sm font-medium text-neutral-700 mb-1">
-            Name Pattern
-          </label>
-          <input
-            type="text"
-            value={batchConfig.pattern}
-            onChange={(e) =>
-              setBatchConfig((prev) => ({ ...prev, pattern: e.target.value }))
-            }
-            placeholder="e.g., Table {n}"
-            className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-qrmory-purple-500 focus:border-transparent"
-          />
-          <p className="text-xs text-neutral-500 mt-1">
-            Use {"{n}"} for the number
-          </p>
-        </div>
+      {/* Pattern Generator Tab */}
+      {activeTab === "pattern" && (
+        <>
+          {/* Suggested patterns */}
+          {suggestedPatterns.length > 0 && (
+            <div>
+              <label className="block text-sm font-medium text-neutral-700 mb-2">
+                Quick Templates
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {suggestedPatterns.map((sp, index) => (
+                  <button
+                    key={index}
+                    onClick={() => handlePatternSelect(index)}
+                    className={`px-3 py-1.5 text-sm rounded-full border transition-colors ${
+                      batchConfig.pattern === sp.pattern
+                        ? "bg-qrmory-purple-100 border-qrmory-purple-300 text-qrmory-purple-800"
+                        : "bg-white border-neutral-200 text-neutral-600 hover:border-qrmory-purple-200"
+                    }`}
+                  >
+                    {sp.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
-        <div>
-          <label className="block text-sm font-medium text-neutral-700 mb-1">
-            URL/Value Pattern
-          </label>
-          <input
-            type="text"
-            value={batchConfig.valuePattern}
-            onChange={(e) =>
-              setBatchConfig((prev) => ({
-                ...prev,
-                valuePattern: e.target.value,
-              }))
-            }
-            placeholder="e.g., https://menu.example.com/table/{n}"
-            className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-qrmory-purple-500 focus:border-transparent"
-          />
-          <p className="text-xs text-neutral-500 mt-1">
-            Use {"{n}"} for the number
-          </p>
-        </div>
-      </div>
+          {/* Pattern configuration */}
+          <div className="grid md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-neutral-700 mb-1">
+                Name Pattern
+              </label>
+              <input
+                type="text"
+                value={batchConfig.pattern}
+                onChange={(e) =>
+                  setBatchConfig((prev) => ({ ...prev, pattern: e.target.value }))
+                }
+                placeholder="e.g., Table {n}"
+                className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-qrmory-purple-500 focus:border-transparent"
+              />
+              <p className="text-xs text-neutral-500 mt-1">
+                Use {"{n}"} for the number
+              </p>
+            </div>
 
-      {/* Range configuration */}
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label className="block text-sm font-medium text-neutral-700 mb-1">
-            Start Number
-          </label>
-          <input
-            type="number"
-            value={batchConfig.rangeStart}
-            onChange={(e) =>
-              setBatchConfig((prev) => ({
-                ...prev,
-                rangeStart: parseInt(e.target.value) || 0,
-              }))
-            }
-            min={0}
-            className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-qrmory-purple-500 focus:border-transparent"
-          />
-        </div>
+            <div>
+              <label className="block text-sm font-medium text-neutral-700 mb-1">
+                URL/Value Pattern
+              </label>
+              <input
+                type="text"
+                value={batchConfig.valuePattern}
+                onChange={(e) =>
+                  setBatchConfig((prev) => ({
+                    ...prev,
+                    valuePattern: e.target.value,
+                  }))
+                }
+                placeholder="e.g., https://menu.example.com/table/{n}"
+                className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-qrmory-purple-500 focus:border-transparent"
+              />
+              <p className="text-xs text-neutral-500 mt-1">
+                Use {"{n}"} for the number
+              </p>
+            </div>
+          </div>
 
-        <div>
-          <label className="block text-sm font-medium text-neutral-700 mb-1">
-            End Number
-          </label>
-          <input
-            type="number"
-            value={batchConfig.rangeEnd}
-            onChange={(e) =>
-              setBatchConfig((prev) => ({
-                ...prev,
-                rangeEnd: parseInt(e.target.value) || 0,
-              }))
-            }
-            min={1}
-            className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-qrmory-purple-500 focus:border-transparent"
-          />
-        </div>
-      </div>
+          {/* Range configuration */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-neutral-700 mb-1">
+                Start Number
+              </label>
+              <input
+                type="number"
+                value={batchConfig.rangeStart}
+                onChange={(e) =>
+                  setBatchConfig((prev) => ({
+                    ...prev,
+                    rangeStart: parseInt(e.target.value) || 0,
+                  }))
+                }
+                min={0}
+                className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-qrmory-purple-500 focus:border-transparent"
+              />
+            </div>
 
-      {/* Preview */}
-      <div className="bg-neutral-50 rounded-xl p-4 border border-neutral-200">
-        <div className="flex items-center justify-between mb-3">
-          <h4 className="text-sm font-medium text-neutral-700">Preview</h4>
-          <span className="text-xs bg-qrmory-purple-100 text-qrmory-purple-700 px-2 py-1 rounded-full">
-            {totalCount} codes
-          </span>
-        </div>
-        <div className="space-y-2">
-          {previewItems.map((item, index) => (
-            <div
-              key={index}
-              className="flex items-center justify-between text-sm bg-white rounded-lg px-3 py-2 border border-neutral-100"
-            >
-              <span className="font-medium text-neutral-800">{item.name}</span>
-              <span className="text-neutral-500 text-xs truncate max-w-48">
-                {item.value}
+            <div>
+              <label className="block text-sm font-medium text-neutral-700 mb-1">
+                End Number
+              </label>
+              <input
+                type="number"
+                value={batchConfig.rangeEnd}
+                onChange={(e) =>
+                  setBatchConfig((prev) => ({
+                    ...prev,
+                    rangeEnd: parseInt(e.target.value) || 0,
+                  }))
+                }
+                min={1}
+                className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-qrmory-purple-500 focus:border-transparent"
+              />
+            </div>
+          </div>
+
+          {/* Preview */}
+          <div className="bg-neutral-50 rounded-xl p-4 border border-neutral-200">
+            <div className="flex items-center justify-between mb-3">
+              <h4 className="text-sm font-medium text-neutral-700">Preview</h4>
+              <span className="text-xs bg-qrmory-purple-100 text-qrmory-purple-700 px-2 py-1 rounded-full">
+                {totalCount} codes
               </span>
             </div>
-          ))}
-          {totalCount > 5 && (
-            <p className="text-xs text-neutral-500 text-center pt-2">
-              ... and {totalCount - 5} more
-            </p>
-          )}
-        </div>
-      </div>
+            <div className="space-y-2">
+              {previewItems.map((item, index) => (
+                <div
+                  key={index}
+                  className="flex items-center justify-between text-sm bg-white rounded-lg px-3 py-2 border border-neutral-100"
+                >
+                  <span className="font-medium text-neutral-800">{item.name}</span>
+                  <span className="text-neutral-500 text-xs truncate max-w-48">
+                    {item.value}
+                  </span>
+                </div>
+              ))}
+              {totalCount > 5 && (
+                <p className="text-xs text-neutral-500 text-center pt-2">
+                  ... and {totalCount - 5} more
+                </p>
+              )}
+            </div>
+          </div>
 
-      {/* Generate button */}
-      <button
-        onClick={handleGenerate}
-        disabled={isGenerating || totalCount <= 0}
-        className="w-full py-3 bg-qrmory-purple-800 text-white font-semibold rounded-xl hover:bg-qrmory-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-      >
-        {isGenerating ? (
-          <>
-            <IconLoader2 className="w-5 h-5 animate-spin" />
-            Generating {totalCount} QR Codes...
-          </>
-        ) : (
-          <>
-            <IconQrcode className="w-5 h-5" />
-            Generate {totalCount} QR Codes
-          </>
-        )}
-      </button>
+          {/* Generate button */}
+          <button
+            onClick={handleGenerate}
+            disabled={isGenerating || totalCount <= 0}
+            className="w-full py-3 bg-qrmory-purple-800 text-white font-semibold rounded-xl hover:bg-qrmory-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          >
+            {isGenerating ? (
+              <>
+                <IconLoader2 className="w-5 h-5 animate-spin" />
+                Generating {totalCount} QR Codes...
+              </>
+            ) : (
+              <>
+                <IconQrcode className="w-5 h-5" />
+                Generate {totalCount} QR Codes
+              </>
+            )}
+          </button>
 
-      <p className="text-xs text-neutral-500 text-center">
-        Batch generation requires Explorer plan or higher
-      </p>
+          <p className="text-xs text-neutral-500 text-center">
+            Batch generation requires Explorer plan or higher
+          </p>
+        </>
+      )}
     </div>
   );
 }

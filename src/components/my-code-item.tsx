@@ -19,6 +19,7 @@ import {
   IconToggleRight,
   IconCircleCheck,
   IconCircleX,
+  IconChartBar,
 } from "@tabler/icons-react";
 
 // Import all QR control components
@@ -635,6 +636,15 @@ function MyCodeItem({
               )}
             </button>
           )}
+
+          {/* Analytics Link */}
+          <Link
+            href={`/dashboard/analytics/${id}`}
+            className="p-2 text-qrmory-purple-800 hover:bg-qrmory-purple-100 rounded transition-colors"
+            title="View analytics"
+          >
+            <IconChartBar size={20} />
+          </Link>
 
           {type === "dynamic" && (
             <button

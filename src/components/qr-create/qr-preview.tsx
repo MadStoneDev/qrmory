@@ -15,6 +15,9 @@ import { UserSettings } from "@/lib/default-settings";
 import { useErrorReporting } from "@/hooks/useErrorReporting";
 import { ErrorBoundary } from "@/components/error-boundary";
 import { User } from "@supabase/auth-js";
+import { QRShapeSettings, DEFAULT_SHAPE_SETTINGS } from "@/lib/qr-shapes";
+import { QRFrameSettings, DEFAULT_FRAME_SETTINGS, getFrameDimensions, generateFrameSVG } from "@/lib/qr-frames";
+import { renderQRCode } from "@/lib/qr-renderer";
 
 interface QRState {
   title: string;
@@ -35,6 +38,8 @@ interface Props {
   user: User | null;
   userSettings: UserSettings;
   qrColors: { foreground: string; background: string };
+  shapeSettings?: QRShapeSettings;
+  frameSettings?: QRFrameSettings;
 }
 
 interface QRSizes {
@@ -48,6 +53,8 @@ function QRPreviewContent({
   user,
   userSettings,
   qrColors,
+  shapeSettings = DEFAULT_SHAPE_SETTINGS,
+  frameSettings = DEFAULT_FRAME_SETTINGS,
 }: Props) {
   const { SVG } = useQRCode();
   const qrContainerRef = useRef<HTMLDivElement>(null);
@@ -457,6 +464,55 @@ function QRPreviewContent({
     return Math.floor(logoSizeInViewBox * scaleRatio);
   }, [displayValue, qrState.value]);
 
+  // Check if custom shapes are being used
+  const useCustomRenderer = useMemo(() => {
+    return (
+      shapeSettings.dotStyle !== "square" ||
+      shapeSettings.cornerStyle !== "square" ||
+      shapeSettings.cornerDotStyle !== "square"
+    );
+  }, [shapeSettings]);
+
+  // Render custom QR code with shapes
+  const customQRSvg = useMemo(() => {
+    if (!useCustomRenderer || !displayValue) return null;
+
+    try {
+      const result = renderQRCode({
+        text: displayValue,
+        size: 180,
+        margin: 4,
+        errorCorrectionLevel: effectiveErrorCorrectionLevel as "L" | "M" | "Q" | "H",
+        foregroundColor: qrState.changed
+          ? "#78716c"
+          : qrColors?.foreground || "#000000",
+        backgroundColor: qrColors?.background || "#FFFFFF",
+        shapeSettings,
+      });
+      return result.svg;
+    } catch (error) {
+      console.error("Error rendering custom QR:", error);
+      return null;
+    }
+  }, [
+    useCustomRenderer,
+    displayValue,
+    effectiveErrorCorrectionLevel,
+    qrState.changed,
+    qrColors,
+    shapeSettings,
+  ]);
+
+  // Check if frame is being used
+  const hasFrame = frameSettings.type !== "none";
+
+  // Calculate frame dimensions for preview
+  const frameDims = useMemo(() => {
+    if (!hasFrame) return null;
+    const hasText = frameSettings.text.trim().length > 0;
+    return getFrameDimensions(180, frameSettings.type, hasText);
+  }, [hasFrame, frameSettings.type, frameSettings.text]);
+
   // Memoized download buttons to prevent unnecessary re-renders
   const downloadButtons = useMemo(
     () => (
@@ -532,21 +588,116 @@ function QRPreviewContent({
           className="my-6 lg:my-16 lg:mx-auto grid place-content-center text-neutral-600 dark:text-neutral-600 text-sm relative"
           role="img"
           aria-label={`QR code for ${qrState.title || "content"}`}
+          style={hasFrame && frameDims ? {
+            width: frameDims.totalWidth,
+            height: frameDims.totalHeight,
+          } : undefined}
         >
-          <SVG
-            text={displayValue}
-            options={{
-              errorCorrectionLevel: effectiveErrorCorrectionLevel,
-              color: {
-                dark: qrState.changed
-                  ? "#78716c"
-                  : qrColors?.foreground || "#000000",
-                light: qrColors?.background || "#0000",
-              },
-              width: 180,
-              margin: 1,
-            }}
-          />
+          {/* Frame wrapper if enabled */}
+          {hasFrame && frameDims ? (
+            <div className="relative" style={{ width: frameDims.totalWidth, height: frameDims.totalHeight }}>
+              {/* Frame background */}
+              <svg
+                className="absolute inset-0"
+                viewBox={`0 0 ${frameDims.totalWidth} ${frameDims.totalHeight}`}
+                width={frameDims.totalWidth}
+                height={frameDims.totalHeight}
+              >
+                {frameSettings.type === "simple" && (
+                  <>
+                    <rect x="0" y="0" width={frameDims.totalWidth} height={frameDims.totalHeight} fill={frameSettings.frameColor} />
+                    <rect x={frameDims.padding / 2} y={frameDims.padding / 2} width={frameDims.totalWidth - frameDims.padding} height={frameDims.totalHeight - frameDims.padding} fill="white" />
+                  </>
+                )}
+                {frameSettings.type === "rounded" && (
+                  <>
+                    <rect x="0" y="0" width={frameDims.totalWidth} height={frameDims.totalHeight} fill={frameSettings.frameColor} rx={frameDims.padding * 0.8} />
+                    <rect x={frameDims.padding / 2} y={frameDims.padding / 2} width={frameDims.totalWidth - frameDims.padding} height={frameDims.totalHeight - frameDims.padding} fill="white" rx={frameDims.padding * 0.5} />
+                  </>
+                )}
+                {frameSettings.type === "banner-top" && (
+                  <>
+                    <rect x="0" y="0" width={frameDims.totalWidth} height={frameDims.totalHeight} fill="white" />
+                    <rect x="0" y="0" width={frameDims.totalWidth} height={frameDims.bannerHeight + frameDims.padding / 2} fill={frameSettings.frameColor} />
+                    {frameSettings.text && (
+                      <text x={frameDims.totalWidth / 2} y={frameDims.bannerHeight / 2 + frameDims.padding / 4} fontFamily="Arial, sans-serif" fontSize={frameDims.bannerHeight * 0.5} fontWeight="bold" fill={frameSettings.textColor} textAnchor="middle" dominantBaseline="middle">
+                        {frameSettings.text}
+                      </text>
+                    )}
+                  </>
+                )}
+                {frameSettings.type === "banner-bottom" && (
+                  <>
+                    <rect x="0" y="0" width={frameDims.totalWidth} height={frameDims.totalHeight} fill="white" />
+                    <rect x="0" y={frameDims.totalHeight - frameDims.bannerHeight - frameDims.padding / 2} width={frameDims.totalWidth} height={frameDims.bannerHeight + frameDims.padding / 2} fill={frameSettings.frameColor} />
+                    {frameSettings.text && (
+                      <text x={frameDims.totalWidth / 2} y={frameDims.totalHeight - frameDims.bannerHeight / 2 - frameDims.padding / 4} fontFamily="Arial, sans-serif" fontSize={frameDims.bannerHeight * 0.5} fontWeight="bold" fill={frameSettings.textColor} textAnchor="middle" dominantBaseline="middle">
+                        {frameSettings.text}
+                      </text>
+                    )}
+                  </>
+                )}
+                {frameSettings.type === "full-border" && (
+                  <>
+                    <rect x="0" y="0" width={frameDims.totalWidth} height={frameDims.totalHeight} fill={frameSettings.frameColor} rx={frameDims.padding * 0.8} />
+                    <rect x={frameDims.padding / 2} y={frameDims.padding / 2} width={frameDims.totalWidth - frameDims.padding} height={180 + frameDims.padding} fill="white" rx={frameDims.padding * 0.5} />
+                    {frameSettings.text && (
+                      <text x={frameDims.totalWidth / 2} y={180 + frameDims.padding + frameDims.bannerHeight / 2 + frameDims.padding / 4} fontFamily="Arial, sans-serif" fontSize={frameDims.bannerHeight * 0.5} fontWeight="bold" fill={frameSettings.textColor} textAnchor="middle" dominantBaseline="middle">
+                        {frameSettings.text}
+                      </text>
+                    )}
+                  </>
+                )}
+              </svg>
+              {/* QR Code positioned within frame */}
+              <div
+                className="absolute"
+                style={{
+                  left: frameDims.qrX,
+                  top: frameDims.qrY,
+                  width: 180,
+                  height: 180,
+                }}
+              >
+                {useCustomRenderer && customQRSvg ? (
+                  <div dangerouslySetInnerHTML={{ __html: customQRSvg }} />
+                ) : (
+                  <SVG
+                    text={displayValue}
+                    options={{
+                      errorCorrectionLevel: effectiveErrorCorrectionLevel,
+                      color: {
+                        dark: qrState.changed ? "#78716c" : qrColors?.foreground || "#000000",
+                        light: qrColors?.background || "#0000",
+                      },
+                      width: 180,
+                      margin: 1,
+                    }}
+                  />
+                )}
+              </div>
+            </div>
+          ) : (
+            // No frame - render QR directly
+            useCustomRenderer && customQRSvg ? (
+              <div dangerouslySetInnerHTML={{ __html: customQRSvg }} />
+            ) : (
+              <SVG
+                text={displayValue}
+                options={{
+                  errorCorrectionLevel: effectiveErrorCorrectionLevel,
+                  color: {
+                    dark: qrState.changed
+                      ? "#78716c"
+                      : qrColors?.foreground || "#000000",
+                    light: qrColors?.background || "#0000",
+                  },
+                  width: 180,
+                  margin: 1,
+                }}
+              />
+            )
+          )}
 
           {/* Logo overlay for preview */}
           {showLogo && hasLogo && !qrState.changed && (

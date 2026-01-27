@@ -1,6 +1,22 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
+// Main QRmory domains (requests from these are handled normally)
+const MAIN_DOMAINS = [
+  "qrmory.com",
+  "www.qrmory.com",
+  "localhost",
+  "localhost:3000",
+];
+
+// Check if this is a custom domain request
+function isCustomDomain(host: string): boolean {
+  const normalizedHost = host.toLowerCase().replace(/:\d+$/, ""); // Remove port
+  return !MAIN_DOMAINS.some(
+    (d) => normalizedHost === d || normalizedHost.endsWith(`.${d}`)
+  );
+}
+
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
     request,
@@ -28,6 +44,54 @@ export async function updateSession(request: NextRequest) {
       },
     },
   );
+
+  // Handle custom domain requests
+  const host = request.headers.get("host") || "";
+  const pathname = request.nextUrl.pathname;
+
+  if (isCustomDomain(host)) {
+    // This is a custom domain request
+    // Check if it's a shortcode path (single segment, no special routes)
+    const pathSegments = pathname.split("/").filter(Boolean);
+
+    if (pathSegments.length === 1) {
+      const potentialShortcode = pathSegments[0];
+
+      // Skip if it looks like a special route or file
+      if (
+        !potentialShortcode.includes(".") &&
+        !["api", "dashboard", "login", "signup", "_next"].includes(potentialShortcode)
+      ) {
+        // Verify this custom domain is registered and active
+        try {
+          const { data: domain } = await supabase
+            .from("custom_domains")
+            .select("id, is_active")
+            .eq("domain", host.toLowerCase().replace(/:\d+$/, ""))
+            .single();
+
+          if (domain && domain.is_active) {
+            // Domain is valid, let the request pass through to the [code] route
+            // The [code] route will handle the actual redirect
+            // Add a header to indicate this is a custom domain request
+            const response = NextResponse.next({ request });
+            response.headers.set("x-custom-domain", host);
+            response.headers.set("x-custom-domain-id", domain.id);
+
+            // Copy cookies from supabaseResponse
+            supabaseResponse.cookies.getAll().forEach((cookie) => {
+              response.cookies.set(cookie.name, cookie.value);
+            });
+
+            return response;
+          }
+        } catch (error) {
+          // Domain lookup failed, continue with normal handling
+          console.error("Custom domain lookup error:", error);
+        }
+      }
+    }
+  }
 
   // Do not run code between createServerClient and
   // supabase.auth.getUser(). A simple mistake could make it very hard to debug

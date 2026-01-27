@@ -7,7 +7,14 @@ import { toast } from "sonner";
 import QRPreview from "./qr-preview";
 import QRSettings from "./qr-settings";
 import { suggestedTitles } from "@/data/defaults/suggested-titles";
-import { UserSettings } from "@/lib/default-settings";
+import { UserSettings, DEFAULT_FRAME_SETTINGS, QRFrameSettings as QRFrameSettingsType } from "@/lib/default-settings";
+import { QRShapeSettings, DEFAULT_SHAPE_SETTINGS } from "@/lib/qr-shapes";
+import { QRFrameSettings } from "@/lib/qr-frames";
+import {
+  QRTemplate,
+  QRTemplateConfig,
+  TemplateCategory,
+} from "@/lib/qr-templates";
 
 interface QuotaInfo {
   currentCount: number;
@@ -100,6 +107,20 @@ export default function QRCreator({
     background: qrColors.background,
   });
 
+  // Shape and frame settings
+  const [shapeSettings, setShapeSettings] = useState<QRShapeSettings>(
+    userSettings.shapeSettings || DEFAULT_SHAPE_SETTINGS
+  );
+
+  const [frameSettings, setFrameSettings] = useState<QRFrameSettings>(
+    userSettings.frameSettings || DEFAULT_FRAME_SETTINGS
+  );
+
+  // Template state
+  const [userTemplates, setUserTemplates] = useState<QRTemplate[]>([]);
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
+  const [showSaveTemplateDialog, setShowSaveTemplateDialog] = useState(false);
+
   // Consolidated state management
   const [qrState, setQRState] = useState<QRState>(() => ({
     title: suggestedTitles[Math.floor(Math.random() * suggestedTitles.length)],
@@ -131,6 +152,60 @@ export default function QRCreator({
     },
     [updateQRState],
   );
+
+  const updateShapeSettings = useCallback((settings: QRShapeSettings) => {
+    setShapeSettings(settings);
+  }, []);
+
+  const updateFrameSettings = useCallback((settings: QRFrameSettings) => {
+    setFrameSettings(settings);
+  }, []);
+
+  // Template handlers
+  const handleApplyTemplate = useCallback((template: QRTemplate) => {
+    setSelectedTemplateId(template.id);
+    setQRColors(template.config.colors);
+    setColorInputs(template.config.colors);
+    setShapeSettings(template.config.shapeSettings);
+    setFrameSettings(template.config.frameSettings);
+    setQRState((prev) => ({ ...prev, changed: true }));
+  }, []);
+
+  const handleSaveTemplate = useCallback(
+    async (name: string, description: string, category: TemplateCategory) => {
+      const config: QRTemplateConfig = {
+        colors: qrColors,
+        shapeSettings,
+        frameSettings,
+      };
+
+      const response = await fetch("/api/templates", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, description, category, config }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || "Failed to save template");
+      }
+
+      const data = await response.json();
+
+      // Add new template to local state
+      setUserTemplates((prev) => [...prev, data.template]);
+      setSelectedTemplateId(data.template.id);
+    },
+    [qrColors, shapeSettings, frameSettings]
+  );
+
+  const handleOpenSaveDialog = useCallback(() => {
+    setShowSaveTemplateDialog(true);
+  }, []);
+
+  const handleCloseSaveDialog = useCallback(() => {
+    setShowSaveTemplateDialog(false);
+  }, []);
 
   const updateLoadingState = useCallback(
     (key: keyof typeof loadingStates, value: boolean) => {
@@ -183,6 +258,25 @@ export default function QRCreator({
     }
     return qrState.value;
   }, [qrState.shortCode, qrState.isDynamic, qrState.value]);
+
+  // Fetch user templates on mount
+  useEffect(() => {
+    if (!user) return;
+
+    const fetchTemplates = async () => {
+      try {
+        const response = await fetch("/api/templates");
+        if (response.ok) {
+          const data = await response.json();
+          setUserTemplates(data.templates || []);
+        }
+      } catch (error) {
+        console.error("Failed to fetch templates:", error);
+      }
+    };
+
+    fetchTemplates();
+  }, [user]);
 
   // Cleanup effect for unreserved shortcodes
   useEffect(() => {
@@ -238,6 +332,22 @@ export default function QRCreator({
             onGenerateQR={handleGenerateQR}
             qrColors={qrColors}
             onUpdateQRColors={updateQRColors}
+            shapeSettings={shapeSettings}
+            onUpdateShapeSettings={updateShapeSettings}
+            frameSettings={frameSettings}
+            onUpdateFrameSettings={updateFrameSettings}
+            userTemplates={userTemplates}
+            selectedTemplateId={selectedTemplateId}
+            onApplyTemplate={handleApplyTemplate}
+            onSaveTemplate={handleOpenSaveDialog}
+            showSaveTemplateDialog={showSaveTemplateDialog}
+            onCloseSaveDialog={handleCloseSaveDialog}
+            onSaveTemplateConfirm={handleSaveTemplate}
+            currentTemplateConfig={{
+              colors: qrColors,
+              shapeSettings,
+              frameSettings,
+            }}
           />
 
           <QRPreview
@@ -247,6 +357,8 @@ export default function QRCreator({
             user={user}
             userSettings={userSettings}
             qrColors={qrColors}
+            shapeSettings={shapeSettings}
+            frameSettings={frameSettings}
           />
         </section>
       </div>

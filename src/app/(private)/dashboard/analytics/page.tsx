@@ -290,7 +290,7 @@ export default async function AnalyticsPage() {
           {qrCodes.slice(0, 6).map((qr: any) => (
             <Link
               key={qr.id}
-              href={`/qr-codes/${qr.id}`}
+              href={`/dashboard/analytics/${qr.id}`}
               className="border border-neutral-200 rounded-lg p-4 hover:border-qrmory-purple-300 hover:bg-neutral-50 transition-all"
             >
               <div className="flex items-start justify-between mb-2">
@@ -309,6 +309,9 @@ export default async function AnalyticsPage() {
               </div>
               <p className="text-xs text-neutral-500">
                 Created {new Date(qr.created_at).toLocaleDateString()}
+              </p>
+              <p className="text-xs text-qrmory-purple-600 mt-1 font-medium">
+                View analytics →
               </p>
             </Link>
           ))}

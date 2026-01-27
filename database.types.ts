@@ -14,6 +14,50 @@ export type Database = {
   }
   public: {
     Tables: {
+      custom_domains: {
+        Row: {
+          created_at: string | null
+          domain: string
+          id: string
+          is_active: boolean | null
+          ssl_status: string | null
+          updated_at: string | null
+          user_id: string
+          verification_token: string
+          verified_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          domain: string
+          id?: string
+          is_active?: boolean | null
+          ssl_status?: string | null
+          updated_at?: string | null
+          user_id: string
+          verification_token: string
+          verified_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          domain?: string
+          id?: string
+          is_active?: boolean | null
+          ssl_status?: string | null
+          updated_at?: string | null
+          user_id?: string
+          verification_token?: string
+          verified_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "custom_domains_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       error_reports: {
         Row: {
           client_ip: string | null
@@ -150,6 +194,7 @@ export type Database = {
         Row: {
           content: Json
           created_at: string
+          custom_domain_id: string | null
           id: string
           is_active: boolean | null
           qr_value: string | null
@@ -162,6 +207,7 @@ export type Database = {
         Insert: {
           content: Json
           created_at?: string
+          custom_domain_id?: string | null
           id?: string
           is_active?: boolean | null
           qr_value?: string | null
@@ -174,6 +220,7 @@ export type Database = {
         Update: {
           content?: Json
           created_at?: string
+          custom_domain_id?: string | null
           id?: string
           is_active?: boolean | null
           qr_value?: string | null
@@ -184,6 +231,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "qr_codes_custom_domain_id_fkey"
+            columns: ["custom_domain_id"]
+            isOneToOne: false
+            referencedRelation: "custom_domains"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "qr_codes_user_id_fkey"
             columns: ["user_id"]
@@ -326,40 +380,40 @@ export type Database = {
           paddle_price_id: string | null
           updated_at: string | null
         }
-        Insert: {
-          billing_interval?: string | null
-          created_at?: string | null
-          description?: string | null
-          features?: Json | null
-          id?: string | null
-          is_active?: boolean | null
-          name?: string | null
-          paddle_price_id?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          billing_interval?: string | null
-          created_at?: string | null
-          description?: string | null
-          features?: Json | null
-          id?: string | null
-          is_active?: boolean | null
-          name?: string | null
-          paddle_price_id?: string | null
-          updated_at?: string | null
-        }
         Relationships: []
       }
     }
     Functions: {
-      check_dynamic_qr_quota: {
+      _sd_get_active_subscription_packages: {
+        Args: never
+        Returns: {
+          billing_interval: string
+          created_at: string
+          description: string
+          features: Json
+          id: string
+          is_active: boolean
+          name: string
+          paddle_price_id: string
+          updated_at: string
+        }[]
+      }
+      active_subscription_packages_for_user: {
         Args: { p_user_id: string }
-        Returns: boolean
+        Returns: {
+          billing_interval: string
+          created_at: string
+          description: string
+          features: Json
+          id: string
+          is_active: boolean
+          name: string
+          paddle_price_id: string
+          updated_at: string
+        }[]
       }
-      cleanup_old_error_reports: {
-        Args: Record<PropertyKey, never>
-        Returns: number
-      }
+      check_dynamic_qr_quota: { Args: { p_user_id: string }; Returns: boolean }
+      cleanup_old_error_reports: { Args: never; Returns: number }
     }
     Enums: {
       [_ in never]: never
