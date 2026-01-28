@@ -20,6 +20,40 @@ interface CoolifyAppResponse {
 }
 
 /**
+ * Restart the application to apply configuration changes
+ * This is less disruptive than a full redeploy - just restarts the container
+ */
+async function restartApplication(): Promise<{ success: boolean; error?: string }> {
+  if (!COOLIFY_API_URL || !COOLIFY_API_TOKEN || !COOLIFY_APP_UUID) {
+    return { success: true };
+  }
+
+  try {
+    const response = await fetch(
+      `${COOLIFY_API_URL}/applications/${COOLIFY_APP_UUID}/restart`,
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${COOLIFY_API_TOKEN}`,
+        },
+      }
+    );
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("Failed to restart application:", errorText);
+      return { success: false, error: errorText };
+    }
+
+    console.log("Application restart triggered to apply domain changes");
+    return { success: true };
+  } catch (error) {
+    console.error("Error restarting application:", error);
+    return { success: false, error: String(error) };
+  }
+}
+
+/**
  * Get current domains configured for the QRmory app
  */
 export async function getCurrentDomains(): Promise<string[]> {
@@ -109,6 +143,14 @@ export async function addDomainToCoolify(domain: string): Promise<{
     }
 
     console.log(`Successfully added domain ${domain} to Coolify`);
+
+    // Restart the application to apply the new domain configuration
+    // This triggers Traefik to pick up the new domain and provision SSL
+    const restartResult = await restartApplication();
+    if (!restartResult.success) {
+      console.warn("Domain added but restart failed - may need manual restart");
+    }
+
     return { success: true };
   } catch (error) {
     console.error("Error adding domain to Coolify:", error);
@@ -168,6 +210,13 @@ export async function removeDomainFromCoolify(domain: string): Promise<{
     }
 
     console.log(`Successfully removed domain ${domain} from Coolify`);
+
+    // Restart the application to apply the domain removal
+    const restartResult = await restartApplication();
+    if (!restartResult.success) {
+      console.warn("Domain removed but restart failed - may need manual restart");
+    }
+
     return { success: true };
   } catch (error) {
     console.error("Error removing domain from Coolify:", error);
@@ -223,6 +272,13 @@ export async function syncDomainsWithCoolify(
     }
 
     console.log(`Successfully synced ${activeDomains.length} custom domains with Coolify`);
+
+    // Restart the application to apply the synced domains
+    const restartResult = await restartApplication();
+    if (!restartResult.success) {
+      console.warn("Domains synced but restart failed - may need manual restart");
+    }
+
     return { success: true };
   } catch (error) {
     console.error("Error syncing domains with Coolify:", error);

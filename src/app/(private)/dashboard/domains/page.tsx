@@ -86,7 +86,8 @@ export default function DomainsPage() {
 
       if (data.verified) {
         toast("Domain verified!", {
-          description: "Your custom domain is now active.",
+          description: "Your custom domain is now active. SSL certificate will be ready in 1-5 minutes.",
+          duration: 8000,
         });
         // Update the domain in the list
         setDomains((prev) =>
