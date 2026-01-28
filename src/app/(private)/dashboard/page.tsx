@@ -107,26 +107,33 @@ async function fetchUserData(): Promise<UserData> {
       .eq("type", "dynamic"),
 
     // Fetch recent QR code scans (analytics) with QR code titles
+    // First get user's QR code IDs, then fetch scans
     supabase
-      .from("qr_code_analytics")
-      .select(
-        `
-        id,
-        scanned_at,
-        qr_code_id,
-        browser,
-        country,
-        device_type,
-        referrer,
-        user_agent,
-        qr_codes:qr_code_id (
-          title
-        )
-        `,
-      )
-      .eq("qr_codes.user_id", user.id) // Only get scans for user's QR codes
-      .order("scanned_at", { ascending: false })
-      .limit(5),
+      .from("qr_codes")
+      .select("id")
+      .eq("user_id", user.id)
+      .then(async ({ data: userQrCodes }) => {
+        if (!userQrCodes?.length) return { data: [], error: null };
+        const qrCodeIds = userQrCodes.map(qr => qr.id);
+        return supabase
+          .from("qr_code_analytics")
+          .select(`
+            id,
+            scanned_at,
+            qr_code_id,
+            browser,
+            country,
+            device_type,
+            referrer,
+            user_agent,
+            qr_codes:qr_code_id (
+              title
+            )
+          `)
+          .in("qr_code_id", qrCodeIds)
+          .order("scanned_at", { ascending: false })
+          .limit(5);
+      }),
   ]);
 
   // Log errors (but don't fail completely)

@@ -1,0 +1,32 @@
+# Traefik Dynamic Configuration for Custom Domains
+# Place this in Coolify's Traefik config directory or add via Coolify UI
+#
+# This enables on-demand SSL certificates for any domain pointing to your server
+
+http:
+  routers:
+    # Catch-all router for custom domains
+    qrmory-custom-domains:
+      rule: "HostRegexp(`{host:.+}`)"
+      priority: 1  # Low priority so specific routes take precedence
+      entryPoints:
+        - https
+      service: qrmory-app
+      tls:
+        certResolver: letsencrypt
+        domains:
+          - main: "*.qrmory.com"  # Your main domain wildcard
+
+  services:
+    qrmory-app:
+      loadBalancer:
+        servers:
+          - url: "http://qrmory-app:3000"  # Coolify container name and port
+
+tls:
+  options:
+    default:
+      minVersion: VersionTLS12
+
+# Note: The actual catch-all for custom domains may need to be configured
+# directly in Coolify's Traefik settings or via labels on the container

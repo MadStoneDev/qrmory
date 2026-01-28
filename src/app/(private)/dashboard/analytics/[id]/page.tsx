@@ -78,7 +78,11 @@ export default async function QRAnalyticsPage({ params, searchParams }: PageProp
               </a>
             )}
             <span className="text-xs text-neutral-500">
-              Created {new Date(qrCode.created_at).toLocaleDateString()}
+              Created {new Date(qrCode.created_at).toLocaleDateString("en-AU", {
+                day: "numeric",
+                month: "long",
+                year: "numeric",
+              })}
             </span>
           </div>
         </div>
@@ -157,11 +161,11 @@ export default async function QRAnalyticsPage({ params, searchParams }: PageProp
                 .sort(([, a], [, b]) => b - a)
                 .slice(0, 5)
                 .map(([country, count]) => {
-                  const percentage = Math.round((count / scansInRange) * 100);
+                  const percentage = scansInRange > 0 ? Math.round((count / scansInRange) * 100) : 0;
                   return (
                     <div key={country}>
                       <div className="flex justify-between items-center mb-1">
-                        <span className="text-sm text-neutral-700">{country}</span>
+                        <span className="text-sm text-neutral-700">{country || "Unknown"}</span>
                         <span className="text-sm font-medium text-neutral-900">
                           {count} ({percentage}%)
                         </span>
@@ -192,11 +196,11 @@ export default async function QRAnalyticsPage({ params, searchParams }: PageProp
               {Object.entries(deviceBreakdown)
                 .sort(([, a], [, b]) => b - a)
                 .map(([device, count]) => {
-                  const percentage = Math.round((count / scansInRange) * 100);
+                  const percentage = scansInRange > 0 ? Math.round((count / scansInRange) * 100) : 0;
                   return (
                     <div key={device}>
                       <div className="flex justify-between items-center mb-1">
-                        <span className="text-sm text-neutral-700 capitalize">{device}</span>
+                        <span className="text-sm text-neutral-700 capitalize">{device || "Unknown"}</span>
                         <span className="text-sm font-medium text-neutral-900">
                           {count} ({percentage}%)
                         </span>
@@ -228,11 +232,11 @@ export default async function QRAnalyticsPage({ params, searchParams }: PageProp
                 .sort(([, a], [, b]) => b - a)
                 .slice(0, 5)
                 .map(([browser, count]) => {
-                  const percentage = Math.round((count / scansInRange) * 100);
+                  const percentage = scansInRange > 0 ? Math.round((count / scansInRange) * 100) : 0;
                   return (
                     <div key={browser}>
                       <div className="flex justify-between items-center mb-1">
-                        <span className="text-sm text-neutral-700">{browser}</span>
+                        <span className="text-sm text-neutral-700">{browser || "Unknown"}</span>
                         <span className="text-sm font-medium text-neutral-900">
                           {count} ({percentage}%)
                         </span>

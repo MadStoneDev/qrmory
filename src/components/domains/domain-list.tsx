@@ -14,7 +14,7 @@ import {
   IconExternalLink,
   IconLoader2,
 } from "@tabler/icons-react";
-import { CustomDomain, getVerificationDNSRecord } from "@/lib/domain-verification";
+import { CustomDomain, getDNSRecords, QRMORY_SERVER_HOST } from "@/lib/domain-verification";
 
 interface DomainListProps {
   domains: CustomDomain[];
@@ -63,7 +63,7 @@ function DomainCard({
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDNS, setShowDNS] = useState(!domain.verified_at);
 
-  const dnsRecord = getVerificationDNSRecord(domain.domain, domain.verification_token);
+  const dnsRecords = getDNSRecords(domain.domain, domain.verification_token);
 
   const handleVerify = async () => {
     setIsVerifying(true);
@@ -108,61 +108,109 @@ function DomainCard({
         <DomainStatusBadge domain={domain} />
       </div>
 
-      {/* DNS Configuration (show when not verified) */}
-      {!domain.verified_at && (
-        <div className="mb-4">
-          <button
-            onClick={() => setShowDNS(!showDNS)}
-            className="text-sm text-qrmory-purple-600 hover:text-qrmory-purple-800 font-medium mb-2"
-          >
-            {showDNS ? "Hide" : "Show"} DNS Configuration
-          </button>
+      {/* DNS Configuration */}
+      <div className="mb-4">
+        <button
+          onClick={() => setShowDNS(!showDNS)}
+          className="text-sm text-qrmory-purple-600 hover:text-qrmory-purple-800 font-medium mb-2"
+        >
+          {showDNS ? "Hide" : "Show"} DNS Configuration
+        </button>
 
-          {showDNS && (
-            <div className="bg-neutral-50 rounded-lg p-3 space-y-2">
-              <p className="text-xs text-neutral-600 mb-2">
-                Add this TXT record to your domain&apos;s DNS settings:
-              </p>
-
-              <div className="space-y-2">
+        {showDNS && (
+          <div className="bg-neutral-50 rounded-lg p-3 space-y-4">
+            {/* Step 1: CNAME Record for Routing */}
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <span className={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold ${domain.is_active ? "bg-green-500 text-white" : "bg-qrmory-purple-600 text-white"}`}>
+                  {domain.is_active ? <IconCheck size={12} /> : "1"}
+                </span>
+                <span className="text-xs font-medium text-neutral-700">
+                  CNAME Record (for routing)
+                </span>
+              </div>
+              <div className="space-y-2 ml-7">
                 <div className="flex items-center justify-between bg-white rounded border border-neutral-200 px-3 py-2">
                   <div>
                     <span className="text-xs text-neutral-500 block">Host/Name</span>
                     <code className="text-sm font-mono text-neutral-800">
-                      {dnsRecord.host}
+                      {domain.domain.split(".")[0] === domain.domain ? "@" : domain.domain.split(".")[0]}
                     </code>
                   </div>
                   <button
-                    onClick={() => copyToClipboard(dnsRecord.host, "Host")}
+                    onClick={() => copyToClipboard(domain.domain.split(".")[0] === domain.domain ? "@" : domain.domain.split(".")[0], "Host")}
                     className="p-1 text-neutral-400 hover:text-neutral-600"
                   >
                     <IconCopy size={16} />
                   </button>
                 </div>
-
                 <div className="flex items-center justify-between bg-white rounded border border-neutral-200 px-3 py-2">
-                  <div className="flex-1 min-w-0">
-                    <span className="text-xs text-neutral-500 block">Value</span>
-                    <code className="text-sm font-mono text-neutral-800 break-all">
-                      {dnsRecord.value}
+                  <div>
+                    <span className="text-xs text-neutral-500 block">Points to</span>
+                    <code className="text-sm font-mono text-neutral-800">
+                      {QRMORY_SERVER_HOST}
                     </code>
                   </div>
                   <button
-                    onClick={() => copyToClipboard(dnsRecord.value, "Value")}
-                    className="p-1 text-neutral-400 hover:text-neutral-600 ml-2"
+                    onClick={() => copyToClipboard(QRMORY_SERVER_HOST, "Target")}
+                    className="p-1 text-neutral-400 hover:text-neutral-600"
                   >
                     <IconCopy size={16} />
                   </button>
                 </div>
               </div>
-
-              <p className="text-xs text-neutral-500 mt-2">
-                DNS changes can take up to 48 hours to propagate.
-              </p>
             </div>
-          )}
-        </div>
-      )}
+
+            {/* Step 2: TXT Record for Verification */}
+            {!domain.verified_at && (
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="w-5 h-5 rounded-full bg-qrmory-purple-600 text-white flex items-center justify-center text-xs font-bold">
+                    2
+                  </span>
+                  <span className="text-xs font-medium text-neutral-700">
+                    TXT Record (for verification)
+                  </span>
+                </div>
+                <div className="space-y-2 ml-7">
+                  <div className="flex items-center justify-between bg-white rounded border border-neutral-200 px-3 py-2">
+                    <div>
+                      <span className="text-xs text-neutral-500 block">Host/Name</span>
+                      <code className="text-sm font-mono text-neutral-800">
+                        {dnsRecords.verification.host}
+                      </code>
+                    </div>
+                    <button
+                      onClick={() => copyToClipboard(dnsRecords.verification.host, "Host")}
+                      className="p-1 text-neutral-400 hover:text-neutral-600"
+                    >
+                      <IconCopy size={16} />
+                    </button>
+                  </div>
+                  <div className="flex items-center justify-between bg-white rounded border border-neutral-200 px-3 py-2">
+                    <div className="flex-1 min-w-0">
+                      <span className="text-xs text-neutral-500 block">Value</span>
+                      <code className="text-sm font-mono text-neutral-800 break-all">
+                        {dnsRecords.verification.value}
+                      </code>
+                    </div>
+                    <button
+                      onClick={() => copyToClipboard(dnsRecords.verification.value, "Value")}
+                      className="p-1 text-neutral-400 hover:text-neutral-600 ml-2"
+                    >
+                      <IconCopy size={16} />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <p className="text-xs text-neutral-500 mt-2">
+              DNS changes can take up to 48 hours to propagate. {!domain.verified_at && "Add both records, then click \"Verify Now\"."}
+            </p>
+          </div>
+        )}
+      </div>
 
       {/* Actions */}
       <div className="flex items-center gap-2 pt-2 border-t border-neutral-100">

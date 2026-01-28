@@ -7,6 +7,7 @@ const MAIN_DOMAINS = [
   "www.qrmory.com",
   "localhost",
   "localhost:3000",
+  "localhost:3020",
 ];
 
 // Check if this is a custom domain request

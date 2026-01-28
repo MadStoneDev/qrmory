@@ -183,10 +183,12 @@ function processBreakdown(
   data: any[] | null,
   field: string
 ): AnalyticsBreakdown {
-  if (!data) return {};
+  if (!data || !data.length) return {};
 
   return data.reduce((acc: AnalyticsBreakdown, item: any) => {
-    const key = item[field] || "Unknown";
+    // Handle null, undefined, or empty string values
+    const rawKey = item[field];
+    const key = rawKey && rawKey.trim() ? rawKey.trim() : "Unknown";
     acc[key] = (acc[key] || 0) + 1;
     return acc;
   }, {});

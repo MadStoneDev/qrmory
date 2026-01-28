@@ -26,31 +26,21 @@ export interface QRTemplateConfig {
   frameSettings: QRFrameSettings;
 }
 
-export type TemplateCategory =
-  | "professional"
-  | "playful"
-  | "minimalist"
-  | "bold"
-  | "elegant"
-  | "custom";
+export type TemplateCategory = "all" | "custom";
 
 export const TEMPLATE_CATEGORIES: { value: TemplateCategory; label: string }[] = [
-  { value: "professional", label: "Professional" },
-  { value: "minimalist", label: "Minimalist" },
-  { value: "bold", label: "Bold" },
-  { value: "elegant", label: "Elegant" },
-  { value: "playful", label: "Playful" },
-  { value: "custom", label: "Custom" },
+  { value: "all", label: "All Templates" },
+  { value: "custom", label: "My Templates" },
 ];
 
-// System templates - these are always available
+// System templates - simple, practical designs
 export const SYSTEM_TEMPLATES: QRTemplate[] = [
   {
     id: "system-classic",
     name: "Classic",
-    description: "Traditional black and white QR code",
+    description: "Standard black and white",
     isSystem: true,
-    category: "professional",
+    category: "all",
     previewColors: { primary: "#000000", secondary: "#FFFFFF" },
     config: {
       colors: {
@@ -71,11 +61,61 @@ export const SYSTEM_TEMPLATES: QRTemplate[] = [
     },
   },
   {
-    id: "system-qrmory",
-    name: "QRmory Purple",
-    description: "Our signature purple style",
+    id: "system-rounded",
+    name: "Rounded",
+    description: "Soft rounded dots",
     isSystem: true,
-    category: "professional",
+    category: "all",
+    previewColors: { primary: "#171717", secondary: "#FFFFFF" },
+    config: {
+      colors: {
+        foreground: "#171717",
+        background: "#FFFFFF",
+      },
+      shapeSettings: {
+        dotStyle: "rounded",
+        cornerStyle: "extra-rounded",
+        cornerDotStyle: "dot",
+      },
+      frameSettings: {
+        type: "none",
+        text: "",
+        textColor: "#FFFFFF",
+        frameColor: "#171717",
+      },
+    },
+  },
+  {
+    id: "system-dots",
+    name: "Dots",
+    description: "Circular dot pattern",
+    isSystem: true,
+    category: "all",
+    previewColors: { primary: "#1F2937", secondary: "#FFFFFF" },
+    config: {
+      colors: {
+        foreground: "#1F2937",
+        background: "#FFFFFF",
+      },
+      shapeSettings: {
+        dotStyle: "dots",
+        cornerStyle: "dot",
+        cornerDotStyle: "dot",
+      },
+      frameSettings: {
+        type: "none",
+        text: "",
+        textColor: "#FFFFFF",
+        frameColor: "#1F2937",
+      },
+    },
+  },
+  {
+    id: "system-qrmory",
+    name: "QRmory",
+    description: "Brand purple",
+    isSystem: true,
+    category: "all",
     previewColors: { primary: "#2A0B4D", secondary: "#FFFFFF" },
     config: {
       colors: {
@@ -96,44 +136,19 @@ export const SYSTEM_TEMPLATES: QRTemplate[] = [
     },
   },
   {
-    id: "system-ocean",
-    name: "Ocean Blue",
-    description: "Calm and professional blue tones",
+    id: "system-blue",
+    name: "Blue",
+    description: "Professional blue",
     isSystem: true,
-    category: "professional",
-    previewColors: { primary: "#1E40AF", secondary: "#DBEAFE" },
+    category: "all",
+    previewColors: { primary: "#1D4ED8", secondary: "#FFFFFF" },
     config: {
       colors: {
-        foreground: "#1E40AF",
-        background: "#DBEAFE",
+        foreground: "#1D4ED8",
+        background: "#FFFFFF",
       },
       shapeSettings: {
         dotStyle: "rounded",
-        cornerStyle: "dot",
-        cornerDotStyle: "dot",
-      },
-      frameSettings: {
-        type: "none",
-        text: "",
-        textColor: "#FFFFFF",
-        frameColor: "#1E40AF",
-      },
-    },
-  },
-  {
-    id: "system-forest",
-    name: "Forest Green",
-    description: "Natural and eco-friendly feel",
-    isSystem: true,
-    category: "elegant",
-    previewColors: { primary: "#166534", secondary: "#DCFCE7" },
-    config: {
-      colors: {
-        foreground: "#166534",
-        background: "#DCFCE7",
-      },
-      shapeSettings: {
-        dotStyle: "extra-rounded",
         cornerStyle: "extra-rounded",
         cornerDotStyle: "dot",
       },
@@ -141,168 +156,15 @@ export const SYSTEM_TEMPLATES: QRTemplate[] = [
         type: "none",
         text: "",
         textColor: "#FFFFFF",
-        frameColor: "#166534",
-      },
-    },
-  },
-  {
-    id: "system-sunset",
-    name: "Sunset Orange",
-    description: "Warm and inviting design",
-    isSystem: true,
-    category: "bold",
-    previewColors: { primary: "#EA580C", secondary: "#FFF7ED" },
-    config: {
-      colors: {
-        foreground: "#EA580C",
-        background: "#FFF7ED",
-      },
-      shapeSettings: {
-        dotStyle: "dots",
-        cornerStyle: "dot",
-        cornerDotStyle: "dot",
-      },
-      frameSettings: {
-        type: "none",
-        text: "",
-        textColor: "#FFFFFF",
-        frameColor: "#EA580C",
-      },
-    },
-  },
-  {
-    id: "system-midnight",
-    name: "Midnight",
-    description: "Dark and sophisticated",
-    isSystem: true,
-    category: "elegant",
-    previewColors: { primary: "#1E1B4B", secondary: "#E0E7FF" },
-    config: {
-      colors: {
-        foreground: "#1E1B4B",
-        background: "#E0E7FF",
-      },
-      shapeSettings: {
-        dotStyle: "classy",
-        cornerStyle: "square",
-        cornerDotStyle: "square",
-      },
-      frameSettings: {
-        type: "none",
-        text: "",
-        textColor: "#FFFFFF",
-        frameColor: "#1E1B4B",
-      },
-    },
-  },
-  {
-    id: "system-rose",
-    name: "Rose Gold",
-    description: "Elegant and feminine style",
-    isSystem: true,
-    category: "elegant",
-    previewColors: { primary: "#9F1239", secondary: "#FFF1F2" },
-    config: {
-      colors: {
-        foreground: "#9F1239",
-        background: "#FFF1F2",
-      },
-      shapeSettings: {
-        dotStyle: "classy-rounded",
-        cornerStyle: "extra-rounded",
-        cornerDotStyle: "dot",
-      },
-      frameSettings: {
-        type: "none",
-        text: "",
-        textColor: "#FFFFFF",
-        frameColor: "#9F1239",
-      },
-    },
-  },
-  {
-    id: "system-neon",
-    name: "Neon Pop",
-    description: "Bold and eye-catching",
-    isSystem: true,
-    category: "playful",
-    previewColors: { primary: "#7C3AED", secondary: "#FEF3C7" },
-    config: {
-      colors: {
-        foreground: "#7C3AED",
-        background: "#FEF3C7",
-      },
-      shapeSettings: {
-        dotStyle: "dots",
-        cornerStyle: "extra-rounded",
-        cornerDotStyle: "dot",
-      },
-      frameSettings: {
-        type: "rounded",
-        text: "SCAN ME",
-        textColor: "#FFFFFF",
-        frameColor: "#7C3AED",
-      },
-    },
-  },
-  {
-    id: "system-minimal-dark",
-    name: "Minimal Dark",
-    description: "Clean dark mode aesthetic",
-    isSystem: true,
-    category: "minimalist",
-    previewColors: { primary: "#18181B", secondary: "#F4F4F5" },
-    config: {
-      colors: {
-        foreground: "#18181B",
-        background: "#F4F4F5",
-      },
-      shapeSettings: {
-        dotStyle: "square",
-        cornerStyle: "square",
-        cornerDotStyle: "square",
-      },
-      frameSettings: {
-        type: "simple",
-        text: "",
-        textColor: "#FFFFFF",
-        frameColor: "#18181B",
-      },
-    },
-  },
-  {
-    id: "system-cafe",
-    name: "Cafe Menu",
-    description: "Perfect for restaurants and cafes",
-    isSystem: true,
-    category: "professional",
-    previewColors: { primary: "#78350F", secondary: "#FFFBEB" },
-    config: {
-      colors: {
-        foreground: "#78350F",
-        background: "#FFFBEB",
-      },
-      shapeSettings: {
-        dotStyle: "rounded",
-        cornerStyle: "dot",
-        cornerDotStyle: "dot",
-      },
-      frameSettings: {
-        type: "banner-bottom",
-        text: "View Menu",
-        textColor: "#FFFBEB",
-        frameColor: "#78350F",
+        frameColor: "#1D4ED8",
       },
     },
   },
 ];
 
-// Get system templates by category
-export function getSystemTemplatesByCategory(
-  category?: TemplateCategory
-): QRTemplate[] {
-  if (!category) return SYSTEM_TEMPLATES;
-  return SYSTEM_TEMPLATES.filter((t) => t.category === category);
+// Get all system templates
+export function getSystemTemplates(): QRTemplate[] {
+  return SYSTEM_TEMPLATES;
 }
 
 // Find a template by ID

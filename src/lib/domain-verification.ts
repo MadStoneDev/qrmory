@@ -28,9 +28,27 @@ export interface DomainWithStatus extends CustomDomain {
 
 // DNS record requirement for verification
 export interface DNSRecord {
-  type: "TXT";
+  type: "TXT" | "CNAME" | "A";
   host: string;
   value: string;
+}
+
+// Get the server hostname for CNAME/A records
+export const QRMORY_SERVER_HOST = process.env.NEXT_PUBLIC_CUSTOM_DOMAIN_TARGET || "qrmory.com";
+
+// Get the DNS records needed for a custom domain
+export function getDNSRecords(
+  domain: string,
+  token: string
+): { verification: DNSRecord; routing: DNSRecord } {
+  return {
+    verification: getVerificationDNSRecord(domain, token),
+    routing: {
+      type: "CNAME",
+      host: domain,
+      value: QRMORY_SERVER_HOST,
+    },
+  };
 }
 
 // Generate a unique verification token

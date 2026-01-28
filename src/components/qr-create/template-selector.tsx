@@ -1,7 +1,7 @@
 // src/components/qr-create/template-selector.tsx
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState } from "react";
 import {
   IconPalette,
   IconCheck,
@@ -11,9 +11,7 @@ import {
 import {
   QRTemplate,
   QRTemplateConfig,
-  TemplateCategory,
   SYSTEM_TEMPLATES,
-  TEMPLATE_CATEGORIES,
 } from "@/lib/qr-templates";
 
 interface TemplateSelectorProps {
@@ -180,35 +178,26 @@ function TemplateCard({
     <button
       onClick={onClick}
       className={`
-        relative flex flex-col items-center gap-2 p-3 rounded-xl border-2 transition-all
-        hover:shadow-md hover:scale-[1.02]
+        relative flex-shrink-0 flex flex-col items-center gap-1.5 p-2 rounded-lg border-2 transition-all
+        hover:shadow-sm
         ${isSelected
-          ? "border-qrmory-purple-500 bg-qrmory-purple-50 shadow-md"
-          : "border-neutral-200 bg-white hover:border-qrmory-purple-200"
+          ? "border-qrmory-purple-500 bg-qrmory-purple-50"
+          : "border-neutral-200 bg-white hover:border-qrmory-purple-300"
         }
       `}
     >
       {/* Selected indicator */}
       {isSelected && (
-        <div className="absolute -top-1 -right-1 w-5 h-5 bg-qrmory-purple-600 rounded-full flex items-center justify-center">
-          <IconCheck size={12} className="text-white" />
-        </div>
-      )}
-
-      {/* System badge */}
-      {template.isSystem && (
-        <div className="absolute top-1 left-1">
-          <div className="w-4 h-4 bg-neutral-100 rounded-full flex items-center justify-center" title="System template">
-            <IconPalette size={10} className="text-neutral-500" />
-          </div>
+        <div className="absolute -top-1 -right-1 w-4 h-4 bg-qrmory-purple-600 rounded-full flex items-center justify-center">
+          <IconCheck size={10} className="text-white" />
         </div>
       )}
 
       {/* Preview */}
-      <TemplatePreview config={template.config} size={56} />
+      <TemplatePreview config={template.config} size={44} />
 
       {/* Name */}
-      <span className="text-xs font-medium text-neutral-700 text-center line-clamp-1 w-full">
+      <span className="text-[10px] font-medium text-neutral-600 text-center whitespace-nowrap">
         {template.name}
       </span>
     </button>
@@ -222,26 +211,11 @@ export default function TemplateSelector({
   onSaveTemplate,
   compact = false,
 }: TemplateSelectorProps) {
-  const [selectedCategory, setSelectedCategory] = useState<TemplateCategory | "all" | "saved">("all");
+  const [showSaved, setShowSaved] = useState(false);
   const [isExpanded, setIsExpanded] = useState(!compact);
 
-  // Combine and filter templates
-  const filteredTemplates = useMemo(() => {
-    let templates: QRTemplate[] = [];
-
-    if (selectedCategory === "saved") {
-      templates = userTemplates;
-    } else if (selectedCategory === "all") {
-      templates = [...SYSTEM_TEMPLATES, ...userTemplates];
-    } else {
-      templates = [
-        ...SYSTEM_TEMPLATES.filter((t) => t.category === selectedCategory),
-        ...userTemplates.filter((t) => t.category === selectedCategory),
-      ];
-    }
-
-    return templates;
-  }, [selectedCategory, userTemplates]);
+  // Get templates to display
+  const templates = showSaved ? userTemplates : SYSTEM_TEMPLATES;
 
   if (compact && !isExpanded) {
     return (
@@ -251,7 +225,7 @@ export default function TemplateSelector({
       >
         <div className="flex items-center gap-2">
           <IconPalette size={18} className="text-qrmory-purple-600" />
-          <span className="text-sm font-medium text-neutral-700">Design Templates</span>
+          <span className="text-sm font-medium text-neutral-700">Quick Styles</span>
         </div>
         <IconChevronDown size={18} className="text-neutral-400" />
       </button>
@@ -259,66 +233,41 @@ export default function TemplateSelector({
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <IconPalette size={18} className="text-qrmory-purple-600" />
-          <span className="text-sm font-medium text-neutral-700">Templates</span>
+          <span className="text-sm font-medium text-neutral-700">Quick Styles</span>
         </div>
-        {onSaveTemplate && (
-          <button
-            onClick={onSaveTemplate}
-            className="text-xs text-qrmory-purple-600 hover:text-qrmory-purple-800 font-medium flex items-center gap-1"
-          >
-            <IconBookmark size={14} />
-            Save Current
-          </button>
-        )}
+        <div className="flex items-center gap-2">
+          {userTemplates.length > 0 && (
+            <button
+              onClick={() => setShowSaved(!showSaved)}
+              className={`text-xs px-2 py-1 rounded transition-colors ${
+                showSaved
+                  ? "bg-qrmory-purple-100 text-qrmory-purple-700"
+                  : "text-neutral-500 hover:text-neutral-700"
+              }`}
+            >
+              {showSaved ? "Presets" : `Saved (${userTemplates.length})`}
+            </button>
+          )}
+          {onSaveTemplate && (
+            <button
+              onClick={onSaveTemplate}
+              className="text-xs text-qrmory-purple-600 hover:text-qrmory-purple-800 font-medium flex items-center gap-1"
+            >
+              <IconBookmark size={14} />
+              Save
+            </button>
+          )}
+        </div>
       </div>
 
-      {/* Category filter */}
-      <div className="flex flex-wrap gap-1.5">
-        <button
-          onClick={() => setSelectedCategory("all")}
-          className={`px-2.5 py-1 text-xs rounded-full transition-colors ${
-            selectedCategory === "all"
-              ? "bg-qrmory-purple-600 text-white"
-              : "bg-neutral-100 text-neutral-600 hover:bg-neutral-200"
-          }`}
-        >
-          All
-        </button>
-        {TEMPLATE_CATEGORIES.filter(c => c.value !== "custom").map((cat) => (
-          <button
-            key={cat.value}
-            onClick={() => setSelectedCategory(cat.value)}
-            className={`px-2.5 py-1 text-xs rounded-full transition-colors ${
-              selectedCategory === cat.value
-                ? "bg-qrmory-purple-600 text-white"
-                : "bg-neutral-100 text-neutral-600 hover:bg-neutral-200"
-            }`}
-          >
-            {cat.label}
-          </button>
-        ))}
-        {userTemplates.length > 0 && (
-          <button
-            onClick={() => setSelectedCategory("saved")}
-            className={`px-2.5 py-1 text-xs rounded-full transition-colors ${
-              selectedCategory === "saved"
-                ? "bg-qrmory-purple-600 text-white"
-                : "bg-neutral-100 text-neutral-600 hover:bg-neutral-200"
-            }`}
-          >
-            Saved ({userTemplates.length})
-          </button>
-        )}
-      </div>
-
-      {/* Template grid */}
-      <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-2">
-        {filteredTemplates.map((template) => (
+      {/* Template grid - horizontal scroll on mobile */}
+      <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
+        {templates.map((template) => (
           <TemplateCard
             key={template.id}
             template={template}
@@ -328,12 +277,10 @@ export default function TemplateSelector({
         ))}
       </div>
 
-      {/* Empty state */}
-      {filteredTemplates.length === 0 && (
-        <div className="text-center py-6 text-neutral-500 text-sm">
-          {selectedCategory === "saved"
-            ? "No saved templates yet. Save your current design to reuse it later."
-            : "No templates found in this category."}
+      {/* Empty state for saved */}
+      {showSaved && userTemplates.length === 0 && (
+        <div className="text-center py-4 text-neutral-500 text-sm">
+          No saved styles yet
         </div>
       )}
 

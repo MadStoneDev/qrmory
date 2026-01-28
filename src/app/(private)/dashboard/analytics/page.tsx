@@ -112,14 +112,14 @@ export default async function AnalyticsPage() {
                 .sort(([, a], [, b]) => (b as number) - (a as number))
                 .slice(0, 5)
                 .map(([country, count]) => {
-                  const percentage = Math.round(
-                    ((count as number) / recentScansCount) * 100,
-                  );
+                  const percentage = recentScansCount > 0
+                    ? Math.round(((count as number) / recentScansCount) * 100)
+                    : 0;
                   return (
                     <div key={country}>
                       <div className="flex justify-between items-center mb-1">
                         <span className="text-sm text-neutral-700">
-                          {country}
+                          {country || "Unknown"}
                         </span>
                         <span className="text-sm font-medium text-neutral-900">
                           {count as number} ({percentage}%)
@@ -148,14 +148,14 @@ export default async function AnalyticsPage() {
               {Object.entries(analytics?.deviceBreakdown || {})
                 .sort(([, a], [, b]) => (b as number) - (a as number))
                 .map(([device, count]) => {
-                  const percentage = Math.round(
-                    ((count as number) / recentScansCount) * 100,
-                  );
+                  const percentage = recentScansCount > 0
+                    ? Math.round(((count as number) / recentScansCount) * 100)
+                    : 0;
                   return (
                     <div key={device}>
                       <div className="flex justify-between items-center mb-1">
                         <span className="text-sm text-neutral-700 capitalize">
-                          {device}
+                          {device || "Unknown"}
                         </span>
                         <span className="text-sm font-medium text-neutral-900">
                           {count as number} ({percentage}%)
@@ -185,14 +185,14 @@ export default async function AnalyticsPage() {
                 .sort(([, a], [, b]) => (b as number) - (a as number))
                 .slice(0, 5)
                 .map(([browser, count]) => {
-                  const percentage = Math.round(
-                    ((count as number) / recentScansCount) * 100,
-                  );
+                  const percentage = recentScansCount > 0
+                    ? Math.round(((count as number) / recentScansCount) * 100)
+                    : 0;
                   return (
                     <div key={browser}>
                       <div className="flex justify-between items-center mb-1">
                         <span className="text-sm text-neutral-700">
-                          {browser}
+                          {browser || "Unknown"}
                         </span>
                         <span className="text-sm font-medium text-neutral-900">
                           {count as number} ({percentage}%)
@@ -242,9 +242,9 @@ export default async function AnalyticsPage() {
                   .map((scan: any, index: number) => (
                     <tr key={index} className="hover:bg-neutral-50">
                       <td className="px-4 py-3 text-sm text-neutral-900">
-                        {new Date(scan.scanned_at).toLocaleDateString("en-US", {
-                          month: "short",
+                        {new Date(scan.scanned_at).toLocaleDateString("en-AU", {
                           day: "numeric",
+                          month: "short",
                           hour: "2-digit",
                           minute: "2-digit",
                         })}
