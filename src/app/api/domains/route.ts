@@ -11,6 +11,7 @@ import {
   canAddDomain,
   DOMAIN_LIMITS,
 } from "@/lib/domain-verification";
+import { removeDomainFromCoolify } from "@/lib/coolify-api";
 
 // GET - List user's custom domains
 export async function GET() {
@@ -224,7 +225,15 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    // Verify ownership and delete
+    // Get the domain first (we need the domain name for Coolify)
+    const { data: domainToDelete } = await supabase
+      .from("custom_domains")
+      .select("domain")
+      .eq("id", domainId)
+      .eq("user_id", user.id)
+      .single();
+
+    // Delete from database
     const { error: deleteError } = await supabase
       .from("custom_domains")
       .delete()
@@ -237,6 +246,15 @@ export async function DELETE(request: NextRequest) {
         { error: "Failed to delete domain" },
         { status: 500 }
       );
+    }
+
+    // Remove from Coolify/Traefik
+    if (domainToDelete?.domain) {
+      const coolifyResult = await removeDomainFromCoolify(domainToDelete.domain);
+      if (!coolifyResult.success) {
+        console.error("Failed to remove domain from Coolify:", coolifyResult.error);
+        // Don't fail - domain is deleted from our DB
+      }
     }
 
     // Also clear custom_domain_id from any QR codes using this domain

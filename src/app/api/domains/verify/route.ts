@@ -4,6 +4,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/utils/supabase/server";
 import { verifyDNSRecord, getVerificationDNSRecord } from "@/lib/domain-verification";
+import { addDomainToCoolify } from "@/lib/coolify-api";
 
 // POST - Verify domain DNS configuration
 export async function POST(request: NextRequest) {
@@ -77,7 +78,7 @@ export async function POST(request: NextRequest) {
       .update({
         verified_at: new Date().toISOString(),
         is_active: true,
-        ssl_status: "active", // In a real implementation, you'd provision SSL here
+        ssl_status: "active",
         updated_at: new Date().toISOString(),
       })
       .eq("id", domainId)
@@ -90,6 +91,14 @@ export async function POST(request: NextRequest) {
         { error: "Failed to update domain status" },
         { status: 500 }
       );
+    }
+
+    // Add domain to Coolify/Traefik for routing and SSL
+    const coolifyResult = await addDomainToCoolify(domain.domain);
+    if (!coolifyResult.success) {
+      console.error("Failed to add domain to Coolify:", coolifyResult.error);
+      // Don't fail the verification - domain is verified in our DB
+      // Coolify sync can be retried or done manually
     }
 
     return NextResponse.json({
