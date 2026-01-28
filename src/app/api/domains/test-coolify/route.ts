@@ -26,7 +26,29 @@ export async function GET() {
   }
 
   try {
-    // Try to fetch current domains
+    // Fetch raw app data to see the structure
+    const response = await fetch(
+      `${apiUrl}/applications/${appUuid}`,
+      {
+        headers: {
+          Authorization: `Bearer ${apiToken}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    if (!response.ok) {
+      return NextResponse.json({
+        success: false,
+        message: "API request failed",
+        status: response.status,
+        error: await response.text(),
+      });
+    }
+
+    const rawApp = await response.json();
+
+    // Also get parsed domains
     const domains = await getCurrentDomains();
 
     return NextResponse.json({
@@ -34,6 +56,13 @@ export async function GET() {
       message: "Coolify API connection successful!",
       envCheck,
       currentDomains: domains,
+      rawAppData: {
+        fqdn: rawApp.fqdn,
+        name: rawApp.name,
+        uuid: rawApp.uuid,
+        // Show all keys to understand the structure
+        availableKeys: Object.keys(rawApp),
+      },
     });
   } catch (error) {
     return NextResponse.json({
