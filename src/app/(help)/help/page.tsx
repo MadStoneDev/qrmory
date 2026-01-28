@@ -1,10 +1,15 @@
-﻿import React from "react";
+import React from "react";
 
 import MainNavigation from "@/components/main-navigation";
 import ContactForm from "@/components/ui/contact-form";
 import MainFooter from "@/components/sections/main-footer";
 import { IconForms, IconMail } from "@tabler/icons-react";
 import Link from "next/link";
+
+export const metadata = {
+  title: "Help & Support | QRmory",
+  description: "Get help with QRmory. Contact our support team or browse FAQs.",
+};
 
 export default function ContactPage() {
   return (

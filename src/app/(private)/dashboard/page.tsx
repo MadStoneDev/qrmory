@@ -23,19 +23,19 @@ type SubscriptionPackage =
   Database["public"]["Tables"]["subscription_packages"]["Row"];
 type Subscription = Database["public"]["Tables"]["subscriptions"]["Row"];
 
+// For many-to-one joins, Supabase can return object or array depending on the relationship
 interface SupabaseQRCodeScan extends Omit<QRCodeScan, "qr_codes"> {
   qr_codes:
-    | {
-        title: string;
-      }[]
-    | null; // Supabase returns an array
+    | { title: string }
+    | { title: string }[]
+    | null;
 }
 
-// Keep your original interface for the final transformed data
+// Final transformed data - always a single object or null
 interface QRCodeScanWithTitle extends Omit<QRCodeScan, "qr_codes"> {
   qr_codes: {
     title: string;
-  } | null; // We want a single object or null
+  } | null;
 }
 
 interface UserData {
@@ -146,11 +146,21 @@ async function fetchUserData(): Promise<UserData> {
 
   const recentScans: QRCodeScanWithTitle[] = (
     (recentScansRaw as SupabaseQRCodeScan[]) || []
-  ).map((scan) => ({
-    ...scan,
-    qr_codes:
-      scan.qr_codes && scan.qr_codes.length > 0 ? scan.qr_codes[0] : null,
-  }));
+  ).map((scan) => {
+    // Handle both array and object responses from Supabase
+    let qrCodeData: { title: string } | null = null;
+    if (scan.qr_codes) {
+      if (Array.isArray(scan.qr_codes)) {
+        qrCodeData = scan.qr_codes.length > 0 ? scan.qr_codes[0] : null;
+      } else {
+        qrCodeData = scan.qr_codes;
+      }
+    }
+    return {
+      ...scan,
+      qr_codes: qrCodeData,
+    };
+  });
 
   return {
     profile: profile as Profile | null,

@@ -12,6 +12,7 @@ import {
   IconPower,
   IconQrcode,
   IconSettings,
+  IconWorld,
 } from "@tabler/icons-react";
 import { createClient } from "@/utils/supabase/client";
 
@@ -54,6 +55,10 @@ export default function PrivateNavigation({
 
           <NavItem href={"/dashboard/analytics"} title={"Analytics"}>
             <IconChartBar size={30} strokeWidth={1.75} />
+          </NavItem>
+
+          <NavItem href={"/dashboard/domains"} title={"Custom Domains"}>
+            <IconWorld size={30} strokeWidth={1.75} />
           </NavItem>
 
           {/*<div*/}

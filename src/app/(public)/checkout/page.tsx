@@ -1,8 +1,13 @@
-﻿// src/app/checkout/page.tsx
+// src/app/checkout/page.tsx
 import { redirect } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
 import CheckoutComponent from "@/components/checkout-component";
 import { getUserProfile, ensurePaddleCustomer } from "@/utils/supabase/queries";
+
+export const metadata = {
+  title: "Checkout | QRmory",
+  description: "Complete your QRmory subscription purchase.",
+};
 
 export default async function CheckoutPage({
   searchParams,

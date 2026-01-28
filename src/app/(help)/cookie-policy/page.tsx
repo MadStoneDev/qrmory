@@ -1,5 +1,10 @@
 import MainNavigation from "@/components/main-navigation";
 
+export const metadata = {
+  title: "Cookie Policy | QRmory",
+  description: "Learn about how QRmory uses cookies and similar technologies.",
+};
+
 const CookiePolicy = () => {
   return (
     <main className="flex flex-col w-full policy-document">

@@ -1,5 +1,9 @@
 // src/lib/coolify-api.ts
 // Coolify API integration for managing custom domains via Traefik
+//
+// Note: Requires Coolify v4.0.0-beta.427 or later for proper domain updates.
+// Earlier versions have a bug where Traefik labels don't regenerate after
+// domain changes via API. See: https://github.com/coollabsio/coolify/issues/6281
 
 const COOLIFY_API_URL = process.env.COOLIFY_API_URL; // e.g., https://coolify.yourdomain.com/api/v1
 const COOLIFY_API_TOKEN = process.env.COOLIFY_API_TOKEN;
@@ -82,7 +86,8 @@ export async function addDomainToCoolify(domain: string): Promise<{
       .map((d) => `https://${d}`)
       .join(",");
 
-    // Update the application
+    // Update the application using the correct 'domains' field (not 'fqdn')
+    // Note: Coolify API expects 'domains' for PATCH, even though GET returns 'fqdn'
     const response = await fetch(
       `${COOLIFY_API_URL}/applications/${COOLIFY_APP_UUID}`,
       {
@@ -92,7 +97,7 @@ export async function addDomainToCoolify(domain: string): Promise<{
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          fqdn: newFqdn,
+          domains: newFqdn,
         }),
       }
     );
@@ -100,7 +105,7 @@ export async function addDomainToCoolify(domain: string): Promise<{
     if (!response.ok) {
       const errorText = await response.text();
       console.error("Failed to add domain to Coolify:", errorText);
-      return { success: false, error: "Failed to configure domain routing" };
+      return { success: false, error: `Failed to configure domain routing: ${errorText}` };
     }
 
     console.log(`Successfully added domain ${domain} to Coolify`);
@@ -141,7 +146,7 @@ export async function removeDomainFromCoolify(domain: string): Promise<{
     // Build new FQDN list
     const newFqdn = updatedDomains.map((d) => `https://${d}`).join(",");
 
-    // Update the application
+    // Update the application using the correct 'domains' field
     const response = await fetch(
       `${COOLIFY_API_URL}/applications/${COOLIFY_APP_UUID}`,
       {
@@ -151,7 +156,7 @@ export async function removeDomainFromCoolify(domain: string): Promise<{
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          fqdn: newFqdn,
+          domains: newFqdn,
         }),
       }
     );
@@ -159,7 +164,7 @@ export async function removeDomainFromCoolify(domain: string): Promise<{
     if (!response.ok) {
       const errorText = await response.text();
       console.error("Failed to remove domain from Coolify:", errorText);
-      return { success: false, error: "Failed to remove domain routing" };
+      return { success: false, error: `Failed to remove domain routing: ${errorText}` };
     }
 
     console.log(`Successfully removed domain ${domain} from Coolify`);
@@ -206,7 +211,7 @@ export async function syncDomainsWithCoolify(
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          fqdn: newFqdn,
+          domains: newFqdn,
         }),
       }
     );
@@ -214,7 +219,7 @@ export async function syncDomainsWithCoolify(
     if (!response.ok) {
       const errorText = await response.text();
       console.error("Failed to sync domains with Coolify:", errorText);
-      return { success: false, error: "Failed to sync domain routing" };
+      return { success: false, error: `Failed to sync domain routing: ${errorText}` };
     }
 
     console.log(`Successfully synced ${activeDomains.length} custom domains with Coolify`);
