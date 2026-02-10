@@ -45,7 +45,7 @@ export default async function PrivateLayout({
       <footer
         className={`px-4 fixed bottom-0 grid place-content-center w-full h-10 bg-qrmory-purple-900 text-xs text-center text-neutral-100/50`}
       >
-        <p className={``}>&copy; 2024 QRmory</p>
+        <p className={``}>&copy; {new Date().getFullYear()} QRmory</p>
       </footer>
       <Toaster
         position={`top-right`}

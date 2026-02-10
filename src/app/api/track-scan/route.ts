@@ -32,8 +32,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "QR code not found" }, { status: 404 });
     }
 
-    // Get country from request
-    const countryCode = req.geo?.country || "Unknown";
+    // Get country from request headers (geo is no longer on NextRequest in Next.js 16+)
+    const countryCode = req.headers.get("x-vercel-ip-country") ||
+      req.headers.get("cf-ipcountry") ||
+      req.headers.get("x-country-code") ||
+      "Unknown";
 
     // Parse user agent
     const userAgent = req.headers.get("user-agent") || "";
