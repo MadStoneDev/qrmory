@@ -83,25 +83,27 @@ export default function PrivateNavigation({
             className={`hidden sm:block w-8 h-[1px] border-b border-neutral-200/60`}
           ></div>
 
-          <NavItem href={"/dashboard/settings"} title={"Settings"}>
-            <IconSettings size={30} strokeWidth={1.75} />
-          </NavItem>
+          <div className={`hidden sm:flex flex-col items-center`}>
+            <NavItem href={"/dashboard/settings"} title={"Settings"}>
+              <IconSettings size={30} strokeWidth={1.75} />
+            </NavItem>
 
-          <div
-            className={`hidden sm:block w-8 h-[1px] border-b border-neutral-200/60`}
-          ></div>
+            <div
+              className={`w-8 h-[1px] border-b border-neutral-200/60`}
+            ></div>
 
-          <NavItem
-            action={async () => {
-              const { error } = await supabase.auth.signOut();
-              if (error) console.error(error);
+            <NavItem
+              action={async () => {
+                const { error } = await supabase.auth.signOut();
+                if (error) console.error(error);
 
-              router.push("/");
-            }}
-            title={"Logout"}
-          >
-            <IconPower size={30} strokeWidth={1.75} />
-          </NavItem>
+                router.push("/");
+              }}
+              title={"Logout"}
+            >
+              <IconPower size={30} strokeWidth={1.75} />
+            </NavItem>
+          </div>
         </article>
       </section>
     </nav>

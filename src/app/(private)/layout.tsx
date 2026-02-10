@@ -19,6 +19,7 @@ export default async function PrivateLayout({
       <MainNavigation
         className={`fixed top-0 left-0 right-0 bg-qrmory-purple-800 z-50`}
         absolute={false}
+        dashboardMode
       />
 
       {/* Block Space for Nav */}

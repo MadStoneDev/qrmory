@@ -1,13 +1,15 @@
 ﻿"use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import Logo from "@/components/logo";
-import { IconUser } from "@tabler/icons-react";
+import { IconPower, IconSettings, IconUser } from "@tabler/icons-react";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { createClient } from "@/utils/supabase/client";
 
 export default function MainNavigation({
   className = "",
@@ -15,6 +17,7 @@ export default function MainNavigation({
   logoColour = "white",
   fullLogo = true,
   pages = [],
+  dashboardMode = false,
 }: {
   className?: string;
   absolute?: boolean;
@@ -25,12 +28,15 @@ export default function MainNavigation({
     path: string;
     specialClasses?: string;
   }[];
+  dashboardMode?: boolean;
 }) {
+  const router = useRouter();
+
   return (
     <nav
       className={`${className} ${
         absolute ? "absolute" : ""
-      } py-6 px-8 top-0 flex flex-col items-center justify-center w-full h-16 sm:h-20 bg-qrmory-purple-800`}
+      } py-6 px-8 top-0 flex flex-col ${dashboardMode ? "items-start sm:items-center" : "items-center"} justify-center w-full h-16 sm:h-20 bg-qrmory-purple-800`}
     >
       <Link href="/">
         <Logo className={`w-20 sm:w-24`} logoColour={logoColour} />
@@ -48,6 +54,31 @@ export default function MainNavigation({
             {title}
           </Link>
         ))}
+
+        {dashboardMode && (
+          <div className="flex sm:hidden items-center gap-1">
+            <Link
+              href="/dashboard/settings"
+              className="p-2 text-white/70 hover:text-white hover:bg-qrmory-purple-600 rounded-full transition-all duration-300"
+              title="Settings"
+            >
+              <IconSettings size={22} strokeWidth={1.75} />
+            </Link>
+            <button
+              type="button"
+              onClick={async () => {
+                const supabase = createClient();
+                const { error } = await supabase.auth.signOut();
+                if (error) console.error(error);
+                router.push("/");
+              }}
+              className="p-2 text-white/70 hover:text-white hover:bg-qrmory-purple-600 rounded-full transition-all duration-300"
+              title="Logout"
+            >
+              <IconPower size={22} strokeWidth={1.75} />
+            </button>
+          </div>
+        )}
 
         {/*<Popover>*/}
         {/*  <PopoverTrigger*/}
