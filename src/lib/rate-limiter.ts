@@ -5,6 +5,7 @@ import { NextRequest, NextResponse } from "next/server";
 const redis = new Redis({
   url: process.env.UPSTASH_REDIS_REST_URL!,
   token: process.env.UPSTASH_REDIS_REST_TOKEN!,
+  enableAutoPipelining: false,
 });
 
 interface RateLimitConfig {
@@ -40,15 +41,10 @@ export class RateLimiter {
     const key = `rate_limit:${operation}:${identifier}`;
 
     try {
-      // Use Redis pipeline for atomic operations
-      const pipeline = redis.pipeline();
-      pipeline.incr(key);
-      pipeline.expire(key, config.window);
-      pipeline.ttl(key);
-
-      const results = await pipeline.exec();
-      const currentCount = results[0] as number;
-      const ttl = results[2] as number;
+      // Use individual commands to avoid pipeline response parsing issues
+      const currentCount = await redis.incr(key);
+      await redis.expire(key, config.window);
+      const ttl = await redis.ttl(key);
 
       const remaining = Math.max(0, config.requests - currentCount);
       const resetTime = Date.now() + ttl * 1000;

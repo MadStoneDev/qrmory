@@ -1,8 +1,7 @@
 // src/lib/csv-parser.ts
-// CSV and Excel file parsing utilities for batch QR code generation
+// CSV file parsing utilities for batch QR code generation
 
 import Papa from "papaparse";
-import * as XLSX from "xlsx";
 
 export interface ParsedRow {
   [key: string]: string;
@@ -58,74 +57,18 @@ export function parseCSV(content: string): ParseResult {
   };
 }
 
-// Parse Excel file
-export function parseExcel(buffer: ArrayBuffer): ParseResult {
-  const errors: string[] = [];
-
-  try {
-    const workbook = XLSX.read(buffer, { type: "array" });
-    const firstSheetName = workbook.SheetNames[0];
-
-    if (!firstSheetName) {
-      return {
-        headers: [],
-        rows: [],
-        errors: ["No sheets found in the Excel file"],
-      };
-    }
-
-    const worksheet = workbook.Sheets[firstSheetName];
-    const jsonData = XLSX.utils.sheet_to_json<ParsedRow>(worksheet, {
-      defval: "",
-    });
-
-    if (jsonData.length === 0) {
-      return {
-        headers: [],
-        rows: [],
-        errors: ["No data found in the Excel file"],
-      };
-    }
-
-    // Get headers from first row
-    const headers = Object.keys(jsonData[0] || {});
-
-    return {
-      headers,
-      rows: jsonData.map((row) => {
-        // Convert all values to strings
-        const stringRow: ParsedRow = {};
-        for (const key of Object.keys(row)) {
-          stringRow[key] = String(row[key] ?? "");
-        }
-        return stringRow;
-      }),
-      errors,
-    };
-  } catch (error) {
-    return {
-      headers: [],
-      rows: [],
-      errors: [`Failed to parse Excel file: ${(error as Error).message}`],
-    };
-  }
-}
-
-// Parse file based on type
+// Parse file (CSV only)
 export async function parseFile(file: File): Promise<ParseResult> {
   const extension = file.name.toLowerCase().split(".").pop();
 
   if (extension === "csv") {
     const content = await file.text();
     return parseCSV(content);
-  } else if (extension === "xlsx" || extension === "xls") {
-    const buffer = await file.arrayBuffer();
-    return parseExcel(buffer);
   } else {
     return {
       headers: [],
       rows: [],
-      errors: [`Unsupported file type: .${extension}. Please use CSV or Excel files.`],
+      errors: [`Unsupported file type: .${extension}. Please use a CSV file.`],
     };
   }
 }

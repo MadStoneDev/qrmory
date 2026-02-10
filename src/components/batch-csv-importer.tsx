@@ -6,7 +6,6 @@ import { toast } from "sonner";
 import {
   IconUpload,
   IconFileTypeCsv,
-  IconFileSpreadsheet,
   IconLoader2,
   IconCheck,
   IconX,
@@ -99,7 +98,7 @@ export default function BatchCSVImporter({
       } catch (error) {
         console.error("File parse error:", error);
         toast("Failed to read file", {
-          description: "Please make sure the file is a valid CSV or Excel file.",
+          description: "Please make sure the file is a valid CSV file.",
           style: {
             backgroundColor: "rgb(254, 226, 226)",
             color: "rgb(153, 27, 27)",
@@ -208,18 +207,17 @@ export default function BatchCSVImporter({
           <input
             ref={fileInputRef}
             type="file"
-            accept=".csv,.xlsx,.xls"
+            accept=".csv"
             onChange={handleFileInput}
             className="hidden"
           />
 
           <div className="flex justify-center gap-4 mb-4">
             <IconFileTypeCsv size={40} className="text-green-600" />
-            <IconFileSpreadsheet size={40} className="text-green-700" />
           </div>
 
           <p className="text-neutral-700 font-medium mb-1">
-            Drop your CSV or Excel file here
+            Drop your CSV file here
           </p>
           <p className="text-sm text-neutral-500 mb-4">or click to browse</p>
 
@@ -234,7 +232,7 @@ export default function BatchCSVImporter({
 
         <div className="flex items-center justify-between text-sm">
           <span className="text-neutral-500">
-            Supported: CSV, XLSX, XLS (max {maxRows} rows)
+            Supported: CSV (max {maxRows} rows)
           </span>
           <button
             onClick={downloadSampleTemplate}
