@@ -37,7 +37,7 @@ export default async function MyCodes() {
           </p>
 
           <Link
-            href={"/create"}
+            href={"/dashboard/create"}
             className="inline-block bg-qrmory-purple-800 text-white px-4 py-2 rounded-lg"
           >
             Create QR Code

@@ -9,29 +9,29 @@
 
 ### Security
 
-- [ ] **Rate limiter fails open** — Returns "allowed" on Redis errors, meaning if Redis goes down, all rate limits are bypassed
-- [ ] **`/api/reserve-shortcode` has no auth check** — Anyone can reserve shortcodes without being logged in
-- [ ] **Admin check uses subscription level** — Admin access is determined by subscription level instead of a proper admin role flag
-- [ ] **Auth rate limiter commented out** — Login page rate limiting code is commented out, allowing brute force attempts
+- [x] **Rate limiter fails open** — Returns "allowed" on Redis errors, meaning if Redis goes down, all rate limits are bypassed
+- [x] **`/api/reserve-shortcode` has no auth check** — Anyone can reserve shortcodes without being logged in
+- [x] **Admin check uses subscription level** — Admin access is determined by subscription level instead of a proper admin role flag
+- [x] **Auth rate limiter commented out** — Login page rate limiting code is commented out, allowing brute force attempts
 
 ### Payments / Subscriptions
 
-- [ ] **Missing Paddle webhook handlers** — `subscription.resumed`, `transaction.failed`, `transaction.refunded`, `transaction.disputed` events are unhandled
-- [ ] **Free-tier downgrade bypasses Paddle** — Directly updates DB without cancelling the Paddle subscription
-- [ ] **No server-side feature gating** — Feature access checks are client-side only; API routes don't enforce subscription limits
+- [x] **Missing Paddle webhook handlers** — `subscription.resumed`, `transaction.payment_failed` now handled; refund/dispute handled via Paddle dashboard
+- [x] **Free-tier downgrade bypasses Paddle** — Now cancels Paddle subscription via API before updating DB
+- [x] **No server-side feature gating** — Templates and domain verify routes now enforce subscription limits; other routes already gated
 
 ### Broken Links
 
-- [ ] **`/contact`** — Should be `/help/contact`
-- [ ] **`/settings`** — Should be `/dashboard/settings`
-- [ ] **`/create`** — Should be `/dashboard/create`
-- [ ] **`/error`** — Page doesn't exist, needs an `error.tsx` boundary
-- [ ] **`/view/${code}`** — Route doesn't exist, references need updating or removing
+- [x] **`/contact`** — Fixed to `/help/contact`
+- [x] **`/settings`** — Fixed to `/dashboard/settings`
+- [x] **`/create`** — Fixed to `/dashboard/create`
+- [x] **`/error`** — Not referenced in code; error.tsx boundaries added
+- [x] **`/view/${code}`** — Not referenced in code; no fix needed
 
 ### UX / Legal
 
-- [ ] **No `error.tsx` boundary pages** — Unhandled errors show a blank/broken page
-- [ ] **No `robots.txt`** — Search engines have no crawl guidance
+- [x] **No `error.tsx` boundary pages** — Added root and dashboard error boundaries
+- [x] **No `robots.txt`** — Added robots.ts with proper rules
 - [ ] **Privacy policy outdated** — Dated 2022, references "RAVENCI" instead of QRmory
 - [ ] **No onboarding flow** — New users land on dashboard with no guidance
 
@@ -71,11 +71,11 @@
 
 ## Launch Readiness Phases
 
-### Phase 1 (1-2 days) — Critical fixes
+### Phase 1 (1-2 days) — Critical fixes ✅
 Security fixes, missing webhook handlers, error pages, robots.txt, broken links
 
 ### Phase 2 (3-5 days) — Compliance and gating
-Legal compliance, server-side feature gating, onboarding, accessibility, input validation
+Legal compliance, ~~server-side feature gating~~, onboarding, accessibility, input validation
 
 ### Phase 3 (1-2 weeks) — Optimisation
 Performance optimization, DB indexes, caching, code-splitting, SEO, mobile fixes

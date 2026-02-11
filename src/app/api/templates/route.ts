@@ -11,8 +11,13 @@ import {
   isValidTemplateConfig,
 } from "@/lib/qr-templates";
 
-// Maximum templates per user
-const MAX_USER_TEMPLATES = 20;
+// Maximum templates per subscription level
+const TEMPLATE_LIMITS: Record<number, number> = {
+  0: 3,   // Free
+  1: 10,  // Explorer
+  2: 20,  // Creator
+  3: 50,  // Champion
+};
 
 interface UserSettingsData {
   templates?: QRTemplate[];
@@ -101,6 +106,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Get subscription level for template limits
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("subscription_level")
+      .eq("id", user.id)
+      .single();
+
+    const subscriptionLevel = profile?.subscription_level ?? 0;
+    const maxTemplates = TEMPLATE_LIMITS[subscriptionLevel] || TEMPLATE_LIMITS[0];
+
     // Get existing settings
     const { data: existingSettings } = await supabase
       .from("user_settings")
@@ -112,11 +127,11 @@ export async function POST(request: NextRequest) {
     const existingTemplates = userSettings.templates || [];
 
     // Check template limit
-    if (existingTemplates.length >= MAX_USER_TEMPLATES) {
+    if (existingTemplates.length >= maxTemplates) {
       return NextResponse.json(
         {
-          error: `Maximum ${MAX_USER_TEMPLATES} templates allowed. Please delete some to add more.`,
-          limit: MAX_USER_TEMPLATES,
+          error: `Maximum ${maxTemplates} templates allowed on your plan. Please delete some or upgrade to add more.`,
+          limit: maxTemplates,
         },
         { status: 400 }
       );

@@ -3,7 +3,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/utils/supabase/server";
-import { verifyDNSRecord, getVerificationDNSRecord } from "@/lib/domain-verification";
+import { verifyDNSRecord, getVerificationDNSRecord, DOMAIN_LIMITS } from "@/lib/domain-verification";
 import { addDomainToCoolify } from "@/lib/coolify-api";
 
 // POST - Verify domain DNS configuration
@@ -18,6 +18,21 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: "Authentication required" },
         { status: 401 }
+      );
+    }
+
+    // Check subscription allows custom domains
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("subscription_level")
+      .eq("id", user.id)
+      .single();
+
+    const subscriptionLevel = profile?.subscription_level ?? 0;
+    if ((DOMAIN_LIMITS[subscriptionLevel] || 0) === 0) {
+      return NextResponse.json(
+        { error: "Custom domains are not available on your current plan" },
+        { status: 403 }
       );
     }
 

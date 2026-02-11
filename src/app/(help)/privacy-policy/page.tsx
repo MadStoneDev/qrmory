@@ -667,7 +667,7 @@ const PrivacyPolicy = () => {
           us using the following details:{" "}
         </p>
         <p>
-          <a href="/contact">https://qrmory.com/contact</a>
+          <a href="/help/contact">https://qrmory.com/contact</a>
         </p>
         <p>
           We have appointed an internal Data Protection Officer for you to
@@ -676,7 +676,7 @@ const PrivacyPolicy = () => {
           details are as follows:
         </p>
         <p>
-          <a href="/contact">https://qrmory.com/contact</a>
+          <a href="/help/contact">https://qrmory.com/contact</a>
         </p>
       </section>
     </main>

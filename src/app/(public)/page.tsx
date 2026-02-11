@@ -134,7 +134,7 @@ export default async function Home() {
           Spotted a QR code that looks fishy? Not sure if it's one of ours? No
           worries! Drop us a line on our{" "}
           <a
-            href="/contact"
+            href="/help/contact"
             className={`px-1 py-0.5 hover:bg-qrmory-purple-800 text-qrmory-purple-300 hover:text-neutral-100 transition-all duration-300`}
           >
             contact page

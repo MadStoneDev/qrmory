@@ -6,8 +6,10 @@
   SubscriptionCanceledEvent,
   SubscriptionCreatedEvent,
   SubscriptionPausedEvent,
+  SubscriptionResumedEvent,
   SubscriptionUpdatedEvent,
   TransactionCompletedEvent,
+  TransactionPaymentFailedEvent,
 } from "@paddle/paddle-node-sdk";
 import { supabaseAdmin } from "@/utils/supabase/admin";
 import {
@@ -38,6 +40,19 @@ export class ProcessWebhook {
       case EventName.SubscriptionCanceled:
       case EventName.SubscriptionPaused:
         await this.handleSubscriptionEnded(eventData);
+        break;
+      case EventName.SubscriptionResumed:
+        await this.handleSubscriptionResumed(
+          eventData as SubscriptionResumedEvent,
+        );
+        break;
+      case EventName.TransactionPaymentFailed:
+        await this.handleTransactionPaymentFailed(
+          eventData as TransactionPaymentFailedEvent,
+        );
+        break;
+      default:
+        console.log(`Unhandled webhook event type: ${eventData.eventType}`);
         break;
     }
   }
@@ -149,6 +164,146 @@ export class ProcessWebhook {
         freeQuota: FREE_TIER_QUOTA,
       });
     }
+  }
+
+  private async handleSubscriptionResumed(
+    eventData: SubscriptionResumedEvent,
+  ) {
+    const customerId = eventData.data.customerId;
+
+    const { data: profile } = await supabaseAdmin
+      .from("profiles")
+      .select("id")
+      .eq("paddle_customer_id", customerId)
+      .single();
+
+    if (!profile) {
+      console.error(`No user found for Paddle customer ID: ${customerId}`);
+      return;
+    }
+
+    // Get the subscription package from the price ID
+    const priceId = eventData.data.items[0]?.price?.id;
+    if (!priceId) {
+      console.error("No price ID found in resumed subscription data");
+      return;
+    }
+
+    const { data: subscriptionPackage } = await supabaseAdmin
+      .from("subscription_packages")
+      .select("level, quota_amount, name")
+      .eq("paddle_price_id", priceId)
+      .eq("is_active", true)
+      .single();
+
+    if (!subscriptionPackage) {
+      console.error(`No subscription package found for price ID: ${priceId}`);
+      return;
+    }
+
+    // Reactivate subscription record
+    await supabaseAdmin
+      .from("subscriptions")
+      .update({
+        status: "active",
+        current_period_end:
+          eventData.data.currentBillingPeriod?.endsAt || new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      })
+      .eq("user_id", profile.id);
+
+    // Restore profile to the subscription level
+    await supabaseAdmin
+      .from("profiles")
+      .update({
+        subscription_level: subscriptionPackage.level,
+        dynamic_qr_quota: subscriptionPackage.quota_amount,
+        subscription_status: "active",
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", profile.id);
+
+    // Reactivate QR codes up to the restored quota
+    const { data: dynamicCodes } = await supabaseAdmin
+      .from("qr_codes")
+      .select("id")
+      .eq("user_id", profile.id)
+      .eq("type", "dynamic")
+      .order("created_at", { ascending: false })
+      .limit(subscriptionPackage.quota_amount);
+
+    if (dynamicCodes && dynamicCodes.length > 0) {
+      await supabaseAdmin
+        .from("qr_codes")
+        .update({
+          is_active: true,
+          updated_at: new Date().toISOString(),
+        })
+        .in("id", dynamicCodes.map(code => code.id));
+    }
+
+    // Send confirmation email
+    const { data: authData } = await supabaseAdmin.auth.admin.getUserById(profile.id);
+    const userEmail = authData?.user?.email;
+
+    if (userEmail) {
+      const storageQuotas: Record<number, string> = {
+        0: "50MB", 1: "500MB", 2: "2GB", 3: "10GB",
+      };
+
+      await sendSubscriptionConfirmedEmail(userEmail, {
+        planName: subscriptionPackage.name,
+        dynamicQrQuota: subscriptionPackage.quota_amount,
+        storageQuota: storageQuotas[subscriptionPackage.level] || "50MB",
+      });
+    }
+
+    console.log(
+      `✅ Subscription resumed for user ${profile.id}, restored to ${subscriptionPackage.name}`,
+    );
+  }
+
+  private async handleTransactionPaymentFailed(
+    eventData: TransactionPaymentFailedEvent,
+  ) {
+    const customerId = eventData.data.customerId;
+
+    if (!customerId) {
+      console.log("No customer ID in failed transaction");
+      return;
+    }
+
+    const { data: profile } = await supabaseAdmin
+      .from("profiles")
+      .select("id")
+      .eq("paddle_customer_id", customerId)
+      .single();
+
+    if (!profile) {
+      console.error(`No user found for Paddle customer ID: ${customerId}`);
+      return;
+    }
+
+    // Update subscription status to past_due
+    await supabaseAdmin
+      .from("subscriptions")
+      .update({
+        status: "past_due",
+        updated_at: new Date().toISOString(),
+      })
+      .eq("user_id", profile.id);
+
+    await supabaseAdmin
+      .from("profiles")
+      .update({
+        subscription_status: "past_due",
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", profile.id);
+
+    console.log(
+      `⚠️ Payment failed for user ${profile.id}, subscription marked as past_due`,
+    );
   }
 
   private async handleTransactionCompleted(

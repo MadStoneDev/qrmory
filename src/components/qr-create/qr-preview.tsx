@@ -746,7 +746,7 @@ function QRPreviewContent({
                   No logo found in your settings
                 </p>
                 <a
-                  href="/settings"
+                  href="/dashboard/settings"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-block text-xs px-3 py-1.5 bg-qrmory-purple-600 text-white rounded hover:bg-qrmory-purple-700 transition-colors"
