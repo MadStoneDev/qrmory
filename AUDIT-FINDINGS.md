@@ -32,7 +32,7 @@
 
 - [x] **No `error.tsx` boundary pages** — Added root and dashboard error boundaries
 - [x] **No `robots.txt`** — Added robots.ts with proper rules
-- [ ] **Privacy policy outdated** — Dated 2022, references "RAVENCI" instead of QRmory
+- [x] **Privacy policy outdated** — Updated to reference QRmory, current date, and actual third-party services
 - [ ] **No onboarding flow** — New users land on dashboard with no guidance
 
 ---

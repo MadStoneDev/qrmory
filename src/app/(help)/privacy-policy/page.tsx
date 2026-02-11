@@ -19,7 +19,7 @@ const PrivacyPolicy = () => {
           Privacy Policy
         </h2>
         <p>
-          Your privacy is important to us. It is RAVENCI&#39;s policy to respect
+          Your privacy is important to us. It is QRmory&#39;s policy to respect
           your privacy and comply with any applicable law and regulation
           regarding any personal information we may collect about you, including
           across our website,{" "}
@@ -41,10 +41,10 @@ const PrivacyPolicy = () => {
           apply to any of your activities after you leave our site.{" "}
         </p>
         <p className="font-bold">
-          This policy is effective as of 2 September 2022.{" "}
+          This policy is effective as of 12 February 2026.{" "}
         </p>
         <p>
-          Last updated: <span className="font-bold">2 September 2022</span>
+          Last updated: <span className="font-bold">12 February 2026</span>
         </p>
         <h3>Information We Collect</h3>
         <p>
@@ -275,7 +275,11 @@ const PrivacyPolicy = () => {
         <p>Third parties we currently use include: </p>
         <ul>
           <li>Google Analytics</li>
-          <li>mailerlite</li>
+          <li>Google reCAPTCHA</li>
+          <li>Resend (email delivery)</li>
+          <li>Paddle (payment processing)</li>
+          <li>Supabase (authentication and data storage)</li>
+          <li>LogRocket (error monitoring)</li>
         </ul>
         <h3>Your Rights and Controlling Your Personal Information</h3>
         <p>
@@ -418,7 +422,7 @@ const PrivacyPolicy = () => {
           information for their own purposes (known as &ldquo;data
           controllers&rdquo;) and organizations that process personal
           information on behalf of other organizations (known as &ldquo;data
-          processors&rdquo;). We, RAVENCI, located at the address provided in
+          processors&rdquo;). We, QRmory, located at the address provided in
           our Contact Us section, are a Data Controller and/or Processor with
           respect to the personal information you provide to us.{" "}
         </p>
