@@ -1,12 +1,14 @@
 "use client";
 
-import React, { ChangeEvent, FormEvent, useState } from "react";
+import React, { ChangeEvent, FormEvent, useState, useCallback } from "react";
+import { useGoogleReCaptcha } from "react-google-recaptcha-v3";
 import AuthText from "@/components/auth-text";
 import { IconCheck, IconLoader2 } from "@tabler/icons-react";
 
 type FormStatus = "idle" | "submitting" | "success" | "error";
 
 export default function ContactForm() {
+  const { executeRecaptcha } = useGoogleReCaptcha();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -25,36 +27,45 @@ export default function ContactForm() {
     }
   };
 
-  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setStatus("submitting");
-    setErrorMessage("");
+  const handleSubmit = useCallback(
+    async (e: FormEvent<HTMLFormElement>) => {
+      e.preventDefault();
+      setStatus("submitting");
+      setErrorMessage("");
 
-    try {
-      const response = await fetch("/api/contact", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
-      });
+      try {
+        // Get reCAPTCHA token
+        let recaptchaToken = "";
+        if (executeRecaptcha) {
+          recaptchaToken = await executeRecaptcha("contact_form");
+        }
 
-      const result = await response.json();
+        const response = await fetch("/api/contact", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ ...formData, recaptchaToken }),
+        });
 
-      if (!response.ok || !result.success) {
-        throw new Error(result.error || "Failed to send message");
+        const result = await response.json();
+
+        if (!response.ok || !result.success) {
+          throw new Error(result.error || "Failed to send message");
+        }
+
+        setStatus("success");
+        // Clear form on success
+        setFormData({ name: "", email: "", message: "" });
+      } catch (error) {
+        setStatus("error");
+        setErrorMessage(
+          error instanceof Error ? error.message : "Failed to send message"
+        );
       }
-
-      setStatus("success");
-      // Clear form on success
-      setFormData({ name: "", email: "", message: "" });
-    } catch (error) {
-      setStatus("error");
-      setErrorMessage(
-        error instanceof Error ? error.message : "Failed to send message"
-      );
-    }
-  };
+    },
+    [executeRecaptcha, formData]
+  );
 
   const isValid =
     formData.name.length >= 2 &&

@@ -1,5 +1,6 @@
 ﻿import { NextRequest, NextResponse } from "next/server";
 import axios from "axios";
+import { RateLimiter } from "@/lib/rate-limiter";
 
 type SearchResult = {
   name: string;
@@ -10,6 +11,25 @@ type SearchResult = {
 };
 
 export async function GET(request: NextRequest) {
+  // Rate limit: 20 searches per minute per IP (Google Places API costs money)
+  const ip =
+    request.headers.get("x-forwarded-for")?.split(",")[0] ||
+    request.headers.get("x-real-ip") ||
+    "unknown";
+
+  const rateLimitResult = await RateLimiter.checkLimit(
+    "api_general",
+    `location_search:${ip}`,
+    { requests: 20, window: 60 },
+  );
+
+  if (!rateLimitResult.success) {
+    return NextResponse.json(
+      { error: "Too many searches. Please wait a moment." },
+      { status: 429 },
+    );
+  }
+
   // Get the query parameter
   const searchParams = request.nextUrl.searchParams;
   const query = searchParams.get("query");

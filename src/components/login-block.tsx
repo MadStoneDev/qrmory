@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ChangeEvent, FormEvent, useState, useEffect } from "react";
+import { ChangeEvent, FormEvent, useState, useEffect, useCallback } from "react";
+import { useGoogleReCaptcha } from "react-google-recaptcha-v3";
 
 import { handleAuth, verifyOtp } from "@/app/(auth)/login/actions";
 import AuthText from "@/components/auth-text";
@@ -11,6 +12,7 @@ import OTPInput from "@/components/otp-input";
 export const LoginBlock = () => {
   // Hooks
   const router = useRouter();
+  const { executeRecaptcha } = useGoogleReCaptcha();
 
   // States
   const [magicCodeSent, setMagicCodeSent] = useState(false);
@@ -92,7 +94,7 @@ export const LoginBlock = () => {
     setIsValidEmail(emailRegex.test(value));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!isValidEmail) return;
@@ -104,6 +106,12 @@ export const LoginBlock = () => {
     // Create FormData object
     const formDataObj = new FormData();
     formDataObj.append("email", formData.email);
+
+    // Get reCAPTCHA token
+    if (executeRecaptcha) {
+      const recaptchaToken = await executeRecaptcha("login");
+      formDataObj.append("recaptchaToken", recaptchaToken);
+    }
 
     try {
       const response = await handleAuth(formDataObj);
@@ -129,7 +137,7 @@ export const LoginBlock = () => {
       setIsLoading(false);
       setIsSubmitting(false);
     }
-  };
+  }, [isValidEmail, formData.email, executeRecaptcha]);
 
   // Effects
   useEffect(() => {

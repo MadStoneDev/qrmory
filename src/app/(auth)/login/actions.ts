@@ -5,6 +5,7 @@ import { headers } from "next/headers";
 
 import { createClient } from "@/utils/supabase/server";
 import { RateLimiter } from "@/lib/rate-limiter";
+import { verifyRecaptchaToken } from "@/lib/recaptcha";
 
 type AuthResponse = {
   error: string | null;
@@ -23,6 +24,23 @@ export async function handleAuth(formData: FormData): Promise<AuthResponse> {
   }
 
   try {
+    // Verify reCAPTCHA token if provided
+    const recaptchaToken = formData.get("recaptchaToken") as string;
+    if (recaptchaToken) {
+      const recaptchaResult = await verifyRecaptchaToken(recaptchaToken, "login");
+      if (!recaptchaResult.success) {
+        return {
+          error: "Security verification failed. Please refresh and try again.",
+          success: false,
+        };
+      }
+    } else if (process.env.NODE_ENV === "production") {
+      return {
+        error: "Security verification required. Please refresh and try again.",
+        success: false,
+      };
+    }
+
     // Server-side rate limiting: 5 OTP sends per 5 minutes per email
     const rateLimitResult = await RateLimiter.checkLimit(
       "user_registration",

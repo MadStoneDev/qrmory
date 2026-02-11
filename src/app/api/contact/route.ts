@@ -1,14 +1,16 @@
-// app/api/contact/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import {
   sendContactFormThankYouEmail,
   sendContactFormNotificationEmail,
 } from "@/lib/email/send-email";
+import { verifyRecaptchaToken } from "@/lib/recaptcha";
+import { RateLimiter } from "@/lib/rate-limiter";
 
 interface ContactFormRequest {
   name: string;
   email: string;
   message: string;
+  recaptchaToken?: string;
 }
 
 function isValidEmail(email: string): boolean {
@@ -19,6 +21,41 @@ function isValidEmail(email: string): boolean {
 export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
     const body: ContactFormRequest = await request.json();
+
+    // Rate limit by IP: 5 submissions per 10 minutes
+    const ip =
+      request.headers.get("x-forwarded-for")?.split(",")[0] ||
+      request.headers.get("x-real-ip") ||
+      "unknown";
+
+    const rateLimitResult = await RateLimiter.checkLimit(
+      "api_general",
+      `contact:${ip}`,
+      { requests: 5, window: 600 },
+    );
+
+    if (!rateLimitResult.success) {
+      // Return success to not reveal rate limiting to spammers
+      return NextResponse.json({ success: true });
+    }
+
+    // Verify reCAPTCHA token
+    if (body.recaptchaToken) {
+      const recaptchaResult = await verifyRecaptchaToken(
+        body.recaptchaToken,
+        "contact_form",
+      );
+
+      if (!recaptchaResult.success) {
+        // Silently reject bots but return success
+        console.warn("reCAPTCHA failed for contact form:", recaptchaResult.error);
+        return NextResponse.json({ success: true });
+      }
+    } else if (process.env.NODE_ENV === "production") {
+      // In production, require reCAPTCHA token
+      console.warn("Contact form submitted without reCAPTCHA token");
+      return NextResponse.json({ success: true });
+    }
 
     // Validate required fields
     if (!body.name || !body.email || !body.message) {

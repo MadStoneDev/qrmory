@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/utils/supabase/server";
 import { ErrorReport } from "@/lib/error-reporter";
 import { isAdmin } from "@/lib/admin";
+import { RateLimiter } from "@/lib/rate-limiter";
 
 export async function POST(request: NextRequest) {
   try {
@@ -22,9 +23,18 @@ export async function POST(request: NextRequest) {
       request.headers.get("x-real-ip") ||
       "unknown";
 
-    // Simple in-memory rate limiting (you could use Redis instead)
-    const rateLimitKey = `error_reports:${clientIp}`;
-    // In production, implement proper rate limiting here
+    const rateLimitResult = await RateLimiter.checkLimit(
+      "api_general",
+      `error_reports:${clientIp}`,
+      { requests: 10, window: 60 },
+    );
+
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: "Rate limit exceeded" },
+        { status: 429 },
+      );
+    }
 
     // Store in database
     const supabase = await createClient();
