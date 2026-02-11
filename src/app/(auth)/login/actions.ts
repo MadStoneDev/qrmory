@@ -1,9 +1,10 @@
 ﻿"use server";
 
 import { revalidatePath } from "next/cache";
+import { headers } from "next/headers";
 
 import { createClient } from "@/utils/supabase/server";
-// import { authRateLimiter } from "@/utils/rate-limit";
+import { RateLimiter } from "@/lib/rate-limiter";
 
 type AuthResponse = {
   error: string | null;
@@ -22,6 +23,40 @@ export async function handleAuth(formData: FormData): Promise<AuthResponse> {
   }
 
   try {
+    // Server-side rate limiting: 5 OTP sends per 5 minutes per email
+    const rateLimitResult = await RateLimiter.checkLimit(
+      "user_registration",
+      `otp_send:${email.toLowerCase()}`,
+      { requests: 5, window: 300 },
+    );
+
+    if (!rateLimitResult.success) {
+      return {
+        error:
+          "You're sending emails faster than John Wick reloads! Please wait a few minutes before trying again.",
+        success: false,
+      };
+    }
+
+    // Also rate limit by IP to prevent enumeration across emails
+    const headersList = await headers();
+    const ip = headersList.get("x-forwarded-for")?.split(",")[0] ||
+      headersList.get("x-real-ip") || "unknown";
+
+    const ipRateLimitResult = await RateLimiter.checkLimit(
+      "user_registration",
+      `otp_send_ip:${ip}`,
+      { requests: 10, window: 300 },
+    );
+
+    if (!ipRateLimitResult.success) {
+      return {
+        error:
+          "Too many login attempts from this location. Please wait a few minutes before trying again.",
+        success: false,
+      };
+    }
+
     const supabase = await createClient();
 
     const { error: authError } = await supabase.auth.signInWithOtp({
@@ -85,6 +120,20 @@ export async function verifyOtp(formData: FormData): Promise<AuthResponse> {
   }
 
   try {
+    // Rate limit OTP verification: 10 attempts per 5 minutes per email
+    const rateLimitResult = await RateLimiter.checkLimit(
+      "user_registration",
+      `otp_verify:${email.toLowerCase()}`,
+      { requests: 10, window: 300 },
+    );
+
+    if (!rateLimitResult.success) {
+      return {
+        error: "Too many verification attempts. Please wait a few minutes and try again.",
+        success: false,
+      };
+    }
+
     const supabase = await createClient();
 
     const { error } = await supabase.auth.verifyOtp({

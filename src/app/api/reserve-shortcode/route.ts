@@ -3,6 +3,8 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { Redis } from "@upstash/redis";
+import { createClient } from "@/utils/supabase/server";
+import { RateLimiter } from "@/lib/rate-limiter";
 
 // Initialize Redis client
 const redis = new Redis({
@@ -16,7 +18,31 @@ const RESERVATION_TTL = 300;
 
 export async function POST(req: NextRequest) {
   try {
-    const { shortcode, userId } = await req.json();
+    // Require authentication
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+      return NextResponse.json(
+        { error: "Authentication required" },
+        { status: 401 },
+      );
+    }
+
+    // Rate limit shortcode reservations
+    const rateLimitResult = await RateLimiter.checkLimit(
+      "shortcode_generation",
+      `user:${user.id}`,
+    );
+
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: "Rate limit exceeded", retryAfter: rateLimitResult.retryAfter },
+        { status: 429 },
+      );
+    }
+
+    const { shortcode } = await req.json();
 
     if (!shortcode) {
       return NextResponse.json(
@@ -25,9 +51,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Store reservation with TTL
-    // Format: "reserved:{shortcode}" => userId or "anonymous"
-    await redis.set(`reserved:${shortcode}`, userId || "anonymous", {
+    // Store reservation with TTL, tied to authenticated user
+    await redis.set(`reserved:${shortcode}`, user.id, {
       ex: RESERVATION_TTL,
     });
 

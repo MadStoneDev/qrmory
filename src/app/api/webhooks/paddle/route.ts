@@ -36,8 +36,9 @@ async function checkAndMarkEventProcessed(eventId: string): Promise<boolean> {
     return false;
   } catch (error) {
     console.error("Redis idempotency check failed:", error);
-    // Fail open - process the event if Redis is unavailable
-    return true;
+    // Fail closed - reject event if Redis is unavailable to prevent duplicate processing
+    // Paddle will retry, and Redis should be available by then
+    return false;
   }
 }
 

@@ -5,6 +5,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/utils/supabase/server";
 import { getCurrentDomains } from "@/lib/coolify-api";
+import { isAdmin } from "@/lib/admin";
 
 export async function GET() {
   // Check authentication
@@ -15,15 +16,8 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  // Check if user is admin (you can adjust this check)
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("subscription_level")
-    .eq("id", user.id)
-    .single();
-
-  // Only allow high-level users or specific admin check
-  if (!profile || profile.subscription_level < 2) {
+  // Check if user is admin via env-based allowlist
+  if (!isAdmin(user.id)) {
     return NextResponse.json({ error: "Admin access required" }, { status: 403 });
   }
 

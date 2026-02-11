@@ -65,11 +65,12 @@ export class RateLimiter {
       }
     } catch (error) {
       console.error(`Rate limiting error for ${operation}:`, error);
-      // Fail open - allow request if rate limiter is down
+      // Fail closed - deny request if rate limiter is down to prevent abuse
       return {
-        success: true,
-        remaining: config.requests,
+        success: false,
+        remaining: 0,
         resetTime: Date.now() + config.window * 1000,
+        retryAfter: config.window,
       };
     }
   }

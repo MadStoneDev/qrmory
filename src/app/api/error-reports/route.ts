@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/utils/supabase/server";
 import { ErrorReport } from "@/lib/error-reporter";
+import { isAdmin } from "@/lib/admin";
 
 export async function POST(request: NextRequest) {
   try {
@@ -135,16 +136,10 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Add admin permission check here
-    // const { data: profile } = await supabase
-    //   .from('profiles')
-    //   .select('is_admin')
-    //   .eq('id', user.id)
-    //   .single();
-
-    // if (!profile?.is_admin) {
-    //   return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
-    // }
+    // Check admin access via env-based allowlist
+    if (!isAdmin(user.id)) {
+      return NextResponse.json({ error: "Admin access required" }, { status: 403 });
+    }
 
     const url = new URL(request.url);
     const limit = parseInt(url.searchParams.get("limit") || "50");
