@@ -11,7 +11,7 @@ import MainNavigation from "@/components/main-navigation";
 import MainFooter from "@/components/sections/main-footer";
 
 interface PageProps {
-  params: { vertical: string };
+  params: Promise<{ vertical: string }>;
 }
 
 // Generate static params for all verticals
@@ -24,7 +24,8 @@ export async function generateStaticParams() {
 export async function generateMetadata({
   params,
 }: PageProps): Promise<Metadata> {
-  const vertical = getVerticalBySlug(params.vertical);
+  const { vertical: verticalSlug } = await params;
+  const vertical = getVerticalBySlug(verticalSlug);
 
   if (!vertical) {
     return {
@@ -43,8 +44,9 @@ export async function generateMetadata({
   };
 }
 
-export default function BusinessVerticalPage({ params }: PageProps) {
-  const vertical = getVerticalBySlug(params.vertical);
+export default async function BusinessVerticalPage({ params }: PageProps) {
+  const { vertical: verticalSlug } = await params;
+  const vertical = getVerticalBySlug(verticalSlug);
 
   if (!vertical) {
     notFound();

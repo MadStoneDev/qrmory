@@ -1,7 +1,7 @@
 // app/(public)/pdf/[code]/page.tsx
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, use } from "react";
 import {
   IconFileTypePdf,
   IconDownload,
@@ -21,9 +21,9 @@ interface PDFData {
 }
 
 interface Props {
-  params: {
+  params: Promise<{
     code: string;
-  };
+  }>;
 }
 
 function decodeData(encoded: string): PDFData | null {
@@ -45,13 +45,14 @@ function formatFileSize(bytes: number): string {
 }
 
 export default function PDFViewer({ params }: Props) {
+  const { code } = use(params);
   const [data, setData] = useState<PDFData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [iframeError, setIframeError] = useState(false);
 
   useEffect(() => {
-    const pdfData = decodeData(params.code);
+    const pdfData = decodeData(code);
     if (pdfData) {
       setData(pdfData);
       setIsLoading(false);
@@ -59,7 +60,7 @@ export default function PDFViewer({ params }: Props) {
       setError("Invalid PDF link");
       setIsLoading(false);
     }
-  }, [params.code]);
+  }, [code]);
 
   const handleDownload = async () => {
     if (!data) return;

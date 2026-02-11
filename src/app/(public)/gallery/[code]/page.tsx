@@ -1,7 +1,7 @@
 ﻿// app/gallery/[code]/page.tsx
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, use } from "react";
 
 interface ImageItem {
   id: string;
@@ -20,9 +20,9 @@ interface GalleryData {
 }
 
 interface Props {
-  params: {
+  params: Promise<{
     code: string;
-  };
+  }>;
 }
 
 function decodeData(encoded: string): GalleryData | null {
@@ -36,18 +36,19 @@ function decodeData(encoded: string): GalleryData | null {
 }
 
 export default function GalleryViewer({ params }: Props) {
+  const { code } = use(params);
   const [data, setData] = useState<GalleryData | null>(null);
   const [selectedImage, setSelectedImage] = useState<ImageItem | null>(null);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const galleryData = decodeData(params.code);
+    const galleryData = decodeData(code);
     if (galleryData && galleryData.images?.length > 0) {
       setData(galleryData);
     }
     setIsLoading(false);
-  }, [params.code]);
+  }, [code]);
 
   if (isLoading) {
     return (

@@ -42,7 +42,7 @@ function ShapeOption({
       onClick={onClick}
       disabled={disabled}
       className={`
-        flex flex-col items-center p-2 rounded-lg border-2 transition-all
+        flex flex-col items-center p-1.5 sm:p-2 rounded-lg border-2 transition-all
         ${selected
           ? "border-qrmory-purple-600 bg-qrmory-purple-50"
           : "border-neutral-200 hover:border-neutral-300 bg-white"
@@ -114,7 +114,7 @@ export function ShapeSelector({
         <label className="text-xs font-medium text-neutral-700 mb-2 block">
           Dot Pattern
         </label>
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-4 sm:grid-cols-3 gap-1.5 sm:gap-2">
           {dotPreviews.map((style) => (
             <ShapeOption
               key={style.value}
@@ -134,7 +134,7 @@ export function ShapeSelector({
         <label className="text-xs font-medium text-neutral-700 mb-2 block">
           Corner Squares
         </label>
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-4 sm:grid-cols-3 gap-1.5 sm:gap-2">
           {cornerPreviews.map((style) => (
             <ShapeOption
               key={style.value}

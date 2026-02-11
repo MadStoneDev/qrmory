@@ -24,11 +24,8 @@ import { UserRateLimiter } from "@/lib/rate-limiter";
 import { ColorPicker } from "@/components/colour-picker";
 import { ShapeSelector } from "@/components/qr-create/shape-selector";
 import { FrameSelector } from "@/components/qr-create/frame-selector";
-import TemplateSelector from "@/components/qr-create/template-selector";
-import TemplateSaveDialog from "@/components/qr-create/template-save-dialog";
 import { QRShapeSettings } from "@/lib/qr-shapes";
 import { QRFrameSettings } from "@/lib/qr-frames";
-import { QRTemplate, QRTemplateConfig, TemplateCategory } from "@/lib/qr-templates";
 
 interface Props {
   qrState: QRState;
@@ -47,15 +44,6 @@ interface Props {
   onUpdateShapeSettings: (settings: QRShapeSettings) => void;
   frameSettings: QRFrameSettings;
   onUpdateFrameSettings: (settings: QRFrameSettings) => void;
-  // Template props
-  userTemplates?: QRTemplate[];
-  selectedTemplateId?: string | null;
-  onApplyTemplate?: (template: QRTemplate) => void;
-  onSaveTemplate?: () => void;
-  showSaveTemplateDialog?: boolean;
-  onCloseSaveDialog?: () => void;
-  onSaveTemplateConfirm?: (name: string, description: string, category: TemplateCategory) => Promise<void>;
-  currentTemplateConfig?: QRTemplateConfig;
 }
 
 // Define which QR types require paid subscriptions
@@ -86,14 +74,6 @@ export default function QRSettingsRefactored({
   onUpdateShapeSettings,
   frameSettings,
   onUpdateFrameSettings,
-  userTemplates = [],
-  selectedTemplateId,
-  onApplyTemplate,
-  onSaveTemplate,
-  showSaveTemplateDialog = false,
-  onCloseSaveDialog,
-  onSaveTemplateConfirm,
-  currentTemplateConfig,
 }: Props) {
   // States
   const { createDynamicQR, releaseShortcode } = useShortcodeManager(user);
@@ -615,7 +595,7 @@ export default function QRSettingsRefactored({
 
   return (
     <article
-      className={`p-4 sm:p-6 lg:px-8 flex flex-col grow bg-white max-w-full ${
+      className={`p-2 sm:p-6 lg:px-8 flex flex-col grow bg-white max-w-full ${
         shadow
           ? "sm:rounded-3xl sm:shadow-xl shadow-neutral-300/50"
           : "lg:rounded-3xl lg:shadow-xl lg:shadow-neutral-300/50"
@@ -649,7 +629,7 @@ export default function QRSettingsRefactored({
           <div className="relative w-full">{qrControl}</div>
         </div>
 
-        <div className="mt-4 p-3 bg-neutral-50 rounded-lg border">
+        <div className="mt-4 pt-4 border-t border-neutral-200">
           <h6 className="text-xs font-medium text-neutral-700 mb-3">
             QR Code Colours
           </h6>
@@ -663,20 +643,7 @@ export default function QRSettingsRefactored({
         </div>
 
         {/* Shape Settings */}
-        {/* Template Selector */}
-        {onApplyTemplate && (
-          <div className="mt-4 p-3 bg-neutral-50 rounded-lg border">
-            <TemplateSelector
-              userTemplates={userTemplates}
-              selectedTemplateId={selectedTemplateId}
-              onSelect={onApplyTemplate}
-              onSaveTemplate={user ? onSaveTemplate : undefined}
-              compact={false}
-            />
-          </div>
-        )}
-
-        <div className="mt-4 p-3 bg-neutral-50 rounded-lg border">
+        <div className="mt-4 pt-4 border-t border-neutral-200">
           <h6 className="text-xs font-medium text-neutral-700 mb-3">
             QR Code Shape
           </h6>
@@ -688,7 +655,7 @@ export default function QRSettingsRefactored({
         </div>
 
         {/* Frame Settings */}
-        <div className="mt-4 p-3 bg-neutral-50 rounded-lg border">
+        <div className="mt-4 pt-4 border-t border-neutral-200">
           <h6 className="text-xs font-medium text-neutral-700 mb-3">
             Frame & Call-to-Action
           </h6>
@@ -719,16 +686,6 @@ export default function QRSettingsRefactored({
           quotaInfo={quotaInfo}
         />
       </div>
-
-      {/* Template Save Dialog */}
-      {showSaveTemplateDialog && onCloseSaveDialog && onSaveTemplateConfirm && currentTemplateConfig && (
-        <TemplateSaveDialog
-          isOpen={showSaveTemplateDialog}
-          onClose={onCloseSaveDialog}
-          onSave={onSaveTemplateConfirm}
-          currentConfig={currentTemplateConfig}
-        />
-      )}
     </article>
   );
 }

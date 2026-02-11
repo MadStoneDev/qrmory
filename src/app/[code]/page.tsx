@@ -1,15 +1,15 @@
 // /[code]/page.tsx
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, use } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { useRouter } from "next/navigation";
 
 // Subscription levels that get branded redirect (Free = 0, Explorer = 1)
 const BRANDED_REDIRECT_LEVELS = [0, 1];
 
-export default function CodeReroute({ params }: { params: { code: string } }) {
-  const code = params.code;
+export default function CodeReroute({ params }: { params: Promise<{ code: string }> }) {
+  const { code } = use(params);
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

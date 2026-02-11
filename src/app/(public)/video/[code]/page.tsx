@@ -1,7 +1,7 @@
 // app/(public)/video/[code]/page.tsx
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, use } from "react";
 import {
   IconPlayerPlay,
   IconPlayerPause,
@@ -27,9 +27,9 @@ interface VideoData {
 }
 
 interface Props {
-  params: {
+  params: Promise<{
     code: string;
-  };
+  }>;
 }
 
 function decodeData(encoded: string): VideoData | null {
@@ -43,6 +43,7 @@ function decodeData(encoded: string): VideoData | null {
 }
 
 export default function VideoPlayer({ params }: Props) {
+  const { code } = use(params);
   const [data, setData] = useState<VideoData | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
@@ -56,7 +57,7 @@ export default function VideoPlayer({ params }: Props) {
   const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
-    const videoData = decodeData(params.code);
+    const videoData = decodeData(code);
     if (videoData) {
       setData(videoData);
       setIsMuted(videoData.muted);
@@ -64,7 +65,7 @@ export default function VideoPlayer({ params }: Props) {
       setError("Invalid video link");
       setIsLoading(false);
     }
-  }, [params.code]);
+  }, [code]);
 
   useEffect(() => {
     const video = videoRef.current;

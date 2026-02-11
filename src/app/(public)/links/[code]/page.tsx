@@ -22,9 +22,9 @@ interface MultiLinkData {
 }
 
 interface Props {
-  params: {
+  params: Promise<{
     code: string;
-  };
+  }>;
 }
 
 function decodeData(encoded: string): MultiLinkData | null {
@@ -76,7 +76,8 @@ async function validateAccess(data: MultiLinkData | null): Promise<boolean> {
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const data = decodeData(params.code);
+  const { code } = await params;
+  const data = decodeData(code);
 
   if (!data) {
     return {
@@ -98,7 +99,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function MultiLinkViewer({ params }: Props) {
-  const data = decodeData(params.code);
+  const { code } = await params;
+  const data = decodeData(code);
 
   if (!data || !data.links?.length) {
     notFound();

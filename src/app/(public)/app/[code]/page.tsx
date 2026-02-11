@@ -22,9 +22,10 @@ function decodeAppData(code: string): AppData | null {
 export async function generateMetadata({
   params,
 }: {
-  params: { code: string };
+  params: Promise<{ code: string }>;
 }): Promise<Metadata> {
-  const data = decodeAppData(params.code);
+  const { code } = await params;
+  const data = decodeAppData(code);
 
   if (!data) {
     return {
@@ -42,12 +43,13 @@ export async function generateMetadata({
   };
 }
 
-export default function AppDownloadPage({
+export default async function AppDownloadPage({
   params,
 }: {
-  params: { code: string };
+  params: Promise<{ code: string }>;
 }) {
-  const data = decodeAppData(params.code);
+  const { code } = await params;
+  const data = decodeAppData(code);
 
   if (!data) {
     return (

@@ -1,7 +1,7 @@
 ﻿// app/audio/[code]/page.tsx
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, use } from "react";
 
 interface AudioData {
   title: string;
@@ -16,9 +16,9 @@ interface AudioData {
 }
 
 interface Props {
-  params: {
+  params: Promise<{
     code: string;
-  };
+  }>;
 }
 
 function decodeData(encoded: string): AudioData | null {
@@ -32,6 +32,7 @@ function decodeData(encoded: string): AudioData | null {
 }
 
 export default function AudioPlayer({ params }: Props) {
+  const { code } = use(params);
   const [data, setData] = useState<AudioData | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -41,14 +42,14 @@ export default function AudioPlayer({ params }: Props) {
   const audioRef = useRef<HTMLAudioElement>(null);
 
   useEffect(() => {
-    const audioData = decodeData(params.code);
+    const audioData = decodeData(code);
     if (audioData) {
       setData(audioData);
     } else {
       setError("Invalid audio link");
       setIsLoading(false);
     }
-  }, [params.code]);
+  }, [code]);
 
   useEffect(() => {
     const audio = audioRef.current;

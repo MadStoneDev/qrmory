@@ -1,7 +1,7 @@
 ﻿// app/poll/[code]/page.tsx
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, use } from "react";
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
 
@@ -30,9 +30,9 @@ interface PollVote {
 }
 
 interface Props {
-  params: {
+  params: Promise<{
     code: string;
-  };
+  }>;
 }
 
 function decodeData(encoded: string): PollData | null {
@@ -46,6 +46,7 @@ function decodeData(encoded: string): PollData | null {
 }
 
 export default function PollViewer({ params }: Props) {
+  const { code } = use(params);
   const [data, setData] = useState<PollData | null>(null);
   const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
   const [voterName, setVoterName] = useState("");
@@ -55,11 +56,11 @@ export default function PollViewer({ params }: Props) {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    const pollData = decodeData(params.code);
+    const pollData = decodeData(code);
     if (pollData) {
       setData(pollData);
       // Load existing votes from localStorage
-      const existingVotes = localStorage.getItem(`poll_votes_${params.code}`);
+      const existingVotes = localStorage.getItem(`poll_votes_${code}`);
       if (existingVotes) {
         try {
           const parsedVotes = JSON.parse(existingVotes);
@@ -70,7 +71,7 @@ export default function PollViewer({ params }: Props) {
       }
 
       // Check if user has already voted
-      const userVote = localStorage.getItem(`poll_vote_${params.code}`);
+      const userVote = localStorage.getItem(`poll_vote_${code}`);
       if (userVote) {
         setHasVoted(true);
         if (pollData.showResults) {
@@ -78,7 +79,7 @@ export default function PollViewer({ params }: Props) {
         }
       }
     }
-  }, [params.code]);
+  }, [code]);
 
   if (!data) {
     return (
@@ -141,10 +142,10 @@ export default function PollViewer({ params }: Props) {
 
       // Save to localStorage
       localStorage.setItem(
-        `poll_votes_${params.code}`,
+        `poll_votes_${code}`,
         JSON.stringify(updatedVotes),
       );
-      localStorage.setItem(`poll_vote_${params.code}`, JSON.stringify(newVote));
+      localStorage.setItem(`poll_vote_${code}`, JSON.stringify(newVote));
 
       setHasVoted(true);
 
