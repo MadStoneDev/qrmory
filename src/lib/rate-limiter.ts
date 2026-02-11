@@ -104,7 +104,7 @@ export class RateLimiter {
 
     const forwarded = request.headers.get("x-forwarded-for");
     const realIp = request.headers.get("x-real-ip");
-    const ip = forwarded?.split(",")[0] || realIp || request.ip || "unknown";
+    const ip = forwarded?.split(",")[0] || realIp || "unknown";
 
     return `ip:${ip}`;
   }
