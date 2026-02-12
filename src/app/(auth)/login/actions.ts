@@ -5,7 +5,6 @@ import { headers } from "next/headers";
 
 import { createClient } from "@/utils/supabase/server";
 import { RateLimiter } from "@/lib/rate-limiter";
-import { verifyRecaptchaToken } from "@/lib/recaptcha";
 
 type AuthResponse = {
   error: string | null;
@@ -24,19 +23,11 @@ export async function handleAuth(formData: FormData): Promise<AuthResponse> {
   }
 
   try {
-    // Verify reCAPTCHA token if provided
-    const recaptchaToken = formData.get("recaptchaToken") as string;
-    if (recaptchaToken) {
-      const recaptchaResult = await verifyRecaptchaToken(recaptchaToken, "login");
-      if (!recaptchaResult.success) {
-        return {
-          error: "Security verification failed. Please refresh and try again.",
-          success: false,
-        };
-      }
-    } else if (process.env.NODE_ENV === "production") {
+    // Get Turnstile captcha token (required — Supabase will verify it)
+    const captchaToken = formData.get("captchaToken") as string;
+    if (!captchaToken && process.env.NODE_ENV === "production") {
       return {
-        error: "Security verification required. Please refresh and try again.",
+        error: "Please complete the security check and try again.",
         success: false,
       };
     }
@@ -81,6 +72,7 @@ export async function handleAuth(formData: FormData): Promise<AuthResponse> {
       email,
       options: {
         shouldCreateUser: true,
+        captchaToken: captchaToken || undefined,
       },
     });
 

@@ -1,6 +1,5 @@
 import React from "react";
 
-import RecaptchaProvider from "@/components/providers/RecaptchaProvider";
 import ContactForm from "@/components/ui/contact-form";
 import MainNavigation from "@/components/main-navigation";
 import MainFooter from "@/components/sections/main-footer";
@@ -40,9 +39,7 @@ export default function ContactPage() {
         <section
           className={`py-10 px-2 sm:px-16 flex flex-col justify-center w-full max-w-60 sm:max-w-2xl`}
         >
-          <RecaptchaProvider>
-            <ContactForm />
-          </RecaptchaProvider>
+          <ContactForm />
         </section>
       </div>
 

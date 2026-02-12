@@ -275,7 +275,7 @@ const PrivacyPolicy = () => {
         <p>Third parties we currently use include: </p>
         <ul>
           <li>Google Analytics</li>
-          <li>Google reCAPTCHA</li>
+          <li>Cloudflare Turnstile (bot protection)</li>
           <li>Resend (email delivery)</li>
           <li>Paddle (payment processing)</li>
           <li>Supabase (authentication and data storage)</li>

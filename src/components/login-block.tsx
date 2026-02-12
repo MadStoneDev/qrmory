@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ChangeEvent, FormEvent, useState, useEffect, useCallback } from "react";
-import { useGoogleReCaptcha } from "react-google-recaptcha-v3";
+import { ChangeEvent, FormEvent, useState, useEffect, useCallback, useRef } from "react";
+import { Turnstile, type TurnstileInstance } from "@marsidev/react-turnstile";
 
 import { handleAuth, verifyOtp } from "@/app/(auth)/login/actions";
 import AuthText from "@/components/auth-text";
@@ -12,7 +12,8 @@ import OTPInput from "@/components/otp-input";
 export const LoginBlock = () => {
   // Hooks
   const router = useRouter();
-  const { executeRecaptcha } = useGoogleReCaptcha();
+  const turnstileRef = useRef<TurnstileInstance>(null);
+  const [turnstileToken, setTurnstileToken] = useState<string>("");
 
   // States
   const [magicCodeSent, setMagicCodeSent] = useState(false);
@@ -99,6 +100,11 @@ export const LoginBlock = () => {
 
     if (!isValidEmail) return;
 
+    if (!turnstileToken) {
+      setError("Please complete the security check.");
+      return;
+    }
+
     setIsLoading(true);
     setIsSubmitting(true);
     setError(null);
@@ -106,12 +112,7 @@ export const LoginBlock = () => {
     // Create FormData object
     const formDataObj = new FormData();
     formDataObj.append("email", formData.email);
-
-    // Get reCAPTCHA token
-    if (executeRecaptcha) {
-      const recaptchaToken = await executeRecaptcha("login");
-      formDataObj.append("recaptchaToken", recaptchaToken);
-    }
+    formDataObj.append("captchaToken", turnstileToken);
 
     try {
       const response = await handleAuth(formDataObj);
@@ -119,6 +120,9 @@ export const LoginBlock = () => {
       if (!response.success) {
         setError(response.error || "Something went wrong");
         setIsSubmitting(false);
+        // Reset Turnstile so user can retry
+        turnstileRef.current?.reset();
+        setTurnstileToken("");
         return;
       }
 
@@ -133,11 +137,13 @@ export const LoginBlock = () => {
     } catch (error) {
       console.error("Form submission error:", error);
       setError("An unexpected error occurred. Please try again.");
+      turnstileRef.current?.reset();
+      setTurnstileToken("");
     } finally {
       setIsLoading(false);
       setIsSubmitting(false);
     }
-  }, [isValidEmail, formData.email, executeRecaptcha]);
+  }, [isValidEmail, formData.email, turnstileToken]);
 
   // Effects
   useEffect(() => {
@@ -263,6 +269,16 @@ export const LoginBlock = () => {
           onChange={handleChange}
         />
 
+        {process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY && (
+          <Turnstile
+            ref={turnstileRef}
+            siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY}
+            onSuccess={setTurnstileToken}
+            onError={() => setTurnstileToken("")}
+            onExpire={() => setTurnstileToken("")}
+          />
+        )}
+
         {error && <p className="text-red-600 text-sm">{error}</p>}
 
         <article className={`grid gap-3`}>
@@ -271,7 +287,8 @@ export const LoginBlock = () => {
             disabled={
               (magicCodeSent && countdownTime > 0) ||
               formData.email.length < 6 ||
-              isLoading
+              isLoading ||
+              !turnstileToken
             }
             className={`py-2 w-full bg-qrmory-purple-500 disabled:bg-neutral-300 rounded-md text-white text-base font-bold`}
           >

@@ -1,5 +1,4 @@
 import { LoginBlock } from "@/components/login-block";
-import RecaptchaProvider from "@/components/providers/RecaptchaProvider";
 import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
 
@@ -19,9 +18,5 @@ export default async function SignUpPage() {
     redirect("/dashboard");
   }
 
-  return (
-    <RecaptchaProvider>
-      <LoginBlock />
-    </RecaptchaProvider>
-  );
+  return <LoginBlock />;
 }

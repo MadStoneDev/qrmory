@@ -1,14 +1,15 @@
 "use client";
 
-import React, { ChangeEvent, FormEvent, useState, useCallback } from "react";
-import { useGoogleReCaptcha } from "react-google-recaptcha-v3";
+import React, { ChangeEvent, FormEvent, useState, useCallback, useRef } from "react";
+import { Turnstile, type TurnstileInstance } from "@marsidev/react-turnstile";
 import AuthText from "@/components/auth-text";
 import { IconCheck, IconLoader2 } from "@tabler/icons-react";
 
 type FormStatus = "idle" | "submitting" | "success" | "error";
 
 export default function ContactForm() {
-  const { executeRecaptcha } = useGoogleReCaptcha();
+  const turnstileRef = useRef<TurnstileInstance>(null);
+  const [turnstileToken, setTurnstileToken] = useState("");
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -34,18 +35,12 @@ export default function ContactForm() {
       setErrorMessage("");
 
       try {
-        // Get reCAPTCHA token
-        let recaptchaToken = "";
-        if (executeRecaptcha) {
-          recaptchaToken = await executeRecaptcha("contact_form");
-        }
-
         const response = await fetch("/api/contact", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ ...formData, recaptchaToken }),
+          body: JSON.stringify({ ...formData, turnstileToken }),
         });
 
         const result = await response.json();
@@ -57,14 +52,18 @@ export default function ContactForm() {
         setStatus("success");
         // Clear form on success
         setFormData({ name: "", email: "", message: "" });
+        setTurnstileToken("");
+        turnstileRef.current?.reset();
       } catch (error) {
         setStatus("error");
         setErrorMessage(
           error instanceof Error ? error.message : "Failed to send message"
         );
+        turnstileRef.current?.reset();
+        setTurnstileToken("");
       }
     },
-    [executeRecaptcha, formData]
+    [turnstileToken, formData]
   );
 
   const isValid =
@@ -133,6 +132,16 @@ export default function ContactForm() {
         />
       </div>
 
+      {process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY && (
+        <Turnstile
+          ref={turnstileRef}
+          siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY}
+          onSuccess={setTurnstileToken}
+          onError={() => setTurnstileToken("")}
+          onExpire={() => setTurnstileToken("")}
+        />
+      )}
+
       {status === "error" && errorMessage && (
         <div className="p-3 bg-red-50 border border-red-200 rounded-md text-red-700 text-sm">
           {errorMessage}
@@ -141,7 +150,7 @@ export default function ContactForm() {
 
       <button
         type="submit"
-        disabled={!isValid || status === "submitting"}
+        disabled={!isValid || status === "submitting" || !turnstileToken}
         className="py-2 w-full bg-qrmory-purple-500 disabled:bg-neutral-300 rounded-md text-white text-sm md:text-base font-bold flex items-center justify-center gap-2 transition-colors"
       >
         {status === "submitting" ? (

@@ -3,14 +3,14 @@ import {
   sendContactFormThankYouEmail,
   sendContactFormNotificationEmail,
 } from "@/lib/email/send-email";
-import { verifyRecaptchaToken } from "@/lib/recaptcha";
+import { verifyTurnstileToken } from "@/lib/recaptcha";
 import { RateLimiter } from "@/lib/rate-limiter";
 
 interface ContactFormRequest {
   name: string;
   email: string;
   message: string;
-  recaptchaToken?: string;
+  turnstileToken?: string;
 }
 
 function isValidEmail(email: string): boolean {
@@ -39,21 +39,16 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       return NextResponse.json({ success: true });
     }
 
-    // Verify reCAPTCHA token
-    if (body.recaptchaToken) {
-      const recaptchaResult = await verifyRecaptchaToken(
-        body.recaptchaToken,
-        "contact_form",
-      );
+    // Verify Turnstile CAPTCHA token
+    if (body.turnstileToken) {
+      const captchaResult = await verifyTurnstileToken(body.turnstileToken);
 
-      if (!recaptchaResult.success) {
+      if (!captchaResult.success) {
         // Silently reject bots but return success
-        console.warn("reCAPTCHA failed for contact form:", recaptchaResult.error);
         return NextResponse.json({ success: true });
       }
     } else if (process.env.NODE_ENV === "production") {
-      // In production, require reCAPTCHA token
-      console.warn("Contact form submitted without reCAPTCHA token");
+      // In production, require CAPTCHA token
       return NextResponse.json({ success: true });
     }
 
