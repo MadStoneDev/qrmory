@@ -9,16 +9,18 @@
 
 ### Security
 
-- [x] **Rate limiter fails open** — Returns "allowed" on Redis errors, meaning if Redis goes down, all rate limits are bypassed
-- [x] **`/api/reserve-shortcode` has no auth check** — Anyone can reserve shortcodes without being logged in
-- [x] **Admin check uses subscription level** — Admin access is determined by subscription level instead of a proper admin role flag
-- [x] **Auth rate limiter commented out** — Login page rate limiting code is commented out, allowing brute force attempts
+- [x] **Rate limiter fails open** — Now fails closed; denies requests when Redis is down
+- [x] **`/api/reserve-shortcode` has no auth check** — Now requires auth + rate limiting
+- [x] **Admin check uses subscription level** — Now uses env-based `ADMIN_USER_IDS` allowlist
+- [x] **Auth rate limiter commented out** — Re-enabled with per-email and per-IP limits
+- [x] **No reCAPTCHA on public forms** — Added reCAPTCHA v3 to contact form and login
+- [x] **Unprotected public APIs** — Added rate limiting to contact, location-search, error-reports
 
 ### Payments / Subscriptions
 
-- [x] **Missing Paddle webhook handlers** — `subscription.resumed`, `transaction.payment_failed` now handled; refund/dispute handled via Paddle dashboard
+- [x] **Missing Paddle webhook handlers** — `subscription.resumed`, `transaction.payment_failed` now handled
 - [x] **Free-tier downgrade bypasses Paddle** — Now cancels Paddle subscription via API before updating DB
-- [x] **No server-side feature gating** — Templates and domain verify routes now enforce subscription limits; other routes already gated
+- [x] **No server-side feature gating** — Templates and domain verify routes now enforce subscription limits
 
 ### Broken Links
 
@@ -49,9 +51,9 @@
 
 ### Accessibility
 
-- [ ] **Color contrast failures** — Several text/background combinations fail WCAG Level A
-- [ ] **Missing focus indicators** — Interactive elements lack visible focus styles
-- [ ] **Missing alt text** — Some images and icons lack descriptive alt attributes
+- [x] **Color contrast failures** — Fixed purple-300/400 on white to purple-500 for WCAG AA compliance
+- [x] **Missing focus indicators** — Added focus-visible:ring to inputs, buttons, and controls
+- [x] **Missing alt text / aria labels** — Added aria-label to icon buttons, aria-hidden to decorative SVGs
 
 ---
 
@@ -74,8 +76,8 @@
 ### Phase 1 (1-2 days) — Critical fixes ✅
 Security fixes, missing webhook handlers, error pages, robots.txt, broken links
 
-### Phase 2 (3-5 days) — Compliance and gating
-Legal compliance, ~~server-side feature gating~~, onboarding, accessibility, input validation
+### Phase 2 (3-5 days) — Compliance and gating ✅
+Legal compliance, server-side feature gating, reCAPTCHA, accessibility, rate limiting
 
 ### Phase 3 (1-2 weeks) — Optimisation
-Performance optimization, DB indexes, caching, code-splitting, SEO, mobile fixes
+Performance optimization, DB indexes, caching, code-splitting, SEO, mobile fixes, onboarding
