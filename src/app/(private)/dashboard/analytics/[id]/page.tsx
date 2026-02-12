@@ -17,7 +17,7 @@ import { ScanChart } from "@/components/analytics/scan-chart";
 import { ExportButton } from "@/components/analytics/export-button";
 
 export const metadata = {
-  title: "QR Code Analytics | QRmory",
+  title: "QR Code Analytics",
   description: "View detailed analytics for your QR code.",
 };
 

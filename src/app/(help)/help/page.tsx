@@ -7,7 +7,7 @@ import { IconForms, IconMail } from "@tabler/icons-react";
 import Link from "next/link";
 
 export const metadata = {
-  title: "Help & Support | QRmory",
+  title: "Help & Support",
   description: "Get help with QRmory. Contact our support team or browse FAQs.",
 };
 

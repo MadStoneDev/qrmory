@@ -29,12 +29,12 @@ export async function generateMetadata({
 
   if (!data) {
     return {
-      title: "App Not Found | QRmory",
+      title: "App Not Found",
     };
   }
 
   return {
-    title: `Download ${data.appName} | QRmory`,
+    title: `Download ${data.appName}`,
     description: data.appDescription || `Get ${data.appName} on iOS and Android`,
     openGraph: {
       title: `Download ${data.appName}`,

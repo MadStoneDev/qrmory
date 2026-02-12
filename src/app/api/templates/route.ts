@@ -48,10 +48,14 @@ export async function GET() {
     const userSettings = (settings?.settings as UserSettingsData) || {};
     const templates = userSettings.templates || [];
 
-    return NextResponse.json({
-      success: true,
-      templates,
-    });
+    return NextResponse.json(
+      { success: true, templates },
+      {
+        headers: {
+          "Cache-Control": "private, max-age=60",
+        },
+      }
+    );
   } catch (error) {
     console.error("Error fetching templates:", error);
     return NextResponse.json(

@@ -11,7 +11,7 @@ import {
 } from "@/utils/supabase/queries";
 
 export const metadata = {
-  title: "Create a QR Code | QRmory",
+  title: "Create a QR Code",
   description: "Create a QR Code to share with your friends and family.",
 };
 

@@ -10,9 +10,14 @@ import {
 } from "@tabler/icons-react";
 
 export const metadata = {
-  title: "About | QRmory",
+  title: "About",
   description:
     "Learn about QRmory - your trusted partner for creating secure, dynamic QR codes with advanced features and analytics.",
+  openGraph: {
+    title: "About QRmory",
+    description:
+      "Learn about QRmory - your trusted partner for creating secure, dynamic QR codes with advanced features and analytics.",
+  },
 };
 
 export default function AboutPage() {

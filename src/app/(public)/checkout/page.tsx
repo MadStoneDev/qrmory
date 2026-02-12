@@ -5,7 +5,7 @@ import CheckoutComponent from "@/components/checkout-component";
 import { getUserProfile, ensurePaddleCustomer } from "@/utils/supabase/queries";
 
 export const metadata = {
-  title: "Checkout | QRmory",
+  title: "Checkout",
   description: "Complete your QRmory subscription purchase.",
 };
 

@@ -13,7 +13,7 @@ import Link from "next/link";
 import { getUserAnalytics } from "@/utils/supabase/queries";
 
 export const metadata = {
-  title: "Analytics | QRmory",
+  title: "Analytics",
   description: "View detailed analytics for your QR codes.",
 };
 

@@ -1,7 +1,7 @@
 import MainNavigation from "@/components/main-navigation";
 
 export const metadata = {
-  title: "Terms + Conditions | QRmory",
+  title: "Terms + Conditions",
   description:
     "Terms of Service for QRmory QR code generator. Usage policies, subscription terms, refund policy, and user responsibilities.",
 };

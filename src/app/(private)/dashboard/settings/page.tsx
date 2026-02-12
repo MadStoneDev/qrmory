@@ -11,7 +11,7 @@ interface Setting {
 }
 
 export const metadata = {
-  title: "Settings | QRmory",
+  title: "Settings",
   description: "Manage your QRmory account settings",
 };
 

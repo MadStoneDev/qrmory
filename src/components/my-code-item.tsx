@@ -40,6 +40,15 @@ import QRMultiLink from "@/components/qr-multilink";
 import QRPoll from "@/components/qr-poll";
 import QRImageGallery from "@/components/qr-image-gallery";
 import QRAudio from "@/components/qr-audio";
+import QRPhone from "@/components/qr-phone";
+import QRWhatsapp from "@/components/qr-whatsapp";
+import QRLinkedin from "@/components/qr-linkedin";
+import QRTiktok from "@/components/qr-tiktok";
+import QRTelegram from "@/components/qr-telegram";
+import QRDiscord from "@/components/qr-discord";
+import QRAppstore from "@/components/qr-appstore";
+import QRVideo from "@/components/qr-video";
+import QRPdf from "@/components/qr-pdf";
 import Link from "next/link";
 
 interface QRCodeContent {
@@ -514,6 +523,91 @@ function MyCodeItem({
             setChanged={updateChanged}
             setSaveData={updateSaveData}
             initialData={currentContent}
+          />
+        );
+      case "phone":
+        return (
+          <QRPhone
+            setText={updateTextValue}
+            setChanged={updateChanged}
+            setSaveData={updateSaveData}
+            initialData={currentContent}
+          />
+        );
+      case "whatsapp":
+        return (
+          <QRWhatsapp
+            setText={updateTextValue}
+            setChanged={updateChanged}
+            setSaveData={updateSaveData}
+            initialData={currentContent}
+          />
+        );
+      case "linkedin":
+        return (
+          <QRLinkedin
+            setText={updateTextValue}
+            setChanged={updateChanged}
+            setSaveData={updateSaveData}
+            initialData={currentContent}
+          />
+        );
+      case "tiktok":
+        return (
+          <QRTiktok
+            setText={updateTextValue}
+            setChanged={updateChanged}
+            setSaveData={updateSaveData}
+            initialData={currentContent}
+          />
+        );
+      case "telegram":
+        return (
+          <QRTelegram
+            setText={updateTextValue}
+            setChanged={updateChanged}
+            setSaveData={updateSaveData}
+            initialData={currentContent}
+          />
+        );
+      case "discord":
+        return (
+          <QRDiscord
+            setText={updateTextValue}
+            setChanged={updateChanged}
+            setSaveData={updateSaveData}
+            initialData={currentContent}
+          />
+        );
+      case "appstore":
+        return (
+          <QRAppstore
+            setText={updateTextValue}
+            setChanged={updateChanged}
+            setSaveData={updateSaveData}
+            initialData={currentContent}
+          />
+        );
+      case "video":
+        return (
+          <QRVideo
+            setText={updateTextValue}
+            setChanged={updateChanged}
+            setSaveData={updateSaveData}
+            initialData={currentContent}
+            user={user}
+            subscriptionLevel={subscriptionLevel}
+          />
+        );
+      case "pdf":
+        return (
+          <QRPdf
+            setText={updateTextValue}
+            setChanged={updateChanged}
+            setSaveData={updateSaveData}
+            initialData={currentContent}
+            user={user}
+            subscriptionLevel={subscriptionLevel}
           />
         );
       default:

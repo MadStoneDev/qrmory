@@ -136,80 +136,69 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Generate unique shortcodes and create QR codes
-    const createdCodes: Array<{
-      id: string;
-      name: string;
-      shortcode: string;
-      value: string;
-      url: string;
-    }> = [];
+    // Generate all unique shortcodes in batch
+    const shortcodes = await generateBatchShortcodes(batchItems.length, supabase);
 
-    const errors: Array<{ name: string; error: string }> = [];
-
-    for (const item of batchItems) {
-      try {
-        // Generate unique shortcode
-        const shortcode = await generateUniqueShortcode();
-
-        // Reserve in Redis temporarily
-        await redis.setex(
-          `reserved:${shortcode}`,
-          300,
-          JSON.stringify({
-            userId: user.id,
-            reservedAt: Date.now(),
-            origin: "batch_generation",
-          })
-        );
-
-        // Insert into database
-        const { data, error: insertError } = await supabase
-          .from("qr_codes")
-          .insert({
-            user_id: user.id,
-            type: "dynamic",
-            title: item.name,
-            qr_value: item.value,
-            shortcode: shortcode,
-            is_active: true,
-            content: {
-              controlType: qrType,
-              batchGenerated: true,
-              batchPattern: pattern,
-              creatorId: user.id,
-            },
-          })
-          .select("id")
-          .single();
-
-        if (insertError) {
-          errors.push({ name: item.name, error: insertError.message });
-          // Release the shortcode reservation on error
-          await redis.del(`reserved:${shortcode}`);
-        } else {
-          createdCodes.push({
-            id: data.id,
-            name: item.name,
-            shortcode,
-            value: item.value,
-            url: `${process.env.NEXT_PUBLIC_SITE_URL}/${shortcode}`,
-          });
-        }
-      } catch (err) {
-        errors.push({
-          name: item.name,
-          error: err instanceof Error ? err.message : "Unknown error",
-        });
-      }
+    // Reserve all shortcodes in Redis with a single pipeline
+    const pipeline = redis.pipeline();
+    const reservationData = JSON.stringify({
+      userId: user.id,
+      reservedAt: Date.now(),
+      origin: "batch_generation",
+    });
+    for (const code of shortcodes) {
+      pipeline.setex(`reserved:${code}`, 300, reservationData);
     }
+    await pipeline.exec();
+
+    // Batch insert all QR codes at once
+    const insertRows = batchItems.map((item, i) => ({
+      user_id: user.id,
+      type: "dynamic" as const,
+      title: item.name,
+      qr_value: item.value,
+      shortcode: shortcodes[i],
+      is_active: true,
+      content: {
+        controlType: qrType,
+        batchGenerated: true,
+        batchPattern: pattern,
+        creatorId: user.id,
+      },
+    }));
+
+    const { data: insertedRows, error: insertError } = await supabase
+      .from("qr_codes")
+      .insert(insertRows)
+      .select("id, title, shortcode, qr_value");
+
+    if (insertError) {
+      // Release all shortcode reservations on error
+      const cleanupPipeline = redis.pipeline();
+      for (const code of shortcodes) {
+        cleanupPipeline.del(`reserved:${code}`);
+      }
+      await cleanupPipeline.exec();
+
+      return NextResponse.json(
+        { error: "Failed to insert QR codes" },
+        { status: 500 }
+      );
+    }
+
+    const createdCodes = (insertedRows || []).map((row) => ({
+      id: row.id,
+      name: row.title,
+      shortcode: row.shortcode,
+      value: row.qr_value,
+      url: `${process.env.NEXT_PUBLIC_SITE_URL}/${row.shortcode}`,
+    }));
 
     return NextResponse.json({
       success: true,
       created: createdCodes.length,
       total: batchItems.length,
       codes: createdCodes,
-      errors: errors.length > 0 ? errors : undefined,
     });
   } catch (error) {
     console.error("Batch generation error:", error);
@@ -220,29 +209,64 @@ export async function POST(request: NextRequest) {
   }
 }
 
-async function generateUniqueShortcode(maxAttempts = 10): Promise<string> {
-  const supabase = await createClient();
+async function generateBatchShortcodes(
+  count: number,
+  supabase: Awaited<ReturnType<typeof createClient>>
+): Promise<string[]> {
+  const shortcodes: string[] = [];
+  const candidates: string[] = [];
 
-  for (let attempts = 0; attempts < maxAttempts; attempts++) {
-    const shortcode = generateShortCode(attempts > 5 ? 9 : 8);
+  // Generate more candidates than needed to account for collisions
+  const candidateCount = Math.ceil(count * 1.5);
+  for (let i = 0; i < candidateCount; i++) {
+    candidates.push(generateShortCode(8));
+  }
 
-    // Check if shortcode is reserved in Redis
-    const isReserved = await redis.exists(`reserved:${shortcode}`);
-    if (isReserved) continue;
+  // Batch check Redis reservations
+  const pipeline = redis.pipeline();
+  for (const code of candidates) {
+    pipeline.exists(`reserved:${code}`);
+  }
+  const redisResults = await pipeline.exec();
 
-    // Check if shortcode exists in database
-    const { data } = await supabase
-      .from("qr_codes")
-      .select("id")
-      .eq("shortcode", shortcode)
-      .single();
+  // Filter out reserved shortcodes
+  const unreserved = candidates.filter(
+    (_, i) => redisResults[i] === 0
+  );
 
-    if (!data) {
-      return shortcode;
+  // Batch check database for existing shortcodes
+  const { data: existing } = await supabase
+    .from("qr_codes")
+    .select("shortcode")
+    .in("shortcode", unreserved);
+
+  const existingSet = new Set(
+    (existing || []).map((r) => r.shortcode)
+  );
+
+  for (const code of unreserved) {
+    if (!existingSet.has(code)) {
+      shortcodes.push(code);
+      if (shortcodes.length >= count) break;
     }
   }
 
-  throw new Error(
-    `Could not generate unique shortcode after ${maxAttempts} attempts`
-  );
+  // If we still don't have enough, generate more individually
+  while (shortcodes.length < count) {
+    const code = generateShortCode(9); // Use longer code to reduce collisions
+    const isReserved = await redis.exists(`reserved:${code}`);
+    if (isReserved) continue;
+
+    const { data } = await supabase
+      .from("qr_codes")
+      .select("id")
+      .eq("shortcode", code)
+      .single();
+
+    if (!data) {
+      shortcodes.push(code);
+    }
+  }
+
+  return shortcodes;
 }

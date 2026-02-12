@@ -6,7 +6,7 @@ import MainNavigation from "@/components/main-navigation";
 import MainFooter from "@/components/sections/main-footer";
 
 export const metadata = {
-  title: "Contact Us | QRmory",
+  title: "Contact Us",
   description: "Have any questions? Feedback? Suggestions? We want to hear it!",
 };
 

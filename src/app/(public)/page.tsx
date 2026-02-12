@@ -11,8 +11,24 @@ import MainFooter from "@/components/sections/main-footer";
 import { createClient } from "@/utils/supabase/server";
 import { DEFAULT_SETTINGS } from "@/lib/default-settings";
 
-import Head from "next/head";
 import FAQSection from "@/components/sections/faq-section";
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  name: "QRmory",
+  url: "https://qrmory.com",
+  description:
+    "Create your QR code arsenal with QRmory - a simple but powerful QR code generator designed by an Australian small business for Australian small businesses.",
+  applicationCategory: "UtilityApplication",
+  operatingSystem: "Web",
+  offers: {
+    "@type": "Offer",
+    price: "0",
+    priceCurrency: "AUD",
+    description: "Free plan with static QR codes",
+  },
+};
 
 async function fetchUserProfile(userId: string) {
   if (!userId) return null;
@@ -116,6 +132,10 @@ export default async function Home() {
 
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <main className="mb-8 flex min-h-screen flex-col items-center justify-between">
         <MainNavigation />
 

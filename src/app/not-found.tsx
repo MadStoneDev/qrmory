@@ -5,7 +5,7 @@ import MainNavigation from "@/components/main-navigation";
 import MainFooter from "@/components/sections/main-footer";
 
 export const metadata = {
-  title: "404 | QRmory",
+  title: "404",
   description: "Page not found - 404",
 };
 

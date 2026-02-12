@@ -16,7 +16,7 @@ import {
 import Link from "next/link";
 
 export const metadata = {
-  title: "Subscription | QRmory",
+  title: "Subscription",
   description: "Upgrade your QRmory subscription to create more QR codes.",
 };
 

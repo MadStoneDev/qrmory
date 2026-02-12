@@ -4,7 +4,7 @@ import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
 
 export const metadata = {
-  title: "Login to your account | QRmory",
+  title: "Login to your account",
   description:
     "Access your arsenal of QR Codes to create, manage, and customise dynamic QR codes with ease.",
 };

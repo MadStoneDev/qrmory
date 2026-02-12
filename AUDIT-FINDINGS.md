@@ -43,11 +43,11 @@
 
 ### Performance
 
-- [ ] **N+1 queries in batch QR generation** — Each QR in a batch triggers individual DB queries
-- [ ] **Unused lodash dependency** — Adds ~72KB to bundle, not used meaningfully
+- [x] **N+1 queries in batch QR generation** — Batch shortcode generation + single insert replaces per-item queries
+- [x] **Unused lodash dependency** — Removed lodash and lodash.throttle from package.json
 - [ ] **No DB indexes** — Frequently queried columns (shortcodes, user_id) lack indexes
-- [ ] **No cache headers on API responses** — Every request hits the server fresh
-- [ ] **Uncached domain verification in middleware** — Domain check runs on every request
+- [x] **No cache headers on API responses** — Added Cache-Control to location-search and templates endpoints
+- [x] **Uncached domain verification in proxy** — Domain lookups now cached in Redis (5 min TTL)
 
 ### Accessibility
 
@@ -61,13 +61,15 @@
 
 ### Performance
 
+- [x] **Missing QR component imports** — Added 9 missing QR type editors (phone, whatsapp, linkedin, etc.) to my-code-item
 - [ ] **No code-splitting for QR component library** — All QR rendering code loads upfront
-- [ ] **Mobile overflow in some dashboard views** — Horizontal scroll on narrow screens
+- [x] **Mobile overflow in some dashboard views** — Already handled with overflow-x-auto
 
 ### SEO
 
-- [ ] **Incomplete meta tags** — Several pages missing Open Graph / Twitter card meta
-- [ ] **No structured data** — No JSON-LD for rich search results
+- [x] **Incomplete meta tags** — Added default OG/Twitter metadata to root layout, title template system
+- [x] **No structured data** — Added JSON-LD WebApplication schema to homepage
+- [x] **Help layout had placeholder metadata** — Replaced with proper layout using MainFooter
 
 ---
 
@@ -79,5 +81,10 @@ Security fixes, missing webhook handlers, error pages, robots.txt, broken links
 ### Phase 2 (3-5 days) — Compliance and gating ✅
 Legal compliance, server-side feature gating, reCAPTCHA, accessibility, rate limiting
 
-### Phase 3 (1-2 weeks) — Optimisation
-Performance optimization, DB indexes, caching, code-splitting, SEO, mobile fixes, onboarding
+### Phase 3 (1-2 weeks) — Optimisation ✅
+Performance optimization, caching, SEO metadata, JSON-LD, QR component imports, lodash removal
+
+### Remaining items
+- DB indexes (requires Supabase migration)
+- Code-splitting for QR components (optimisation, not blocking)
+- Onboarding flow (UX enhancement, not blocking)

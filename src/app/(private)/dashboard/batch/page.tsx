@@ -5,7 +5,7 @@ import { createClient } from "@/utils/supabase/server";
 import BatchQRGenerator from "@/components/batch-qr-generator";
 
 export const metadata: Metadata = {
-  title: "Batch QR Code Generator | QRmory",
+  title: "Batch QR Code Generator",
   description:
     "Create multiple QR codes at once with pattern-based naming. Perfect for restaurants, hotels, and warehouses.",
 };

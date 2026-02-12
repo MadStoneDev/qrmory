@@ -81,13 +81,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   if (!data) {
     return {
-      title: "Multi-Link Page | QRmory",
+      title: "Multi-Link Page",
       description: "A collection of links shared via QR code",
     };
   }
 
   return {
-    title: `${data.pageTitle} | QRmory`,
+    title: `${data.pageTitle}`,
     description: data.description || `Links shared by ${data.pageTitle}`,
     openGraph: {
       title: data.pageTitle,

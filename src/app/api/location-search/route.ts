@@ -76,7 +76,14 @@ export async function GET(request: NextRequest) {
       place_id: place.place_id,
     }));
 
-    return NextResponse.json({ results });
+    return NextResponse.json(
+      { results },
+      {
+        headers: {
+          "Cache-Control": "public, s-maxage=300, max-age=60",
+        },
+      }
+    );
   } catch (error) {
     console.error("Error fetching locations:", error);
 

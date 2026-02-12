@@ -20,7 +20,7 @@ import {
 } from "@/utils/supabase/queries";
 
 export const metadata = {
-  title: "Account Info | QRmory",
+  title: "Account Info",
   description:
     "Manage your QRmory account settings and view account information.",
 };

@@ -7,7 +7,7 @@ import MainFooter from "@/components/sections/main-footer";
 import { IconArrowRight, IconBuilding } from "@tabler/icons-react";
 
 export const metadata: Metadata = {
-  title: "QR Codes for Business | QRmory",
+  title: "QR Codes for Business",
   description:
     "Dynamic QR codes for restaurants, hotels, retail, events, and more. See how businesses in your industry use QRmory.",
 };

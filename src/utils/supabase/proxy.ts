@@ -1,5 +1,15 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { Redis } from "@upstash/redis";
+
+const redis = new Redis({
+  url: process.env.UPSTASH_REDIS_REST_URL!,
+  token: process.env.UPSTASH_REDIS_REST_TOKEN!,
+  enableAutoPipelining: false,
+});
+
+// Cache domain lookups for 5 minutes
+const DOMAIN_CACHE_TTL = 300;
 
 // Main QRmory domains (requests from these are handled normally)
 const MAIN_DOMAINS = [
@@ -63,13 +73,42 @@ export async function updateSession(request: NextRequest) {
         !potentialShortcode.includes(".") &&
         !["api", "dashboard", "login", "signup", "_next"].includes(potentialShortcode)
       ) {
-        // Verify this custom domain is registered and active
+        // Verify this custom domain is registered and active (with Redis cache)
         try {
-          const { data: domain } = await supabase
-            .from("custom_domains")
-            .select("id, is_active")
-            .eq("domain", host.toLowerCase().replace(/:\d+$/, ""))
-            .single();
+          const normalizedDomain = host.toLowerCase().replace(/:\d+$/, "");
+          const cacheKey = `domain:${normalizedDomain}`;
+
+          // Check cache first
+          let domain: { id: string; is_active: boolean } | null = null;
+          try {
+            const cached = await redis.get<{ id: string; is_active: boolean }>(cacheKey);
+            if (cached) {
+              domain = cached;
+            }
+          } catch {
+            // Redis failure — fall through to DB lookup
+          }
+
+          if (!domain) {
+            const { data: dbDomain } = await supabase
+              .from("custom_domains")
+              .select("id, is_active")
+              .eq("domain", normalizedDomain)
+              .single();
+
+            domain = dbDomain;
+
+            // Cache the result (even null to prevent repeated DB misses)
+            try {
+              await redis.setex(
+                cacheKey,
+                DOMAIN_CACHE_TTL,
+                domain || { id: "", is_active: false }
+              );
+            } catch {
+              // Cache write failure is non-critical
+            }
+          }
 
           if (domain && domain.is_active) {
             // Domain is valid, let the request pass through to the [code] route

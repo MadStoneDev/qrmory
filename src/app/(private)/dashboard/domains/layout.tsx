@@ -1,7 +1,7 @@
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Custom Domains | QRmory",
+  title: "Custom Domains",
   description: "Manage your custom domains for branded QR code links.",
 };
 

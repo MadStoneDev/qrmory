@@ -13,7 +13,7 @@ import {
 import { Database } from "../../../../database.types";
 
 export const metadata = {
-  title: "Dashboard | QRmory",
+  title: "Dashboard",
   description: "Your dashboard to manage your QRmory account",
 };
 

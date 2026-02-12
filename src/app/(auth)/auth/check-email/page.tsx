@@ -1,5 +1,5 @@
 ﻿export const metadata = {
-  title: "Thank you for Registering | QRmory",
+  title: "Thank you for Registering",
   description: "Thank you for registering at QRmory.",
 };
 

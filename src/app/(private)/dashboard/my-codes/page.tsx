@@ -7,7 +7,7 @@ import MyCodesList from "@/components/my-codes-list";
 import Link from "next/link";
 
 export const metadata = {
-  title: "My Codes | QRmory",
+  title: "My Codes",
   description: "Your QR Codes that you've created.",
 };
 

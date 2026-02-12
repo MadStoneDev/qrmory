@@ -29,15 +29,15 @@ export async function generateMetadata({
 
   if (!vertical) {
     return {
-      title: "Not Found | QRmory",
+      title: "Not Found",
     };
   }
 
   return {
-    title: `QR Codes for ${vertical.name} | QRmory`,
+    title: `QR Codes for ${vertical.name}`,
     description: vertical.heroDescription,
     openGraph: {
-      title: `QR Codes for ${vertical.name} | QRmory`,
+      title: `QR Codes for ${vertical.name}`,
       description: vertical.heroDescription,
       type: "website",
     },

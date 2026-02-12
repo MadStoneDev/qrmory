@@ -1,7 +1,7 @@
 import MainNavigation from "@/components/main-navigation";
 
 export const metadata = {
-  title: "Cookie Policy | QRmory",
+  title: "Cookie Policy",
   description: "Learn about how QRmory uses cookies and similar technologies.",
 };
 

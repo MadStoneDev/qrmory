@@ -11,7 +11,7 @@ import {
 } from "@/utils/supabase/queries";
 
 export const metadata = {
-  title: "QR Code Quota | QRmory",
+  title: "QR Code Quota",
   description: "View your QR code quota and usage statistics.",
 };
 

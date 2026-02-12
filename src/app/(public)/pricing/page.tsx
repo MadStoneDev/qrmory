@@ -18,8 +18,14 @@ interface SubscriptionPackage extends Omit<SubscriptionPackageRaw, "features"> {
 }
 
 export const metadata = {
-  title: "Pricing | QRmory",
-  description: "QRmory provides competitive pricing for more QR codes..",
+  title: "Pricing",
+  description:
+    "Explore QRmory pricing plans. Create static QR codes for free or upgrade for dynamic QR codes, analytics, and custom domains.",
+  openGraph: {
+    title: "QRmory Pricing",
+    description:
+      "Explore QRmory pricing plans. Create static QR codes for free or upgrade for dynamic QR codes, analytics, and custom domains.",
+  },
 };
 
 interface UserData {

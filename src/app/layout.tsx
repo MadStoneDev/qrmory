@@ -1,10 +1,40 @@
 ﻿import "@/app/globals.css";
 
 import React from "react";
+import type { Metadata } from "next";
 
 import { GoogleAnalytics } from "@next/third-parties/google";
 import { createClient } from "@/utils/supabase/server";
 import { LogRocketProvider } from "@/components/providers/LogRocketProvider";
+
+export const metadata: Metadata = {
+  metadataBase: new URL("https://qrmory.com"),
+  title: {
+    default: "QRmory - Generate an arsenal of QR Codes",
+    template: "%s | QRmory",
+  },
+  description:
+    "Create your QR code arsenal with QRmory - a simple but powerful QR code generator designed by an Australian small business for Australian small businesses.",
+  openGraph: {
+    type: "website",
+    locale: "en_AU",
+    url: "https://qrmory.com",
+    siteName: "QRmory",
+    title: "QRmory - Generate an arsenal of QR Codes",
+    description:
+      "Create your QR code arsenal with QRmory - a simple but powerful QR code generator designed by an Australian small business for Australian small businesses.",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "QRmory - Generate an arsenal of QR Codes",
+    description:
+      "Create your QR code arsenal with QRmory - a simple but powerful QR code generator designed by an Australian small business for Australian small businesses.",
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
+};
 
 export default async function RootLayout({
   children,
