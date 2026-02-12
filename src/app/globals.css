@@ -77,6 +77,10 @@ h1, h2, h3, h4, h5, h6 {
   @apply ease-in-out;
 }
 
+.control-input:focus-visible {
+  @apply ring-1 ring-qrmory-purple-500;
+}
+
 .control-input::placeholder {
   @apply text-neutral-400;
   @apply font-sansLight;

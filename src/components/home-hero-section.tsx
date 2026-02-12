@@ -23,14 +23,14 @@ export default function HomeHero() {
         <section className="mt-16 flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-4 font-serif">
           <button
             onClick={() => scrollTo(`start-creating`)}
-            className="py-3 px-6  hover:translate-x-1 hover:-translate-y-1 bg-white hover:bg-qrmory-purple-400 rounded text-qrmory-purple-800 hover:text-white text-sm sm:text-base font-bold shadow-lg shadow-qrmory-purple-900 hover:shadow-xltransition-all duration-300"
+            className="py-3 px-6 hover:translate-x-1 hover:-translate-y-1 bg-white hover:bg-qrmory-purple-400 rounded text-qrmory-purple-800 hover:text-white text-sm sm:text-base font-bold shadow-lg shadow-qrmory-purple-900 hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white transition-all duration-300"
           >
             Start Creating
           </button>
 
           <button
             onClick={() => scrollTo(`learn-more`)}
-            className="py-3 px-6 hover:translate-x-1 hover:-translate-y-1 hover:bg-qrmory-purple-400 border border-white hover:border-qrmory-purple-400 rounded text-white text-sm sm:text-base font-bold transition-all duration-300"
+            className="py-3 px-6 hover:translate-x-1 hover:-translate-y-1 hover:bg-qrmory-purple-400 border border-white hover:border-qrmory-purple-400 rounded text-white text-sm sm:text-base font-bold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white transition-all duration-300"
           >
             Learn More
           </button>

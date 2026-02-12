@@ -10,6 +10,7 @@ const Logo = ({ className = "", logoColour = "white" }) => {
       viewBox="0 0 248.6 94.9"
       fill={logoColour}
       className={className}
+      aria-hidden="true"
     >
       <g>
         <g>

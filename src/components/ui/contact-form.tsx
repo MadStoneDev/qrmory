@@ -129,7 +129,7 @@ export default function ContactForm() {
           placeholder="Let us know how we can help make QRmory even better!"
           value={formData.message}
           onChange={handleChange}
-          className="py-1 md:py-2 outline-none border-b border-b-neutral-200 focus:border-b-qrmory-purple-500 h-[120px] resize-none text-sm md:text-base placeholder-neutral-300 transition-all duration-300"
+          className="py-1 md:py-2 border-b border-b-neutral-200 focus-visible:outline-none focus-visible:border-b-qrmory-purple-500 focus-visible:ring-1 focus-visible:ring-qrmory-purple-500 h-[120px] resize-none text-sm md:text-base placeholder-neutral-300 transition-all duration-300"
         />
       </div>
 

@@ -22,7 +22,7 @@ const AuthText = ({
         placeholder={placeholder}
         value={value}
         onChange={onChange}
-        className={`py-1 md:py-2 outline-none border-b-neutral-200 focus:border-b-qrmory-purple-500 text-sm md:text-base placeholder-neutral-300 transition-all duration-300`}
+        className={`py-1 md:py-2 border-b border-b-neutral-200 focus-visible:outline-none focus-visible:border-b-qrmory-purple-500 focus-visible:ring-1 focus-visible:ring-qrmory-purple-500 text-sm md:text-base placeholder-neutral-300 transition-all duration-300`}
       />
     </div>
   );

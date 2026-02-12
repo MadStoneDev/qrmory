@@ -191,7 +191,7 @@ const OTPInput = forwardRef<OTPInputHandle, OTPInputProps>(
             onPaste={handlePaste}
             onFocus={() => handleFocus(index)}
             disabled={disabled}
-            className={`w-12 h-12 text-center text-xl border rounded-md focus:outline-none focus:border-2 ${inputClassName}`}
+            className={`w-12 h-12 text-center text-xl border rounded-md focus-visible:outline-none focus-visible:border-2 focus-visible:ring-1 focus-visible:ring-qrmory-purple-500 ${inputClassName}`}
             aria-label={`OTP digit ${index + 1}`}
           />
         ))}

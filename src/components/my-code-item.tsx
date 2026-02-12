@@ -622,12 +622,13 @@ function MyCodeItem({
             <button
               onClick={toggleActiveStatus}
               disabled={isTogglingActive}
-              className={`p-2 rounded transition-colors ${
+              className={`p-2 rounded transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-qrmory-purple-500 ${
                 isActive
                   ? "text-green-600 hover:bg-green-50"
                   : "text-neutral-400 hover:bg-neutral-100"
               } ${isTogglingActive ? "opacity-50 cursor-not-allowed" : ""}`}
               title={isActive ? "Deactivate QR code" : "Activate QR code"}
+              aria-label={isActive ? "Deactivate QR code" : "Activate QR code"}
             >
               {isActive ? (
                 <IconToggleRight size={24} />
@@ -640,8 +641,9 @@ function MyCodeItem({
           {/* Analytics Link */}
           <Link
             href={`/dashboard/analytics/${id}`}
-            className="p-2 text-qrmory-purple-800 hover:bg-qrmory-purple-100 rounded transition-colors"
+            className="p-2 text-qrmory-purple-800 hover:bg-qrmory-purple-100 rounded transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-qrmory-purple-500"
             title="View analytics"
+            aria-label="View analytics"
           >
             <IconChartBar size={20} />
           </Link>
@@ -649,8 +651,9 @@ function MyCodeItem({
           {type === "dynamic" && (
             <button
               onClick={toggleEdit}
-              className="p-2 text-qrmory-purple-800 hover:bg-qrmory-purple-100 rounded transition-colors"
+              className="p-2 text-qrmory-purple-800 hover:bg-qrmory-purple-100 rounded transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-qrmory-purple-500"
               title={isEditing ? "Cancel editing" : "Edit QR code"}
+              aria-label={isEditing ? "Cancel editing" : "Edit QR code"}
             >
               {isEditing ? <IconX size={20} /> : <IconPencil size={20} />}
             </button>
@@ -658,8 +661,9 @@ function MyCodeItem({
 
           <button
             onClick={() => setIsExpanded(!isExpanded)}
-            className="p-2 text-qrmory-purple-800 hover:bg-qrmory-purple-800 hover:text-white rounded transition-all duration-300 ease-in-out"
+            className="p-2 text-qrmory-purple-800 hover:bg-qrmory-purple-800 hover:text-white rounded transition-all duration-300 ease-in-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-qrmory-purple-500"
             title={isExpanded ? "Collapse" : "Expand"}
+            aria-label={isExpanded ? "Collapse details" : "Expand details"}
           >
             {isExpanded ? (
               <IconChevronUp size={20} />

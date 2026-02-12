@@ -17,7 +17,7 @@ export default function NotFound() {
       <section className="pt-52 pb-36 flex flex-col justify-center items-center w-full min-h-fit bg-white">
         <div className="px-2 sm:px-6 w-full sm:max-w-7xl text-center">
           <p
-            className={`mb-8 font-serif text-sm sm:text-base italic text-qrmory-purple-400`}
+            className={`mb-8 font-serif text-sm sm:text-base italic text-qrmory-purple-500`}
           >
             🎶 ...meticulous planning, tenacity spanning, decades of denial is
             simply why I'll be... 🎶
@@ -26,7 +26,7 @@ export default function NotFound() {
             Woah! How'd you get in here?
           </h1>
 
-          <h3 className="mt-1 sm:mt-2 lg:mt-4 font-serif sm:text-xl lg:text-2xl text-qrmory-purple-400 tracking-widest drop-shadow-lg">
+          <h3 className="mt-1 sm:mt-2 lg:mt-4 font-serif sm:text-xl lg:text-2xl text-qrmory-purple-500 tracking-widest drop-shadow-lg">
             Is something broken?
           </h3>
 
@@ -39,41 +39,41 @@ export default function NotFound() {
           <ul className={`my-4 flex flex-col items-center gap-6`}>
             <Link
               href={"/"}
-              className={`group relative font-bold text-qrmory-purple-400`}
+              className={`group relative font-bold text-qrmory-purple-500`}
             >
               Home
               <div
-                className={`absolute left-0 -bottom-0.5 w-0 group-hover:w-full h-[1px] bg-qrmory-purple-400 transition-all duration-300`}
+                className={`absolute left-0 -bottom-0.5 w-0 group-hover:w-full h-[1px] bg-qrmory-purple-500 transition-all duration-300`}
               ></div>
             </Link>
 
             <Link
               href={"/about"}
-              className={`group relative font-bold text-qrmory-purple-400`}
+              className={`group relative font-bold text-qrmory-purple-500`}
             >
               About
               <div
-                className={`absolute left-0 -bottom-0.5 w-0 group-hover:w-full h-[1px] bg-qrmory-purple-400 transition-all duration-300`}
+                className={`absolute left-0 -bottom-0.5 w-0 group-hover:w-full h-[1px] bg-qrmory-purple-500 transition-all duration-300`}
               ></div>
             </Link>
 
             <Link
               href={"/pricing"}
-              className={`group relative font-bold text-qrmory-purple-400`}
+              className={`group relative font-bold text-qrmory-purple-500`}
             >
               Pricing
               <div
-                className={`absolute left-0 -bottom-0.5 w-0 group-hover:w-full h-[1px] bg-qrmory-purple-400 transition-all duration-300`}
+                className={`absolute left-0 -bottom-0.5 w-0 group-hover:w-full h-[1px] bg-qrmory-purple-500 transition-all duration-300`}
               ></div>
             </Link>
 
             <Link
               href={"/help"}
-              className={`group relative font-bold text-qrmory-purple-400`}
+              className={`group relative font-bold text-qrmory-purple-500`}
             >
               Help Center
               <div
-                className={`absolute left-0 -bottom-0.5 w-0 group-hover:w-full h-[1px] bg-qrmory-purple-400 transition-all duration-300`}
+                className={`absolute left-0 -bottom-0.5 w-0 group-hover:w-full h-[1px] bg-qrmory-purple-500 transition-all duration-300`}
               ></div>
             </Link>
 

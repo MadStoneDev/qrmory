@@ -30,7 +30,7 @@ export default function MainFooter() {
     >
       <section className="mx-auto flex md:flex-row flex-col md:justify-between justify-center items-stretch md:gap-4 gap-16 w-full md:text-left text-center">
         <article className="flex flex-col md:w-2/5 w-full md:items-start items-center">
-          <a href="/">
+          <a href="/" aria-label="QRmory Home">
             <FullLogo className="mb-2 w-12 sm:w-16 fill-qrmory-purple-800" />
           </a>
           <p className="mt-4 max-w-60 sm:max-w-xs text-sm sm:text-base">
