@@ -21,7 +21,7 @@ import {
 
 export class ProcessWebhook {
   async processEvent(eventData: EventEntity) {
-    console.log(`Processing webhook event: ${eventData.eventType}`);
+    // Webhook event processing handled by switch below
 
     switch (eventData.eventType) {
       case EventName.TransactionCompleted:
@@ -52,7 +52,7 @@ export class ProcessWebhook {
         );
         break;
       default:
-        console.log(`Unhandled webhook event type: ${eventData.eventType}`);
+        console.error(`Unhandled webhook event type: ${eventData.eventType}`);
         break;
     }
   }
@@ -133,7 +133,7 @@ export class ProcessWebhook {
       if (deactivateError) {
         console.error("Error deactivating QR codes:", deactivateError);
       } else {
-        console.log(`✅ Deactivated ${deactivatedIds.length} dynamic QR codes for user ${profile.id}`);
+        // Deactivated excess QR codes successfully
       }
     }
 
@@ -258,9 +258,7 @@ export class ProcessWebhook {
       });
     }
 
-    console.log(
-      `✅ Subscription resumed for user ${profile.id}, restored to ${subscriptionPackage.name}`,
-    );
+    // Subscription resumed successfully
   }
 
   private async handleTransactionPaymentFailed(
@@ -269,7 +267,7 @@ export class ProcessWebhook {
     const customerId = eventData.data.customerId;
 
     if (!customerId) {
-      console.log("No customer ID in failed transaction");
+      console.error("No customer ID in failed transaction");
       return;
     }
 
@@ -301,9 +299,7 @@ export class ProcessWebhook {
       })
       .eq("id", profile.id);
 
-    console.log(
-      `⚠️ Payment failed for user ${profile.id}, subscription marked as past_due`,
-    );
+    // Payment failed — subscription marked as past_due
   }
 
   private async handleTransactionCompleted(
@@ -312,9 +308,7 @@ export class ProcessWebhook {
     const subscriptionId = eventData.data.subscriptionId;
 
     if (!subscriptionId) {
-      console.log(
-        "No subscription ID in transaction - likely a one-time purchase",
-      );
+      // No subscription ID — likely a one-time purchase, skip
       return;
     }
 
@@ -418,8 +412,6 @@ export class ProcessWebhook {
 
       if (reactivateError) {
         console.error("Error reactivating QR codes:", reactivateError);
-      } else {
-        console.log(`✅ Reactivated ${codesToReactivate.length} dynamic QR codes for user ${profile.id}`);
       }
     }
 
@@ -439,9 +431,7 @@ export class ProcessWebhook {
       });
     }
 
-    console.log(
-      `✅ Successfully processed transaction for user ${profile.id}, level: ${subscriptionPackage.level}`,
-    );
+    // Transaction processed successfully
   }
 
   private async updateSubscriptionData(
@@ -530,7 +520,7 @@ export class ProcessWebhook {
     const isDowngrade = newQuota < oldQuota;
 
     if (isDowngrade && subscriptionPackage) {
-      console.log(`Downgrade detected for user ${profile.id}: ${oldQuota} -> ${newQuota} quota`);
+      // Downgrade detected — deactivating excess QR codes
 
       // Get all user's active dynamic QR codes, ordered by created_at (oldest first)
       const { data: dynamicCodes } = await supabaseAdmin
@@ -562,7 +552,7 @@ export class ProcessWebhook {
           if (deactivateError) {
             console.error("Error deactivating QR codes on downgrade:", deactivateError);
           } else {
-            console.log(`✅ Deactivated ${deactivatedIds.length} dynamic QR codes for user ${profile.id} (downgrade)`);
+            // Deactivated excess QR codes after downgrade
           }
 
           // Send downgrade notification email
@@ -596,7 +586,7 @@ export class ProcessWebhook {
       }
     }
 
-    console.log(`Successfully updated subscription for user ${profile.id}`);
+    // Subscription updated successfully
   }
 
   private getPlanNameFromLevel(level: number): string {
@@ -634,6 +624,6 @@ export class ProcessWebhook {
       throw error;
     }
 
-    console.log(`Successfully updated customer data for user ${user.id}`);
+    // Customer data updated successfully
   }
 }

@@ -185,10 +185,11 @@ export async function POST(request: NextRequest) {
           .single();
 
         if (insertError) {
+          console.error(`CSV batch insert error for row ${item.rowIndex}:`, insertError.message);
           errors.push({
             name: item.name || "Unknown",
             rowIndex: item.rowIndex,
-            error: insertError.message,
+            error: "Failed to create QR code. Please check the data format.",
           });
           // Release the shortcode reservation on error
           await redis.del(`reserved:${shortcode}`);
@@ -203,10 +204,11 @@ export async function POST(request: NextRequest) {
           });
         }
       } catch (err) {
+        console.error(`CSV batch error for row ${item.rowIndex}:`, err);
         errors.push({
           name: item.name || "Unknown",
           rowIndex: item.rowIndex,
-          error: err instanceof Error ? err.message : "Unknown error",
+          error: "An unexpected error occurred while creating this QR code.",
         });
       }
     }

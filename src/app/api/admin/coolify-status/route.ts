@@ -67,9 +67,10 @@ export async function GET() {
       },
     });
   } catch (error) {
+    console.error("Coolify status check failed:", error);
     return NextResponse.json({
       success: false,
-      error: error instanceof Error ? error.message : String(error),
+      error: "Failed to fetch Coolify status",
     });
   }
 }

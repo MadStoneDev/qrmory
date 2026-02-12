@@ -119,11 +119,7 @@ async function sendCriticalErrorAlert(report: ErrorReport) {
       });
     }
 
-    // Also send email alerts for critical errors
-    if (process.env.CRITICAL_ERROR_EMAIL && process.env.MAILERSEND_API_KEY) {
-      // Implement email notification here
-      console.log("Would send critical error email:", report.message);
-    }
+    // TODO: Implement email alerts for critical errors via Resend/MailerSend
   } catch (alertError) {
     console.error("Failed to send critical error alert:", alertError);
   }

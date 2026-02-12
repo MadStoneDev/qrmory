@@ -66,9 +66,11 @@
     "@types/ua-parser-js": "^0.7.39",
     "@types/uuid": "^10.0.0",
     "autoprefixer": "^10.4.20",
+    "dotenv": "^17.2.4",
     "postcss": "^8.4.45",
     "supabase": "^2.72.8",
     "tailwindcss": "^3.4.10",
+    "tsx": "^4.21.0",
     "typescript": "^5"
   },
   "overrides": {

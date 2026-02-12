@@ -76,7 +76,6 @@ export async function POST(request: NextRequest) {
       const isNewEvent = await checkAndMarkEventProcessed(eventId);
 
       if (!isNewEvent) {
-        console.log(`Webhook event ${eventId} already processed, skipping`);
         return Response.json({
           status: 200,
           eventName,
@@ -89,15 +88,13 @@ export async function POST(request: NextRequest) {
     // Process the event
     await webhookProcessor.processEvent(eventData);
 
-    console.log(`Successfully processed webhook event: ${eventId} (${eventName})`);
     return Response.json({ status: 200, eventName, eventId });
   } catch (e) {
-    const error = e instanceof Error ? e : new Error(String(e));
-    console.error("Webhook processing error:", error.message);
+    console.error("Webhook processing error:", e instanceof Error ? e.message : e);
 
     // Return 500 to tell Paddle to retry
     return Response.json(
-      { error: "Internal server error", message: error.message },
+      { error: "Internal server error" },
       { status: 500 }
     );
   }

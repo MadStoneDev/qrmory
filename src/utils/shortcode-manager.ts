@@ -207,10 +207,7 @@ export class ShortcodeManager {
       attempts,
     );
 
-    // Log stats periodically
-    if (this.collisionStats.successfulGenerations % 100 === 0) {
-      console.log("Shortcode generation stats:", this.collisionStats);
-    }
+    // Stats available via ShortcodeManager.getStats()
   }
 
   static getStats(): CollisionStats {

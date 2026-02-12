@@ -184,7 +184,7 @@ export default function QRVideo({
       updateParentValue();
     } catch (error) {
       console.error("Upload error:", error);
-      toast(error instanceof Error ? error.message : "Upload failed", {
+      toast("Upload failed. Please try again.", {
         style: {
           backgroundColor: "rgb(254, 226, 226)",
           color: "rgb(153, 27, 27)",

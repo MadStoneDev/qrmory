@@ -45,7 +45,7 @@ async function restartApplication(): Promise<{ success: boolean; error?: string 
       return { success: false, error: errorText };
     }
 
-    console.log("Application restart triggered to apply domain changes");
+    // Application restart triggered
     return { success: true };
   } catch (error) {
     console.error("Error restarting application:", error);
@@ -142,7 +142,7 @@ export async function addDomainToCoolify(domain: string): Promise<{
       return { success: false, error: `Failed to configure domain routing: ${errorText}` };
     }
 
-    console.log(`Successfully added domain ${domain} to Coolify`);
+    // Domain added to Coolify
 
     // Restart the application to apply the new domain configuration
     // This triggers Traefik to pick up the new domain and provision SSL
@@ -209,7 +209,7 @@ export async function removeDomainFromCoolify(domain: string): Promise<{
       return { success: false, error: `Failed to remove domain routing: ${errorText}` };
     }
 
-    console.log(`Successfully removed domain ${domain} from Coolify`);
+    // Domain removed from Coolify
 
     // Restart the application to apply the domain removal
     const restartResult = await restartApplication();
@@ -271,7 +271,7 @@ export async function syncDomainsWithCoolify(
       return { success: false, error: `Failed to sync domain routing: ${errorText}` };
     }
 
-    console.log(`Successfully synced ${activeDomains.length} custom domains with Coolify`);
+    // Custom domains synced with Coolify
 
     // Restart the application to apply the synced domains
     const restartResult = await restartApplication();

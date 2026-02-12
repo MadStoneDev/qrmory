@@ -57,8 +57,11 @@ export async function POST(request: Request) {
 
     const portalData = await response.json();
     return NextResponse.json({ url: portalData.data.url });
-  } catch (error: any) {
+  } catch (error) {
     console.error("Portal creation error:", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json(
+      { error: "Something went wrong. Please try again." },
+      { status: 500 },
+    );
   }
 }
