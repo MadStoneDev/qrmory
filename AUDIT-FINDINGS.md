@@ -13,7 +13,7 @@
 - [x] **`/api/reserve-shortcode` has no auth check** — Now requires auth + rate limiting
 - [x] **Admin check uses subscription level** — Now uses env-based `ADMIN_USER_IDS` allowlist
 - [x] **Auth rate limiter commented out** — Re-enabled with per-email and per-IP limits
-- [x] **No reCAPTCHA on public forms** — Added reCAPTCHA v3 to contact form and login
+- [x] **No CAPTCHA on public forms** — Replaced reCAPTCHA v3 with Cloudflare Turnstile on contact form and login; Supabase CAPTCHA protection enabled at API level to block direct bot calls
 - [x] **Unprotected public APIs** — Added rate limiting to contact, location-search, error-reports
 
 ### Payments / Subscriptions
@@ -79,10 +79,17 @@
 Security fixes, missing webhook handlers, error pages, robots.txt, broken links
 
 ### Phase 2 (3-5 days) — Compliance and gating ✅
-Legal compliance, server-side feature gating, reCAPTCHA, accessibility, rate limiting
+Legal compliance, server-side feature gating, accessibility, rate limiting
 
 ### Phase 3 (1-2 weeks) — Optimisation ✅
 Performance optimization, caching, SEO metadata, JSON-LD, QR component imports, lodash removal
+
+### Phase 4 — Spam & bot protection ✅
+- Replaced Google reCAPTCHA v3 with Cloudflare Turnstile across all forms
+- Enabled Supabase-level CAPTCHA verification (blocks bots calling auth API directly)
+- Server-side Turnstile verification on contact form API
+- Cleaned up 97 spam/unverified user registrations
+- Hardened error handling: no internal error details leak to users, meaningful server logs only
 
 ### Remaining items
 - DB indexes (requires Supabase migration)
